@@ -1,0 +1,33 @@
+# Carpetas de compilación
+bin/
+obj/
+
+# Configuración de usuario y archivos temporales
+*.user
+*.suo
+*.vs/
+.vscode/
+*.swp
+*.sln.docstates
+
+# Archivos de salida
+*.exe
+*.dll
+*.pdb
+*.log
+*.cache
+*.db
+
+# Archivos de paquetes y dependencias
+packages/
+node_modules/
+
+# Archivos de configuración local
+appsettings*.json
+.env
+secrets.json
+
+# Archivos generados por Visual Studio
+*.csproj.user
+*.dbmdl
+*.jfm
