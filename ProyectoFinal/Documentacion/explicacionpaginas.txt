@@ -1,0 +1,40 @@
+### Autocare Hub Frontend (Angular)
+
+Este proyecto contiene el frontend de AutoCare Hub, desarrollado en Angular.
+
+## Estructura del Proyecto
+
+- **src/app/components/** → Contendrá los componentes principales de la aplicación.
+- **src/app/pages/** → Contendrá las páginas principales de la aplicación.
+- **src/app/services/** → Contendrá los servicios para interactuar con la API.
+- **src/app/models/** → Definirá las interfaces y modelos de datos.
+
+## Componentes Generados
+
+### Componentes Globales
+- **navbar** → Barra de navegación principal.
+- **footer** → Pie de página común en todas las vistas.
+- **not-found** → Página de error 404.
+
+### Páginas Principales
+- **home** → Página principal con información general.
+- **login** → Página de inicio de sesión y autenticación.
+- **register** → Registro de usuarios.
+- **workshop-request** → Formulario para solicitud de cuenta de talleres.
+- **dashboard-user** → Panel de usuario con historial de citas y vehículos.
+- **dashboard-workshop** → Panel de taller para gestión de citas y reparaciones.
+- **appointments** → Gestión de citas.
+- **history** → Historial de citas y pagos.
+- **vehicle-management** → Gestión de vehículos.
+- **workshop-management** → Panel de control para talleres.
+- **statistics** → Visualización de estadísticas de reparaciones.
+- **inventory** → Gestión del inventario de piezas.
+- **admin** → Panel de administración para roles, permisos y servicios.
+- **support** → Soporte y ayuda.
+
+## Configuración de Rutas
+Se definirán rutas en el `app-routing.module.ts` para cada componente.
+
+---
+
+Si necesitas más detalles o personalización, dime y lo ajustamos. 🚀
