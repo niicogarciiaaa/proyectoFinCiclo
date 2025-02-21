@@ -22,6 +22,7 @@ namespace AutoCareHubAPI
         public string Correo { get; set; }
         public string Contrasena { get; set; }
         public string Rol { get; set; }
+        public string NombreUsuario { get; set; }
     }
 
     public class Vehiculo

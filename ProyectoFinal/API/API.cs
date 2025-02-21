@@ -2,6 +2,7 @@ using AutoCareHubAPI;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading.Tasks;
 
 namespace AutoCareHubAPI.Controllers
@@ -138,6 +139,42 @@ namespace AutoCareHubAPI.Controllers
     {
         public UsuariosController(AutoCareHubContext context) 
             : base(context, context.Usuarios) { }
+
+        // Nuevo método para iniciar sesión
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginRequest request)
+        {
+            try
+            {
+                // Buscar el usuario por nombre de usuario
+                var user = await _context.Usuarios
+                    .FirstOrDefaultAsync(u => u.NombreUsuario == request.Username);
+
+                if (user == null)
+                {
+                    return Unauthorized("Usuario no encontrado.");
+                }
+
+                // Aquí debes comparar las contraseñas (asegurate de utilizar un hash en producción)
+                if (user.Contrasena != request.Password)
+                {
+                    return Unauthorized("Contraseña incorrecta.");
+                }
+
+                return Ok(new { message = "Login exitoso", user });
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(500, $"Error interno del servidor: {ex.Message}");
+            }
+        }
+    }
+
+    // Clase para las credenciales de login
+    public class LoginRequest
+    {
+        public string Username { get; set; }
+        public string Password { get; set; }
     }
 
     public class VehiculosController : BaseController<Vehiculo>

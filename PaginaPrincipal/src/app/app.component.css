@@ -1,0 +1,62 @@
+/* app.component.css */
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Asegura que ocupe al menos toda la altura de la ventana */
+}
+
+/* El router-outlet no se puede estilizar directamente, 
+   pero podemos usar un contenedor para el contenido principal */
+router-outlet + * {
+  flex: 1; /* El contenido principal ocupará todo el espacio disponible */
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Asegura que el footer se mantenga al fondo */
+app-footer {
+  margin-top: auto; /* Empuja el footer al fondo */
+  width: 100%;
+  background-color: #f8f9fa;
+  padding: 10px 0;
+  text-align: center;
+}
+
+/* Estilos base para asegurar que todo funcione correctamente */
+body {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: Arial, sans-serif;
+  background-color: #ffffff; /* Fondo blanco para todo el cuerpo */
+  color: #333333; /* Color de texto estándar */
+}
+
+/* Contenedor para los botones */
+.button-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100%;
+  position: relative;
+}
+
+/* Botón "Acceder a AutoCareHub" */
+.button-container .autocarehub-button {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+}
+
+/* Media queries para responsividad */
+@media screen and (max-width: 768px) {
+  router-outlet + * {
+    padding: 15px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  router-outlet + * {
+    padding: 10px;
+  }
+}
