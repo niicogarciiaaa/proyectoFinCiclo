@@ -1,16 +1,17 @@
-﻿using AutoCareHub; // Asegúrate de que el namespace coincide con tu proyecto
+﻿
 using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
-using AutoCareHub.Data;
+using AutoCareHubAPI;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Configurar el contexto de la base de datos
 builder.Services.AddDbContext<AutoCareHubContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
 
 // Agregar servicios de la API
 builder.Services.AddControllers();
@@ -26,7 +27,7 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 app.UseAuthorization();
 app.MapControllers();
 app.Run();
