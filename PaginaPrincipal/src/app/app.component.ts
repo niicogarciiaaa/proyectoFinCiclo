@@ -1,13 +1,12 @@
-// app.component.ts
 import { Component } from '@angular/core';
-import { RouterModule } from '@angular/router';
-import { FooterComponent } from "./components/footer/footer.component";
+import { RouterOutlet } from '@angular/router';
 
 @Component({
   selector: 'app-root',
+  imports: [RouterOutlet],
   templateUrl: './app.component.html',
-  styleUrls: ['./app.component.css'],
-  standalone: true,
-  imports: [RouterModule, FooterComponent]
+  styleUrl: './app.component.css'
 })
-export class AppComponent { }
+export class AppComponent {
+  title = 'PaginaPrincipal';
+}

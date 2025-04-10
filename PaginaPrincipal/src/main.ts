@@ -1,14 +1,6 @@
 import { bootstrapApplication } from '@angular/platform-browser';
-import { importProvidersFrom } from '@angular/core';
-import { ReactiveFormsModule } from '@angular/forms';
+import { appConfig } from './app/app.config';
 import { AppComponent } from './app/app.component';
-import { AppRoutingModule } from './app/app.routes';
-import { provideHttpClient, withFetch } from '@angular/common/http';
 
-bootstrapApplication(AppComponent, {
-  providers: [
-    importProvidersFrom(AppRoutingModule, ReactiveFormsModule),
-    provideHttpClient(withFetch())
-  ]
-})
-.catch(err => console.error(err));
+bootstrapApplication(AppComponent, appConfig)
+  .catch((err) => console.error(err));
