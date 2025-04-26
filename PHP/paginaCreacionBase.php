@@ -39,6 +39,22 @@ if ($accion === 'crear_users') {
         echo "❌ Error creando tabla 'Users': " . $conn->error . "<br>";
     }
 }
+if ($accion === 'crear_notification_preferences') {
+    $sqlNotificationPreferences = "CREATE TABLE IF NOT EXISTS NotificationPreferences (
+    PreferenceID INT AUTO_INCREMENT PRIMARY KEY,
+    UserID INT NOT NULL UNIQUE,  -- Añadido UNIQUE para garantizar solo una preferencia por usuario
+    NotificationType ENUM('SMS', 'Telegram', 'WhatsApp') NOT NULL,
+    ContactValue VARCHAR(255) NOT NULL,
+    IsActive BOOLEAN DEFAULT true,
+    CreateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
+);";
+    if ($conn->query($sqlNotificationPreferences)) {
+        echo "✅ Tabla 'NotificationPreferences' creada correctamente<br>";
+    } else {
+        echo "❌ Error creando tabla 'NotificationPreferences': " . $conn->error . "<br>";
+    }
+}
 
 if ($accion === 'crear_vehicles') {
     $sqlVehicles = "CREATE TABLE IF NOT EXISTS Vehicles (
@@ -80,8 +96,9 @@ if ($accion === 'crear_invoices') {
     $sqlInvoices = "CREATE TABLE IF NOT EXISTS Invoices (
         InvoiceID INT AUTO_INCREMENT PRIMARY KEY,
         AppointmentID INT NOT NULL,
-        Lineas TEXT NOT NULL,
         Date DATE NOT NULL,
+        TotalAmount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
+        Estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
         FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID) ON DELETE CASCADE
     )";
     if ($conn->query($sqlInvoices)) {
@@ -91,6 +108,31 @@ if ($accion === 'crear_invoices') {
     }
 }
 
+if ($accion === 'crear_invoice_items') {
+    $sqlInvoiceItems = "CREATE TABLE IF NOT EXISTS InvoiceItems (
+        ItemID INT AUTO_INCREMENT PRIMARY KEY,
+        InvoiceID INT NOT NULL,
+        Description TEXT NOT NULL,
+        Quantity DECIMAL(10,2) NOT NULL DEFAULT 1,
+        UnitPrice DECIMAL(10,2) NOT NULL,
+        TaxRate DECIMAL(5,2) NOT NULL DEFAULT 21.00,
+        Amount DECIMAL(10,2) NOT NULL,
+        FOREIGN KEY (InvoiceID) REFERENCES Invoices(InvoiceID) ON DELETE CASCADE
+    )";
+    if ($conn->query($sqlInvoiceItems)) {
+        echo "✅ Tabla 'InvoiceItems' creada correctamente<br>";
+    } else {
+        echo "❌ Error creando tabla 'InvoiceItems': " . $conn->error . "<br>";
+    }
+}
+if ($accion === 'eliminar_bd') {
+    $sql = "DROP DATABASE IF EXISTS $nombreBD";
+    if ($conn->query($sql)) {
+        echo "🗑️ Base de datos eliminada correctamente<br>";
+    } else {
+        echo "❌ Error al eliminar la base de datos: " . $conn->error . "<br>";
+    }
+}
 $conn->close();
 ?>
 
@@ -106,9 +148,14 @@ $conn->close();
     <form method="POST">
         <button name="accion" value="crear_bd">Crear Base de Datos</button>
         <button name="accion" value="crear_users">Crear Tabla Users</button>
+        <!-- Añade antes del botón de eliminar base de datos -->
+<button name="accion" value="crear_notification_preferences">Crear Tabla NotificationPreferences</button>
         <button name="accion" value="crear_vehicles">Crear Tabla Vehicles</button>
         <button name="accion" value="crear_appointments">Crear Tabla Appointments</button>
         <button name="accion" value="crear_invoices">Crear Tabla Invoices</button>
+        <button name="accion" value="crear_invoice_items">Crear Tabla InvoiceItems</button>
+        <button name="accion" value="eliminar_bd" onclick="return confirm('¿Estás seguro de que deseas eliminar TODA la base de datos? Esta acción no se puede deshacer.')">🗑️ Eliminar Base de Datos</button>
+
     </form>
 </body>
 </html>

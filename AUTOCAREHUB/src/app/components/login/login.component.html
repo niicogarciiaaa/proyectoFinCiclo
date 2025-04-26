@@ -1,0 +1,64 @@
+<div class="container">
+  <div class="row justify-content-center align-items-center min-vh-100">
+    <div class="col-12 col-md-6 col-lg-4">
+      <div class="card shadow">
+        <div class="card-body p-4">
+          <h2 class="text-center mb-4">Iniciar Sesión</h2>
+          
+          <form [formGroup]="loginForm" (ngSubmit)="checkAccount()">
+            <div class="mb-3">
+              <label for="email" class="form-label">Email</label>
+              <input 
+                type="email" 
+                class="form-control"
+                id="email" 
+                formControlName="email" 
+                [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
+                placeholder="ejemplo@correo.com"
+              >
+              <div class="invalid-feedback" *ngIf="loginForm.get('email')?.errors?.['required'] && loginForm.get('email')?.touched">
+                El email es requerido
+              </div>
+              <div class="invalid-feedback" *ngIf="loginForm.get('email')?.errors?.['email'] && loginForm.get('email')?.touched">
+                Ingrese un email válido
+              </div>
+            </div>
+
+            <div class="mb-3">
+              <label for="password" class="form-label">Contraseña</label>
+              <input 
+                type="password" 
+                class="form-control"
+                id="password" 
+                formControlName="password"
+                [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                placeholder="Ingrese su contraseña"
+              >
+              <div class="invalid-feedback" *ngIf="loginForm.get('password')?.errors?.['required'] && loginForm.get('password')?.touched">
+                La contraseña es requerida
+              </div>
+              <div class="invalid-feedback" *ngIf="loginForm.get('password')?.errors?.['minlength'] && loginForm.get('password')?.touched">
+                La contraseña debe tener al menos 6 caracteres
+              </div>
+            </div>
+
+            <div class="alert alert-danger" *ngIf="errorMessage">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>
+              {{ errorMessage }}
+            </div>
+
+            <div class="d-grid gap-2">
+              <button 
+                type="submit" 
+                class="btn btn-primary"
+                [disabled]="loginForm.invalid || loading">
+                <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
+                {{ loading ? 'Iniciando sesión...' : 'Iniciar Sesión' }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,33 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Angular",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:4200/",
+            "webRoot": "${workspaceFolder}"
+        },
+        {
+            // Use IntelliSense para averiguar qué atributos existen para la depuración de C#.
+            // Usar el puntero por encima para la descripción de los atributos existentes
+            // Para obtener más información, visite https://github.com/dotnet/vscode-csharp/blob/main/debugger-launchjson.md
+            "name": ".NET Core Launch (console)",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            // Si ha cambiado las plataformas de destino, asegúrese de actualizar la ruta de acceso del programa.
+            "program": "${workspaceFolder}/ProyectoFinal/bin/Debug/net9.0/ProyectoFinal.dll",
+            "args": [],
+            "cwd": "${workspaceFolder}/ProyectoFinal",
+            // Para obtener más información sobre el campo \"consola\", consulte https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false
+        },
+        {
+            "name": ".NET Core Attach",
+            "type": "coreclr",
+            "request": "attach"
+        }
+    ]
+}
