@@ -14,7 +14,6 @@ if ($conn->connect_error) {
 echo "<h2>Insertando datos de prueba en AutoCareHub...</h2>";
 
 // 1. Insertar un usuario
-// 1. Insertar un usuario
 $email = "cliente@autocare.com";
 $fullname = "Juan Pérez";
 $password = password_hash("claveSegura123", PASSWORD_DEFAULT);
@@ -30,7 +29,7 @@ if ($stmt->execute()) {
     $notificationType = 'WhatsApp'; // Puede ser 'SMS', 'Telegram' o 'WhatsApp'
     $contactValue = '+34612345678'; // Número de teléfono o usuario de Telegram según el tipo
 
-    $sqlNotification = "INSERT INTO NotificationPreferences (UserID, NotificationType, ContactValue) VALUES (?, ?, ?)";
+    $sqlNotification = "INSERT INTO NotificationPreferences (UserID, NotificationType, ContactValue, IsActive) VALUES (?, ?, ?, true)";
     $stmtNotif = $conn->prepare($sqlNotification);
     $stmtNotif->bind_param("iss", $userId, $notificationType, $contactValue);
     

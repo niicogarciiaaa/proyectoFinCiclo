@@ -1,8 +1,25 @@
-<div class="container">
+<div class="container-fluid position-relative">
+  <!-- Selector de idioma arriba a la derecha -->
+  <div style="position: absolute; top: 20px; right: 30px; z-index: 10;">
+    <select class="form-select form-select-sm" style="width: 120px;" [(ngModel)]="selectedLang" (change)="changeLang(selectedLang)">
+      <option value="es">Español</option>
+      <option value="en">English</option>
+    </select>
+  </div>
+
+  <!-- Logo responsive en esquina superior izquierda -->
+  <img 
+    src="img/LogoAzulAplicacion.png" 
+    alt="Logo" 
+    class="position-absolute img-fluid bg-white p-1"
+    style="top: 10px; left: 10px; width: 100px; height: 100px; object-fit: contain;"
+  >
+
   <div class="row justify-content-center align-items-center min-vh-100">
     <div class="col-12 col-md-6 col-lg-4">
       <form [formGroup]="registerForm" (ngSubmit)="onSubmit()" class="card p-4 shadow">
-        <h2 class="text-center mb-4">Registro</h2>
+        
+        <h2 class="text-center mb-4">{{ i18n.t('registro') }}</h2>
 
         @if (errorMessage) {
           <div class="alert alert-danger mb-3">
@@ -11,7 +28,7 @@
         }
 
         <div class="mb-3">
-          <label for="email" class="form-label">Correo electrónico</label>
+          <label for="email" class="form-label">{{ i18n.t('email') }}</label>
           <input
             type="email"
             class="form-control"
@@ -27,7 +44,7 @@
         </div>
 
         <div class="mb-3">
-          <label for="fullName" class="form-label">Nombre completo</label>
+          <label for="fullName" class="form-label">{{ i18n.t('nombreCompleto') }}</label>
           <input
             type="text"
             class="form-control"
@@ -43,7 +60,7 @@
         </div>
 
         <div class="mb-3">
-          <label for="password" class="form-label">Contraseña</label>
+          <label for="password" class="form-label">{{ i18n.t('contrasena') }}</label>
           <input
             type="password"
             class="form-control"
@@ -59,7 +76,7 @@
         </div>
 
         <div class="mb-3">
-          <label for="confirmPassword" class="form-label">Confirmar contraseña</label>
+          <label for="confirmPassword" class="form-label">{{ i18n.t('confirmarContrasena') }}</label>
           <input
             type="password"
             class="form-control"
@@ -74,17 +91,62 @@
           }
         </div>
 
+        <!-- Campo para seleccionar el tipo de notificación -->
+        <div class="mb-3">
+          <label for="notificationType" class="form-label">{{ i18n.t('metodoNotificacion') }}</label>
+          <select
+            class="form-select"
+            [class.is-invalid]="isFieldInvalid('notificationType')"
+            id="notificationType"
+            formControlName="notificationType"
+          >
+            <option value="" disabled selected>{{ i18n.t('seleccionaMetodo') }}</option>
+            <option *ngFor="let type of notificationTypes" [value]="type.value">{{ type.label }}</option>
+          </select>
+          @if (isFieldInvalid('notificationType')) {
+            <div class="invalid-feedback">
+              {{ getErrorMessage('notificationType') }}
+            </div>
+          }
+        </div>
+
+        <!-- Campo para el valor de contacto según el método -->
+        <div class="mb-3">
+          <label for="contactValue" class="form-label">
+            <ng-container [ngSwitch]="registerForm.get('notificationType')?.value">
+              <span *ngSwitchCase="'SMS'">{{ i18n.t('telefonoSMS') }}</span>
+              <span *ngSwitchCase="'Telegram'">{{ i18n.t('usuarioTelegram') }}</span>
+              <span *ngSwitchCase="'WhatsApp'">{{ i18n.t('telefonoWhatsApp') }}</span>
+              <span *ngSwitchDefault>{{ i18n.t('contacto') }}</span>
+            </ng-container>
+          </label>
+          <input
+            type="text"
+            class="form-control"
+            [class.is-invalid]="isFieldInvalid('contactValue')"
+            id="contactValue"
+            formControlName="contactValue"
+          />
+          @if (isFieldInvalid('contactValue')) {
+            <div class="invalid-feedback">
+              {{ getErrorMessage('contactValue') }}
+            </div>
+          }
+        </div>
+
         <button 
           type="submit" 
           class="btn btn-primary w-100"
           [disabled]="loading || !registerForm.valid"
         >
-          {{ loading ? 'Registrando...' : 'Registrarse' }}
+          {{ loading ? i18n.t('registrando') : i18n.t('registrarse') }}
         </button>
 
         <p class="text-center mt-3 mb-0">
-          ¿Ya tienes cuenta? <a routerLink="/login" class="text-primary">Inicia sesión</a>
+          {{ i18n.t('yaTienesCuenta') }} 
+          <a routerLink="/login" class="text-primary">{{ i18n.t('iniciaSesion') }}</a>
         </p>
+
       </form>
     </div>
   </div>

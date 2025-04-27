@@ -54,10 +54,16 @@ export class DataAccessService {
       })
     );
   }
-  registerUser(email: string, fullName: string, password: string): Observable<RegisterResponse> {
+    registerUser(
+    email: string,
+    fullName: string,
+    password: string,
+    notificationType: string,
+    contactValue: string
+  ): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(
       `${this.apiUrl}/register.php`,
-      { email, fullName, password },
+      { email, fullName, password, notificationType, contactValue },
       this.httpOptions
     ).pipe(
       map(response => {
@@ -72,7 +78,6 @@ export class DataAccessService {
       })
     );
   }
-  
 
   logout(): void {
     // Limpia la información del usuario al cerrar sesión

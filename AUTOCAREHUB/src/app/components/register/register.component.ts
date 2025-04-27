@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { CommonModule } from '@angular/common';
+import { I18nService } from '../../services/i18n.service';
+import { FormsModule } from '@angular/forms';
 
 interface RegisterResponse {
   success: boolean;
@@ -12,13 +14,15 @@ interface RegisterResponse {
     id: number;
     name: string;
     email: string;
+    notificationType?: string;
+    contactValue?: string;
   };
 }
 
 @Component({
   selector: 'app-register',
   standalone: true,
-  imports: [ReactiveFormsModule, CommonModule],
+  imports: [ReactiveFormsModule, CommonModule, RouterModule, FormsModule],
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
@@ -26,23 +30,39 @@ export class RegisterComponent implements OnInit {
   registerForm: FormGroup;
   loading = false;
   errorMessage = '';
+  selectedLang: string;
+
+  notificationTypes = [
+    { value: 'SMS', label: 'SMS' },
+    { value: 'Telegram', label: 'Telegram' },
+    { value: 'WhatsApp', label: 'WhatsApp' }
+  ];
 
   constructor(
     private fb: FormBuilder,
     private dataAccess: DataAccessService,
-    private router: Router
+    private router: Router,
+    public i18n: I18nService
   ) {
+    this.selectedLang = this.i18n.currentLang || 'es';
     this.registerForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
       fullName: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
+      confirmPassword: ['', [Validators.required]],
+      notificationType: ['', [Validators.required]],
+      contactValue: ['', [Validators.required]]
     }, {
       validators: this.passwordMatchValidator
     });
   }
 
   ngOnInit(): void {}
+
+  changeLang(lang: string) {
+    this.i18n.setLang(lang);
+    this.selectedLang = lang;
+  }
 
   passwordMatchValidator(group: FormGroup) {
     const password = group.get('password')?.value;
@@ -55,14 +75,14 @@ export class RegisterComponent implements OnInit {
       this.loading = true;
       this.errorMessage = '';
 
-      const { email, fullName, password } = this.registerForm.value;
+      const { email, fullName, password, notificationType, contactValue } = this.registerForm.value;
 
-      this.dataAccess.registerUser(email, fullName, password).subscribe({
+      this.dataAccess.registerUser(email, fullName, password, notificationType, contactValue).subscribe({
         next: (response: RegisterResponse) => {
           if (response.success) {
             this.router.navigate(['/login']);
           } else {
-            this.errorMessage = response.message || 'Error en el registro';
+            this.errorMessage = response.message || this.i18n.t('errorRegistro');
             if (response.errors?.length) {
               this.errorMessage = response.errors.join(', ');
             }
@@ -70,7 +90,7 @@ export class RegisterComponent implements OnInit {
         },
         error: (error) => {
           console.error('Error en el registro:', error);
-          this.errorMessage = error.error?.message || 'Error de conexión';
+          this.errorMessage = error.error?.message || this.i18n.t('errorConexion');
           this.loading = false;
         },
         complete: () => {
@@ -98,26 +118,26 @@ export class RegisterComponent implements OnInit {
 
   getErrorMessage(fieldName: string): string {
     const control = this.registerForm.get(fieldName);
-    
+
     if (!control) return '';
-    
+
     if (control.hasError('required')) {
-      return 'Este campo es requerido';
+      return this.i18n.t('campoRequerido');
     }
-    
+
     if (control.hasError('email')) {
-      return 'Por favor, introduce un email válido';
+      return this.i18n.t('emailValido');
     }
-    
+
     if (control.hasError('minlength')) {
       const minLength = control.errors?.['minlength'].requiredLength;
-      return `Debe tener al menos ${minLength} caracteres`;
+      return this.i18n.t('minCaracteres', { min: minLength });
     }
-    
+
     if (fieldName === 'confirmPassword' && this.registerForm.hasError('passwordMismatch')) {
-      return 'Las contraseñas no coinciden';
+      return this.i18n.t('contrasenasNoCoinciden');
     }
-    
+
     return '';
   }
 }
