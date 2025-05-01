@@ -1,0 +1,35 @@
+<div class="appointment-container">
+    <h2>Reservar Cita</h2>
+  
+    <div *ngIf="loading" class="loading">
+      Cargando horarios disponibles...
+    </div>
+  
+    <div *ngIf="errorMessage" class="error-message">
+      {{ errorMessage }}
+    </div>
+  
+    <div class="week-slots" *ngIf="!loading">
+      <div class="day-column" *ngFor="let day of weekSlots | keyvalue">
+        <h3>{{ getDayName(day.key) }}</h3>
+        <p class="date">{{ formatDate(day.key) }}</p>
+  
+        <div class="time-slots">
+          <div *ngFor="let slot of day.value"
+               class="slot"
+               [class.occupied]="slot.estado === 'Ocupada'"
+               [class.available]="slot.estado === 'Disponible'"
+               [class.selected]="isSelected(day.key, slot.hora)"
+               (click)="slot.estado === 'Disponible' && toggleSlotSelection(day.key, slot.hora)">
+            <span class="time">{{ slot.hora }}</span>
+            <span class="status">{{ slot.estado }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <div class="actions">
+      <button (click)="makeAppointment()">Confirmar Cita</button>
+    </div>
+  </div>
+  

@@ -78,11 +78,42 @@ export class DataAccessService {
       })
     );
   }
-
-  logout(): void {
-    // Limpia la información del usuario al cerrar sesión
-    localStorage.removeItem('currentUser');
+  consultarSemana(
+    workshopID: number,
+    fechaInicio: string,
+    fechaFin: string
+  ): Observable<any> {
+    const body = {
+      accion: 'consultar_semana',
+      WorkshopID: workshopID,
+      FechaInicio: fechaInicio,
+      FechaFin: fechaFin
+    };
+  
+    return this.http.post<any>(
+      `${this.apiUrl}/Create_Appointment.php`,
+      body,
+      {
+        ...this.httpOptions,
+        withCredentials: true
+      }
+    )
+    .pipe(
+      map(response => {
+        if (response.success) {
+          // Puedes procesar los resultados aquí
+        }
+        return response;
+      }),
+      catchError(error => {
+        console.error('Error al consultar huecos de la semana:', error);
+        throw error;
+      })
+    );
+    
   }
+  
+
 
   getCurrentUser(): any {
     const user = localStorage.getItem('currentUser');

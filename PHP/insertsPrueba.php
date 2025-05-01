@@ -1,5 +1,5 @@
 <?php
-// Conexión a la base de datos ya existente
+// Conexión a la base de datos
 $host = "localhost";
 $usuario = "hmi";
 $contrasena = "hmi";
@@ -10,22 +10,20 @@ if ($conn->connect_error) {
     die("Conexión fallida: " . $conn->connect_error);
 }
 
-// Inserción de datos
-echo "<h2>Insertando datos de prueba en AutoCareHub...</h2>";
+// 1. Insertar un usuario regular (cliente)
+$emailCliente = "cliente@autocare.com";
+$fullnameCliente = "Juan Pérez";
+$passwordCliente = password_hash("claveSegura123", PASSWORD_DEFAULT);
+$roleCliente = "Usuario";
 
-// 1. Insertar un usuario
-$email = "cliente@autocare.com";
-$fullname = "Juan Pérez";
-$password = password_hash("claveSegura123", PASSWORD_DEFAULT);
-
-$sqlUsuario = "INSERT INTO Users (Email, FullName, Password) VALUES (?, ?, ?)";
+$sqlUsuario = "INSERT INTO Users (Email, FullName, Password, Role) VALUES (?, ?, ?, ?)";
 $stmt = $conn->prepare($sqlUsuario);
-$stmt->bind_param("sss", $email, $fullname, $password);
+$stmt->bind_param("ssss", $emailCliente, $fullnameCliente, $passwordCliente, $roleCliente);
 if ($stmt->execute()) {
     $userId = $stmt->insert_id;
-    echo "✅ Usuario insertado con ID $userId<br>";
+    echo "✅ Usuario cliente insertado con ID $userId<br>";
 
-    // Insertar preferencia de notificación (solo una por usuario)
+    // Insertar preferencia de notificación
     $notificationType = 'WhatsApp'; // Puede ser 'SMS', 'Telegram' o 'WhatsApp'
     $contactValue = '+34612345678'; // Número de teléfono o usuario de Telegram según el tipo
 
@@ -40,11 +38,62 @@ if ($stmt->execute()) {
     }
     $stmtNotif->close();
 } else {
-    echo "❌ Error al insertar usuario: " . $conn->error . "<br>";
+    echo "❌ Error al insertar usuario cliente: " . $conn->error . "<br>";
     exit;
 }
 
-// 2. Insertar dos vehículos
+// 2. Insertar un usuario taller
+$emailTaller = "taller@autocare.com";
+$fullnameTaller = "Taller Mecánico AutoFix";
+$passwordTaller = password_hash("tallerSeguro456", PASSWORD_DEFAULT);
+$roleTaller = "Taller";
+
+$sqlTaller = "INSERT INTO Users (Email, FullName, Password, Role) VALUES (?, ?, ?, ?)";
+$stmt = $conn->prepare($sqlTaller);
+$stmt->bind_param("ssss", $emailTaller, $fullnameTaller, $passwordTaller, $roleTaller);
+if ($stmt->execute()) {
+    $tallerId = $stmt->insert_id;
+    echo "✅ Usuario taller insertado con ID $tallerId<br>";
+    
+    // Insertar información del taller
+    $nombreTaller = "AutoFix Centro";
+    $direccionTaller = "Calle Principal 123, Madrid";
+    $telefonoTaller = "+34911234567";
+    $descripcionTaller = "Taller especializado en reparaciones generales y mantenimiento preventivo.";
+    
+    $sqlInfoTaller = "INSERT INTO Workshops (UserID, Name, Address, Phone, Description) VALUES (?, ?, ?, ?, ?)";
+    $stmtTaller = $conn->prepare($sqlInfoTaller);
+    $stmtTaller->bind_param("issss", $tallerId, $nombreTaller, $direccionTaller, $telefonoTaller, $descripcionTaller);
+    
+    if ($stmtTaller->execute()) {
+        $workshopId = $stmtTaller->insert_id;
+        echo "✅ Información de taller insertada con ID $workshopId<br>";
+    } else {
+        echo "❌ Error al insertar información del taller: " . $conn->error . "<br>";
+    }
+    $stmtTaller->close();
+} else {
+    echo "❌ Error al insertar usuario taller: " . $conn->error . "<br>";
+    exit;
+}
+
+// 3. Insertar un administrador
+$emailAdmin = "admin@autocare.com";
+$fullnameAdmin = "Administrador Sistema";
+$passwordAdmin = password_hash("adminSuper789", PASSWORD_DEFAULT);
+$roleAdmin = "Administrador";
+
+$sqlAdmin = "INSERT INTO Users (Email, FullName, Password, Role) VALUES (?, ?, ?, ?)";
+$stmt = $conn->prepare($sqlAdmin);
+$stmt->bind_param("ssss", $emailAdmin, $fullnameAdmin, $passwordAdmin, $roleAdmin);
+if ($stmt->execute()) {
+    $adminId = $stmt->insert_id;
+    echo "✅ Usuario administrador insertado con ID $adminId<br>";
+} else {
+    echo "❌ Error al insertar usuario administrador: " . $conn->error . "<br>";
+}
+
+// 4. Insertar vehículos
 $vehiculos = [
     ['Toyota', 'Corolla', 2015, '1234ABC'],
     ['Ford', 'Focus', 2018, '5678DEF']
@@ -64,18 +113,18 @@ foreach ($vehiculos as $v) {
     }
 }
 
-// 3. Insertar citas
+// 5. Insertar citas
 $appointments = [
-    [$userId, $vehicleIds[0], 'Cambio de aceite', 'Pendiente', '2025-05-01'],
-    [$userId, $vehicleIds[1], 'Revisión general', 'Confirmada', '2025-05-03']
+    [$userId, $vehicleIds[0], $workshopId, 'Cambio de aceite', 'Pendiente', '2025-05-01 10:00:00', '2025-05-01 11:00:00'],
+    [$userId, $vehicleIds[1], $workshopId, 'Revisión general', 'Confirmada', '2025-05-03 15:00:00', '2025-05-03 17:00:00']
 ];
 
 $appointmentIds = [];
-$sqlCita = "INSERT INTO Appointments (UserID, VehicleID, Service, Estado, AppointmentDate) VALUES (?, ?, ?, ?, ?)";
+$sqlCita = "INSERT INTO Appointments (UserID, VehicleID, WorkshopID, Service, Status, StartDateTime, EndDateTime) VALUES (?, ?, ?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($sqlCita);
 foreach ($appointments as $a) {
-    [$uid, $vid, $servicio, $estado, $fecha] = $a;
-    $stmt->bind_param("iisss", $uid, $vid, $servicio, $estado, $fecha);
+    [$uid, $vid, $wid, $servicio, $estado, $fechaInicio, $fechaFin] = $a;
+    $stmt->bind_param("iiissss", $uid, $vid, $wid, $servicio, $estado, $fechaInicio, $fechaFin);
     if ($stmt->execute()) {
         $appointmentIds[] = $stmt->insert_id;
         echo "✅ Cita insertada con ID " . end($appointmentIds) . "<br>";
@@ -84,7 +133,8 @@ foreach ($appointments as $a) {
     }
 }
 
-// 4. Insertar facturas
+
+// 6. Insertar facturas
 $facturas = [
     [$appointmentIds[0], '2025-05-01', 49.99, 'Pendiente'],
     [$appointmentIds[1], '2025-05-03', 89.50, 'Pagado']
@@ -105,7 +155,7 @@ foreach ($facturas as $f) {
     }
 }
 
-// 5. Insertar ítems de factura
+// 7. Insertar ítems de factura
 $items = [
     [$invoiceIds[0], 'Cambio de aceite', 1, 35.00, 21.00, 42.35],
     [$invoiceIds[1], 'Revisión completa', 1, 70.00, 21.00, 84.70]
