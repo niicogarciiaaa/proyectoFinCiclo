@@ -24,7 +24,13 @@ export class MakeAppointmentComponent implements OnInit {
   weekSlots: WeekSlots = {};
   loading: boolean = false;
   selectedSlots: { fecha: string, hora: string }[] = [];
+  selectedVehicle: number = 0; // Aquí puedes manejar el vehículo seleccionado
+  motivo: string = ''; // Motivo de la cita
 
+  vehicles: any[] = [ { vehicleID: 1, userID:5, marca: 'Toyota', modelo: 'Corolla', anyo: 2020, matricula: 'XYZ1234' },
+    { vehicleID: 2, userID: 5, marca: 'Ford', modelo: 'Focus', anyo: 2018, matricula: 'ABC5678' },
+    { vehicleID: 3, userID: 5, marca: 'Honda', modelo: 'Civic', anyo: 2022, matricula: 'LMN9101' }
+  ]; // Aquí puedes manejar la lista de vehículos
   constructor(private dataAccess: DataAccessService) {}
 
   ngOnInit(): void {
@@ -80,8 +86,58 @@ export class MakeAppointmentComponent implements OnInit {
       return;
     }
 
-    console.log('Citas seleccionadas:', this.selectedSlots);
-    // Aquí podrías hacer una llamada al backend para guardar las citas
+    if (!this.selectedVehicle) {
+      this.errorMessage = 'Por favor, selecciona un vehículo.';
+      return;
+    }
+
+    if (!this.motivo) {
+      this.errorMessage = 'Por favor, ingresa el motivo de la cita.';
+      return;
+    }
+
+    // Llamada para crear la cita
+    this.selectedSlots.forEach(slot => {
+      const cita = {
+        Fecha: slot.fecha,
+        HoraInicio: slot.hora,
+        HoraFin: this.calculateEndTime(slot.hora), // Asegúrate de calcular la hora de fin
+        VehiculoID: this.selectedVehicle,
+        WorkshopID: 1, // Puedes cambiar esto según lo que necesites
+        Motivo: this.motivo
+      };
+
+      this.dataAccess.crearCita(cita).subscribe({
+        next: (response) => {
+          console.log('Respuesta del servidor:', response); // Agrega esta línea para ver la respuesta
+          if (response && response.success) {
+            console.log('Cita creada con éxito');
+            this.errorMessage = '';
+          } else {
+            this.errorMessage = 'No se pudo crear la cita';
+            console.warn('Error al crear la cita:', response?.message);
+          }
+        },
+        error: (error) => {
+          this.errorMessage = 'Error al crear la cita';
+          console.error('Error al crear la cita:', error);
+        }
+      });
+    });
+  }
+
+  calculateEndTime(startTime: string): string {
+    const timeParts = startTime.split(':');
+    const hours = parseInt(timeParts[0], 10);
+    const minutes = parseInt(timeParts[1], 10);
+    let endMinutes = minutes + 30; // Asumiendo una duración de 30 minutos para cada cita
+
+    if (endMinutes >= 60) {
+      endMinutes -= 60;
+      return `${hours + 1}:${endMinutes < 10 ? '0' : ''}${endMinutes}`;
+    }
+
+    return `${hours}:${endMinutes < 10 ? '0' : ''}${endMinutes}`;
   }
 
   changeLang(lang: string) {

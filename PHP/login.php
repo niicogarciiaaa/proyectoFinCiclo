@@ -67,7 +67,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 
     // Verificar usuario y contraseña
-    $stmt = $conn->prepare("SELECT UserId, Password, FullName, Email FROM Users WHERE Email = ?");
+    $stmt = $conn->prepare("SELECT UserId, Password, FullName, Email, Role FROM Users WHERE Email = ?");
     if (!$stmt) {
         http_response_code(500);
         echo json_encode([
@@ -131,7 +131,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         'id' => $user['UserId'],
         'email' => $user['Email'],
         'name' => $user['FullName'],
-        'last_activity' => time()
+        'last_activity' => time(),
+        'role' => isset($user['Role']) ? $user['Role'] : 'default' // Asegurarse de que 'Role' esté disponible
     ];
 
     // Devolver respuesta exitosa
@@ -139,7 +140,8 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         "success" => true,
         "user" => [
             "name" => $user['FullName'],
-            "email" => $user['Email']
+            "email" => $user['Email'],
+            "role" => $_SESSION['user']['role'] // Enviar el valor correcto del rol
         ]
     ]);
 

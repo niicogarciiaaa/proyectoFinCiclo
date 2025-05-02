@@ -40,7 +40,10 @@ export class DataAccessService {
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/login.php`, 
       { email, password },
-      this.httpOptions
+      {
+        headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+        withCredentials: true 
+      }
     ).pipe(
       map(response => {
         if (response.success) {
@@ -54,6 +57,7 @@ export class DataAccessService {
       })
     );
   }
+  
     registerUser(
     email: string,
     fullName: string,
@@ -112,6 +116,78 @@ export class DataAccessService {
     );
     
   }
+  crearCita(cita: {
+    Fecha: string,
+    HoraInicio: string,
+    VehiculoID: number,
+    WorkshopID: number,
+    Motivo: string
+}): Observable<any> {
+  const body = {
+    accion: 'crear',  // Acción a realizar, se ajusta al valor esperado por el PHP
+    Fecha: cita.Fecha,  // Fecha de la cita
+    Hora: cita.HoraInicio,  // Hora de inicio de la cita (se usará solo HoraInicio en lugar de HoraInicio y HoraFin)
+    VehicleID: cita.VehiculoID,  // ID del vehículo
+    WorkshopID: cita.WorkshopID,  // ID del taller
+    Descripcion: cita.Motivo,  // Descripción del motivo (se ajusta al nombre esperado)
+    Estado: 'Pendiente'  // Estado de la cita (inicialmente se asigna "Pendiente")
+  };
+
+  return this.http.post<any>(
+    `${this.apiUrl}/Create_Appointment.php`,
+    body,
+    {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      withCredentials: true
+    }
+  ).pipe(
+    map(response => {
+      if (!response.success) {
+        console.warn('No se pudo crear la cita:', response.message);
+      }
+      return response;
+    }),
+    catchError(error => {
+      console.error('Error al crear la cita:', error);
+      throw error;
+    })
+  );
+}
+crearVehiculo(vehiculo: {
+  marca: string,
+  modelo: string,
+  anyo: string,
+  matricula: string
+}): Observable<any> {
+  const body = {
+    accion: 'crear',  // Acción a realizar, se ajusta al valor esperado por el PHP
+    marca: vehiculo.marca,  // Marca del vehículo
+    modelo: vehiculo.modelo,  // Modelo del vehículo
+    anyo: vehiculo.anyo,  // Año del vehículo
+    matricula: vehiculo.matricula  // Matrícula del vehículo
+  };
+
+  return this.http.post<any>(
+    `${this.apiUrl}/Vehicles.php`,
+    body,
+    {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      withCredentials: true  // Asegura que se envíen las cookies de la sesión
+    }
+  ).pipe(
+    map(response => {
+      if (!response.success) {
+        console.warn('No se pudo crear el vehículo:', response.message);
+      }
+      return response;
+    }),
+    catchError(error => {
+      console.error('Error al crear el vehículo:', error);
+      throw error;
+    })
+  );
+}
+
   
 
 

@@ -1,35 +1,57 @@
 <div class="appointment-container">
-    <h2>Reservar Cita</h2>
-  
-    <div *ngIf="loading" class="loading">
-      Cargando horarios disponibles...
-    </div>
-  
-    <div *ngIf="errorMessage" class="error-message">
-      {{ errorMessage }}
-    </div>
-  
-    <div class="week-slots" *ngIf="!loading">
-      <div class="day-column" *ngFor="let day of weekSlots | keyvalue">
-        <h3>{{ getDayName(day.key) }}</h3>
-        <p class="date">{{ formatDate(day.key) }}</p>
-  
-        <div class="time-slots">
-          <div *ngFor="let slot of day.value"
-               class="slot"
-               [class.occupied]="slot.estado === 'Ocupada'"
-               [class.available]="slot.estado === 'Disponible'"
-               [class.selected]="isSelected(day.key, slot.hora)"
-               (click)="slot.estado === 'Disponible' && toggleSlotSelection(day.key, slot.hora)">
-            <span class="time">{{ slot.hora }}</span>
-            <span class="status">{{ slot.estado }}</span>
-          </div>
+  <h2>Reservar Cita</h2>
+
+  <div *ngIf="loading" class="loading">
+    Cargando horarios disponibles...
+  </div>
+
+  <div *ngIf="errorMessage" class="error-message">
+    {{ errorMessage }}
+  </div>
+
+  <div class="week-slots" *ngIf="!loading">
+    <div class="day-column" *ngFor="let day of weekSlots | keyvalue">
+      <h3>{{ getDayName(day.key) }}</h3>
+      <p class="date">{{ formatDate(day.key) }}</p>
+
+      <div class="time-slots">
+        <div *ngFor="let slot of day.value"
+             class="slot"
+             [class.occupied]="slot.estado === 'Ocupada'"
+             [class.available]="slot.estado === 'Disponible'"
+             [class.selected]="isSelected(day.key, slot.hora)"
+             (click)="slot.estado === 'Disponible' && toggleSlotSelection(day.key, slot.hora)">
+          <span class="time">{{ slot.hora }}</span>
+          <span class="status">{{ slot.estado }}</span>
         </div>
       </div>
     </div>
-  
-    <div class="actions">
-      <button (click)="makeAppointment()">Confirmar Cita</button>
-    </div>
   </div>
-  
+
+  <div *ngIf="selectedSlots.length > 0" class="selected-slots">
+    <h3>Citas Seleccionadas</h3>
+    <ul>
+      <li *ngFor="let slot of selectedSlots">
+        {{ formatDate(slot.fecha) }} - {{ slot.hora }}
+      </li>
+    </ul>
+  </div>
+
+  <div class="vehicle-selection">
+    <label for="vehicle">Selecciona un Vehículo:</label>
+    <select id="vehicle" [(ngModel)]="selectedVehicle" name="vehicle">
+      <option value="0" disabled>Selecciona un vehículo</option>
+      <!-- Aquí puedes llenar las opciones con los vehículos disponibles -->
+      <option *ngFor="let vehicle of vehicles" [value]="vehicle.id">{{ vehicle.marca }} {{vehicle.modelo}}</option>
+    </select>
+  </div>
+
+  <div class="motivo-selection">
+    <label for="motivo">Motivo de la Cita:</label>
+    <textarea id="motivo" [(ngModel)]="motivo" name="motivo" placeholder="Escribe el motivo de la cita"></textarea>
+  </div>
+
+  <div class="actions">
+    <button (click)="makeAppointment()">Confirmar Cita</button>
+  </div>
+</div>

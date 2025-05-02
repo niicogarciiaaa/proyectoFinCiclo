@@ -12,15 +12,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
 
 session_start();
 
-// Asegúrate de que las variables de sesión están disponibles y definidas
-if (!isset($_SESSION)) {
+// Verifica si la sesión está iniciada y las variables necesarias están definidas
+if (!isset($_SESSION['user']['id']) || !isset($_SESSION['user']['role'])) {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'No autorizado.']);
     exit();
 }
 
-$userID = $_SESSION['UserID'];
-$userRole = $_SESSION['Role'];
+$userID = $_SESSION['user']['id'];
+$userRole = $_SESSION['user']['role'];
+
 
 // Conexión a la base de datos
 $host = "localhost";
