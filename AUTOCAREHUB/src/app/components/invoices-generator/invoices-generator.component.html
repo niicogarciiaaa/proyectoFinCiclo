@@ -1,0 +1,44 @@
+<div class="invoice-generator">
+    <h2>Generar Nueva Factura</h2>
+  
+    <!-- Formulario para crear factura -->
+    <form (ngSubmit)="crearFactura()">
+      <div>
+        <label for="citaId">ID de la Cita:</label>
+        <input type="number" id="citaId" [(ngModel)]="citaId" name="citaId" required />
+      </div>
+  
+      <!-- Sección para agregar ítems a la factura -->
+      <div *ngFor="let item of items; let i = index">
+        <div>
+          <label for="descripcion-{{i}}">Descripción:</label>
+          <input type="text" id="descripcion-{{i}}" [(ngModel)]="item.descripcion" name="descripcion-{{i}}" required />
+        </div>
+        <div>
+          <label for="cantidad-{{i}}">Cantidad:</label>
+          <input type="number" id="cantidad-{{i}}" [(ngModel)]="item.cantidad" name="cantidad-{{i}}" required />
+        </div>
+        <div>
+          <label for="precio-{{i}}">Precio:</label>
+          <input type="number" id="precio-{{i}}" [(ngModel)]="item.precio" name="precio-{{i}}" required />
+        </div>
+      </div>
+  
+      <button type="button" (click)="agregarItem('', 1, 0)">Agregar Ítem</button>
+      <button type="submit">Crear Factura</button>
+    </form>
+  
+    <hr />
+  
+    <!-- Mostrar todas las facturas -->
+    <h3>Facturas Recientes</h3>
+    <ul>
+      <li *ngFor="let factura of facturas">
+        <p>ID de la factura: {{ factura.id }}</p>
+        <p>Estado: {{ factura.estado }}</p>
+        <p>Fecha: {{ factura.fecha }}</p>
+        <p>Total: {{ factura.total | currency }}</p>
+      </li>
+    </ul>
+  </div>
+  

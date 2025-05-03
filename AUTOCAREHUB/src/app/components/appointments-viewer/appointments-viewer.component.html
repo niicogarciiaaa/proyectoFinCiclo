@@ -1,0 +1,29 @@
+<div class="p-4">
+    <h2 class="text-2xl font-semibold mb-4">Citas del Taller</h2>
+  
+    <table class="min-w-full border border-gray-300 rounded shadow-sm">
+      <thead class="bg-gray-100 text-left">
+        <tr>
+          <th class="px-4 py-2 border-b">Usuario</th>
+          <th class="px-4 py-2 border-b">Vehículo</th>
+          <th class="px-4 py-2 border-b">Fecha Inicio</th>
+          <th class="px-4 py-2 border-b">Fecha Fin</th>
+          <th class="px-4 py-2 border-b">Descripción</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let cita of citas" class="hover:bg-gray-50">
+          <td class="px-4 py-2 border-b">{{ cita.UserName }}</td>
+          <td class="px-4 py-2 border-b">{{ cita.Vehiculo }}</td>
+          <td class="px-4 py-2 border-b">{{ cita.StartDateTime }}</td>
+          <td class="px-4 py-2 border-b">{{ cita.EndDateTime }}</td>
+          <td class="px-4 py-2 border-b">{{ cita.Description }}</td>
+        </tr>
+      </tbody>
+    </table>
+  
+    <div *ngIf="citas.length === 0" class="mt-4 text-gray-500">
+      No hay citas registradas para este taller.
+    </div>
+  </div>
+  

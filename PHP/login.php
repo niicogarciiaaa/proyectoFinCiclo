@@ -1,6 +1,6 @@
 <?php
 // Permitir solicitudes desde cualquier origen durante el desarrollo
-header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Origin: http://localhost:4200");
 header("Access-Control-Allow-Credentials: true");
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
@@ -135,10 +135,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         'role' => isset($user['Role']) ? $user['Role'] : 'default' // Asegurarse de que 'Role' esté disponible
     ];
 
-    // Devolver respuesta exitosa
+    // Devolver respuesta exitosa con UserId incluido
     echo json_encode([
         "success" => true,
         "user" => [
+            "id" => $user['UserId'],  // Asegúrate de incluir el UserId aquí
             "name" => $user['FullName'],
             "email" => $user['Email'],
             "role" => $_SESSION['user']['role'] // Enviar el valor correcto del rol

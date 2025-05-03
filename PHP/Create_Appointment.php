@@ -22,7 +22,6 @@ if (!isset($_SESSION['user']['id']) || !isset($_SESSION['user']['role'])) {
 $userID = $_SESSION['user']['id'];
 $userRole = $_SESSION['user']['role'];
 
-
 // Conexión a la base de datos
 $host = "localhost";
 $db = "AutoCareHub";
@@ -203,18 +202,6 @@ if ($method === 'POST') {
             exit();
         }
 
-        if ($userRole === 'Usuario') {
-            $stmt = $conn->prepare("SELECT * FROM Vehicles WHERE VehicleID = ? AND UserID = ?");
-            $stmt->bind_param("ii", $vehiculoID, $userID);
-            $stmt->execute();
-            $result = $stmt->get_result();
-            if ($result->num_rows === 0) {
-                http_response_code(403);
-                echo json_encode(["success" => false, "message" => "No tienes permiso para usar este vehículo"]);
-                exit();
-            }
-        }
-
         $stmt = $conn->prepare("SELECT * FROM Workshops WHERE WorkshopID = ?");
         $stmt->bind_param("i", $tallerID);
         $stmt->execute();
@@ -248,6 +235,56 @@ if ($method === 'POST') {
         exit();
     }
 
+    // Ver todas las citas de un taller
+    if ($accion === 'ver_citas_taller') {
+        if ($userRole !== 'Taller') {
+            http_response_code(403);
+            echo json_encode(['success' => false, 'message' => 'Acción no permitida. Solo los talleres pueden ver sus citas.']);
+            exit();
+        }
+
+        $tallerID = $data['WorkshopID'] ?? null;
+
+        if (!$tallerID) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "Faltan parámetros"]);
+            exit();
+        }
+
+        // Obtener todas las citas del taller (incluyendo las reservadas y no reservadas)
+        // Obtener todas las citas del taller (sin importar el estado)
+        $stmt = $conn->prepare("
+    SELECT 
+        a.AppointmentID, 
+        a.StartDateTime, 
+        a.EndDateTime, 
+        CONCAT(v.Marca, ' ', v.Modelo) AS Vehiculo, 
+        a.Description, 
+        a.Status, 
+        u.FullName AS UserName 
+    FROM Appointments a 
+    JOIN Vehicles v ON a.VehicleID = v.VehicleID 
+    JOIN Users u ON v.UserID = u.UserID 
+    WHERE a.WorkshopID = ?
+");
+
+    
+$stmt->bind_param("i", $tallerID);
+$stmt->execute();
+$result = $stmt->get_result();
+
+$citas = [];
+while ($row = $result->fetch_assoc()) {
+$citas[] = $row;
+}
+
+echo json_encode([
+"success" => true,
+"citas" => $citas
+]);
+exit();
+
+    }
 } else {
     http_response_code(405);
     echo json_encode(["success" => false, "message" => "Método no permitido"]);

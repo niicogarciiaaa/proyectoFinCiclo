@@ -1,3 +1,5 @@
+<!-- appointment.component.html -->
+
 <div class="appointment-container">
   <h2>Reservar Cita</h2>
 
@@ -41,8 +43,9 @@
     <label for="vehicle">Selecciona un Vehículo:</label>
     <select id="vehicle" [(ngModel)]="selectedVehicle" name="vehicle">
       <option value="0" disabled>Selecciona un vehículo</option>
-      <!-- Aquí puedes llenar las opciones con los vehículos disponibles -->
-      <option *ngFor="let vehicle of vehicles" [value]="vehicle.id">{{ vehicle.marca }} {{vehicle.modelo}}</option>
+      <option *ngFor="let vehicle of vehicles" [value]="vehicle.VehicleID">
+        {{ vehicle.marca }} {{ vehicle.modelo }}
+      </option>
     </select>
   </div>
 

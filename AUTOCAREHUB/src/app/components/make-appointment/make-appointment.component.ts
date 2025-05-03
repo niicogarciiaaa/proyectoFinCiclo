@@ -21,20 +21,46 @@ export class MakeAppointmentComponent implements OnInit {
   selectedLang: string = 'es';
   appointmentForm: any;
   errorMessage: string = '';
+  vehiclesErrorMessage: string = '';
   weekSlots: WeekSlots = {};
   loading: boolean = false;
+  loadingVehicles: boolean = false;
   selectedSlots: { fecha: string, hora: string }[] = [];
-  selectedVehicle: number = 0; // Aquí puedes manejar el vehículo seleccionado
-  motivo: string = ''; // Motivo de la cita
+  selectedVehicle: number = 0;
+  motivo: string = '';
+  vehicles: any[] = [];
 
-  vehicles: any[] = [ { vehicleID: 1, userID:5, marca: 'Toyota', modelo: 'Corolla', anyo: 2020, matricula: 'XYZ1234' },
-    { vehicleID: 2, userID: 5, marca: 'Ford', modelo: 'Focus', anyo: 2018, matricula: 'ABC5678' },
-    { vehicleID: 3, userID: 5, marca: 'Honda', modelo: 'Civic', anyo: 2022, matricula: 'LMN9101' }
-  ]; // Aquí puedes manejar la lista de vehículos
   constructor(private dataAccess: DataAccessService) {}
 
   ngOnInit(): void {
     this.consultarSemana();
+    this.cargarVehiculos();
+  }
+
+  cargarVehiculos() {
+    this.loadingVehicles = true;
+    this.vehiclesErrorMessage = '';
+    
+    this.dataAccess.obtenerVehiculos().subscribe({
+      next: (response) => {
+        if (response && response.success) {
+          this.vehicles = response.vehicles || [];
+          console.log('Vehículos cargados:', this.vehicles);
+          if (this.vehicles.length > 0 && !this.selectedVehicle) {
+            this.selectedVehicle = this.vehicles[0].VehicleID;
+          }
+        } else {
+          this.vehiclesErrorMessage = 'No se pudieron cargar los vehículos';
+        }
+      },
+      error: (error) => {
+        this.vehiclesErrorMessage = 'Error de conexión al cargar vehículos';
+        console.error('Error al cargar vehículos:', error);
+      },
+      complete: () => {
+        this.loadingVehicles = false;
+      }
+    });
   }
 
   consultarSemana() {
@@ -52,7 +78,6 @@ export class MakeAppointmentComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.weekSlots = response.slotsSemana;
-          console.log('Huecos de la semana:', this.weekSlots);
         } else {
           this.errorMessage = 'Error al consultar los huecos disponibles';
         }
@@ -80,6 +105,49 @@ export class MakeAppointmentComponent implements OnInit {
     return this.selectedSlots.some(slot => slot.fecha === fecha && slot.hora === hora);
   }
 
+  crearCitas() {
+    this.loading = true;
+    this.errorMessage = '';
+    let citasCreadas = 0;
+    const totalCitas = this.selectedSlots.length;
+  
+    this.selectedSlots.forEach(slot => {
+      const cita = {
+        Fecha: slot.fecha,
+        HoraInicio: slot.hora,
+        HoraFin: this.calculateEndTime(slot.hora),
+        VehicleID: this.selectedVehicle, // Cambiar de VehiculoID a VehicleID
+        WorkshopID: 1,
+        Motivo: this.motivo
+      };
+  
+      this.dataAccess.crearCita(cita).subscribe({
+        next: (response) => {
+          if (response && response.success) {
+            citasCreadas++;
+            if (citasCreadas === totalCitas) {
+              this.consultarSemana();
+              this.selectedSlots = [];
+              this.motivo = '';
+              this.errorMessage = 'Citas creadas correctamente';
+              console.log('Datos de la cita:', cita);
+            }
+          } else {
+            this.errorMessage = 'No se pudo crear la cita: ' + (response?.message || '');
+          }
+        },
+        error: (error) => {
+          this.errorMessage = 'Error al crear la cita: ' + (error.error?.message || error.message || 'Error desconocido');
+          console.error('Error al crear la cita:', error);
+        },
+        complete: () => {
+          this.loading = false;
+        }
+      });
+    });
+  }
+  
+
   makeAppointment() {
     if (this.selectedSlots.length === 0) {
       this.errorMessage = 'Por favor, selecciona al menos un horario disponible.';
@@ -96,52 +164,20 @@ export class MakeAppointmentComponent implements OnInit {
       return;
     }
 
-    // Llamada para crear la cita
-    this.selectedSlots.forEach(slot => {
-      const cita = {
-        Fecha: slot.fecha,
-        HoraInicio: slot.hora,
-        HoraFin: this.calculateEndTime(slot.hora), // Asegúrate de calcular la hora de fin
-        VehiculoID: this.selectedVehicle,
-        WorkshopID: 1, // Puedes cambiar esto según lo que necesites
-        Motivo: this.motivo
-      };
-
-      this.dataAccess.crearCita(cita).subscribe({
-        next: (response) => {
-          console.log('Respuesta del servidor:', response); // Agrega esta línea para ver la respuesta
-          if (response && response.success) {
-            console.log('Cita creada con éxito');
-            this.errorMessage = '';
-          } else {
-            this.errorMessage = 'No se pudo crear la cita';
-            console.warn('Error al crear la cita:', response?.message);
-          }
-        },
-        error: (error) => {
-          this.errorMessage = 'Error al crear la cita';
-          console.error('Error al crear la cita:', error);
-        }
-      });
-    });
+    this.crearCitas();
   }
 
   calculateEndTime(startTime: string): string {
-    const timeParts = startTime.split(':');
-    const hours = parseInt(timeParts[0], 10);
-    const minutes = parseInt(timeParts[1], 10);
-    let endMinutes = minutes + 30; // Asumiendo una duración de 30 minutos para cada cita
+    const [hours, minutes] = startTime.split(':').map(Number);
+    let endMinutes = minutes + 30;
+    let endHours = hours;
 
     if (endMinutes >= 60) {
+      endHours += 1;
       endMinutes -= 60;
-      return `${hours + 1}:${endMinutes < 10 ? '0' : ''}${endMinutes}`;
     }
 
-    return `${hours}:${endMinutes < 10 ? '0' : ''}${endMinutes}`;
-  }
-
-  changeLang(lang: string) {
-    this.selectedLang = lang;
+    return `${endHours}:${endMinutes < 10 ? '0' : ''}${endMinutes}`;
   }
 
   getDayName(date: string): string {
