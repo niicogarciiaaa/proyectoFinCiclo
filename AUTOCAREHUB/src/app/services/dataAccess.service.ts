@@ -7,6 +7,7 @@ interface LoginResponse {
   success: boolean;
   message?: string;
   user?: {
+    id: number;
     name: string;
     email: string;
     role: string;  // Añadir campo de rol para verificar si es Taller o Usuario
@@ -17,10 +18,24 @@ interface RegisterResponse {
   success: boolean;
   message?: string;
   errors?: string[];
-  user?: {id: number;
+  user?: {
+    id: number;
     name: string;
     email: string;
   };
+}
+
+export interface Invoice {
+  InvoiceID: number;
+  AppointmentID: number;
+  Date: string;
+  TotalAmount: number;
+  Estado: string;
+  UserName?: string; // Solo disponible para modo taller
+}
+
+export interface InvoiceResponse {
+  invoices: Invoice[];
 }
 
 @Injectable({
@@ -31,7 +46,8 @@ export class DataAccessService {
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json'
-    })
+    }),
+    withCredentials: true // Crucial para mantener la sesión PHP
   };
 
   constructor(private http: HttpClient) {}
@@ -86,35 +102,23 @@ export class DataAccessService {
   }
 
   // Método para consultar las facturas de un taller o usuario
-  obtenerFacturas(): Observable<any> {
+  // Modificado para usar GET en lugar de POST según el PHP proporcionado
+  obtenerFacturas(): Observable<InvoiceResponse> {
     const currentUser = this.getCurrentUser();
     if (!currentUser) {
       return throwError(() => new Error('Usuario no autenticado'));
     }
 
-    const userRole = currentUser.role; // Obtenemos el rol del usuario
-
-    if (userRole === 'Taller') {
-      // Si es Taller, obtener todas las facturas del taller
-      const body = { accion: 'ver_facturas_taller', WorkshopID: currentUser.id }; // Suponiendo que el ID de taller es el ID del usuario
-      return this.http.post<any>(`${this.apiUrl}/facturas.php`, body, this.httpOptions).pipe(
-        map(response => response),
-        catchError(error => {
-          console.error('Error al obtener las facturas del taller:', error);
-          return throwError(() => new Error('Error al obtener las facturas'));
-        })
-      );
-    } else {
-      // Si es un usuario estándar, obtener las facturas asociadas a sus citas
-      const body = { accion: 'ver_facturas_usuario', UserID: currentUser.id };
-      return this.http.post<any>(`${this.apiUrl}/facturas.php`, body, this.httpOptions).pipe(
-        map(response => response),
-        catchError(error => {
-          console.error('Error al obtener las facturas del usuario:', error);
-          return throwError(() => new Error('Error al obtener las facturas'));
-        })
-      );
-    }
+    return this.http.get<InvoiceResponse>(`${this.apiUrl}/facturas.php`, this.httpOptions).pipe(
+      map(response => response),
+      catchError(error => {
+        console.error('Error al obtener las facturas:', error);
+        if (error.status === 401) {
+          return throwError(() => new Error('Sesión expirada o no válida. Por favor, inicia sesión nuevamente.'));
+        }
+        return throwError(() => new Error('Error al obtener las facturas'));
+      })
+    );
   }
 
   // Método para crear una nueva factura

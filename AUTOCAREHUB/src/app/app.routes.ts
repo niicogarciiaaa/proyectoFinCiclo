@@ -8,12 +8,12 @@ import { AppointmentsViewerComponent } from './components/appointments-viewer/ap
 import { InvoicesGeneratorComponent } from './components/invoices-generator/invoices-generator.component';
 
 export const routes: Routes = [
-    { path: 'login', component: LoginComponent }, // Ruta para el componente de login
-    { path: '', redirectTo: '/login', pathMatch: 'full' }, // Redirección a login por defecto
-    { path: 'register', component: RegisterComponent }, // Ruta para el componente de registro
-    { path: 'home', component: HomeComponent }, // Ruta para el componente de registro
-    { path: 'makeAppointment', component: MakeAppointmentComponent }, // Ruta para el componente de registro
-    { path: 'registerVehicle', component: RegisterVehicleComponent }, // Ruta para el componente de registro
-    {path: 'viewAppointments', component: AppointmentsViewerComponent}, // Ruta para el componente de registro
-    {path: 'invoiceGenerator', component: InvoicesGeneratorComponent} // Ruta para el componente de registro
+    { path: 'login', component: LoginComponent }, 
+    { path: '', redirectTo: '/login', pathMatch: 'full' }, 
+    { path: 'register', component: RegisterComponent }, 
+    { path: 'home', component: HomeComponent }, 
+    { path: 'makeAppointment', component: MakeAppointmentComponent }, 
+    { path: 'registerVehicle', component: RegisterVehicleComponent }, 
+    {path: 'viewAppointments', component: AppointmentsViewerComponent}, 
+    {path: 'invoiceGenerator', component: InvoicesGeneratorComponent} 
 ];

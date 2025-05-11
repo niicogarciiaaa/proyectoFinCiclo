@@ -1,0 +1,8 @@
+<nav class="navbar">
+    <ul class="menu">
+      <li *ngFor="let route of menuRoutes">
+        <a [routerLink]="route.path">{{ route.label }}</a>
+      </li>
+    </ul>
+  </nav>
+  

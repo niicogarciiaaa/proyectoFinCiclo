@@ -1,0 +1,32 @@
+.navbar {
+    background-color: #f8f9fa; /* Fondo claro */
+    padding: 10px 20px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border-radius: 5px;
+  }
+  
+  .menu {
+    list-style: none;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    margin: 0;
+    padding: 0;
+  }
+  
+  .menu li {
+    margin-right: 20px; /* Espacio entre los enlaces */
+  }
+  
+  .menu li a {
+    text-decoration: none;
+    font-size: 16px;
+    color: #007bff; /* Color del texto (azul) */
+    font-weight: bold;
+    transition: color 0.3s ease;
+  }
+  
+  .menu li a:hover {
+    color: #0056b3; /* Cambiar color al pasar el mouse */
+  }
+  

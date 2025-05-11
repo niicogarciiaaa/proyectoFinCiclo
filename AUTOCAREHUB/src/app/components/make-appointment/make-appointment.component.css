@@ -1,86 +1,104 @@
 .appointment-container {
-    max-width: 800px;
-    margin: auto;
-    padding: 20px;
-  }
-  
-  .loading {
-    font-style: italic;
-    color: #666;
-  }
-  
-  .error-message {
-    color: red;
-    margin-bottom: 10px;
-  }
-  
-  .week-slots {
-    display: flex;
-    gap: 20px;
-    flex-wrap: wrap;
-    justify-content: space-between;
-  }
-  
-  .day-column {
-    flex: 1 1 30%;
-    border: 1px solid #ccc;
-    padding: 10px;
-    border-radius: 6px;
-    background-color: #f9f9f9;
-  }
-  
-  .time-slots {
-    margin-top: 10px;
-  }
-  
-  .slot {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 6px;
-    margin: 5px 0;
-    cursor: pointer;
-    transition: background-color 0.3s ease;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-  }
-  
-  .slot.available {
-    background-color: #d4edda;
-    color: #155724;
-  }
-  
-  .slot.available:hover {
-    background-color: #b8e1c8;
-  }
-  
-  .slot.occupied {
-    background-color: #f8d7da;
-    color: #721c24;
-    cursor: not-allowed;
-  }
-  
-  .slot.selected {
-    background-color: #cce5ff;
-    border: 2px solid #007bff;
-    color: #004085;
-  }
-  
-  .actions {
-    margin-top: 20px;
-    text-align: right;
-  }
-  
-  button {
-    padding: 10px 20px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-  }
-  
-  button:hover {
-    background-color: #0056b3;
-  }
-  
+  max-width: 1300px;
+  margin: auto;
+  padding: 20px;
+}
+
+.loading {
+  font-style: italic;
+  color: #666;
+}
+
+.error-message {
+  color: red;
+  margin-bottom: 10px;
+}
+
+.week-slots {
+  display: flex;
+  gap: 20px;
+  flex-wrap: nowrap; /* ← No permitir que se bajen */
+  overflow-x: auto;   /* ← Scroll horizontal si no entran */
+  justify-content: flex-start;
+}
+
+.day-column {
+  flex: 0 0 180px; /* ← Fijo para que quepan exactamente 5 */
+  border: 1px solid #ccc;
+  padding: 10px;
+  border-radius: 6px;
+  background-color: #f9f9f9;
+}
+
+.time-slots {
+  margin-top: 10px;
+}
+
+.slot {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  margin: 5px 0;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.slot.available {
+  background-color: #d4edda;
+  color: #155724;
+}
+
+.slot.available:hover {
+  background-color: #b8e1c8;
+}
+
+.slot.occupied {
+  background-color: #f8d7da;
+  color: #721c24;
+  cursor: not-allowed;
+}
+
+.slot.selected {
+  background-color: #cce5ff;
+  border: 2px solid #007bff;
+  color: #004085;
+}
+
+.selected-slots {
+  margin-top: 20px;
+}
+
+.vehicle-selection,
+.motivo-selection {
+  margin-top: 20px;
+}
+
+.vehicle-selection select,
+.motivo-selection textarea {
+  width: 100%;
+  padding: 8px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  margin-top: 5px;
+}
+
+.actions {
+  margin-top: 20px;
+  text-align: right;
+}
+
+button {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #0056b3;
+}

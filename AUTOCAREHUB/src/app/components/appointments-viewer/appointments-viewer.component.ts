@@ -24,17 +24,24 @@ interface Cita {
 })
 export class AppointmentsViewerComponent {
   citas: Cita[] = []; // Inicializado como array vacío
-
-  constructor(private dataAccess: DataAccessService){}
+  errorCitas: string = '';
+  constructor(private dataAccessService: DataAccessService){}
   
   ngOnInit(): void {
-    this.dataAccess.obtenerCitasTaller().subscribe({
-      next: (data) => {
-        if (data.success) {
-          this.citas = data.citas;
+    
+  }
+  obtenerCitasDelTaller(): void {
+    this.dataAccessService.obtenerCitasTaller().subscribe({
+      next: (respuesta) => {
+        if (respuesta) {
+          this.citas = respuesta.citas || [];
+        } else {
+          this.citas = respuesta.message || 'No se pudieron obtener las citas del taller';
         }
       },
-      error: (err) => console.error('Error al cargar las citas del taller:', err)
+      error: (error) => {
+        this.errorCitas = error.message || 'Error al obtener las citas';
+      }
     });
-  }
+}
 }

@@ -115,16 +115,16 @@ foreach ($vehiculos as $v) {
 
 // 5. Insertar citas
 $appointments = [
-    [$userId, $vehicleIds[0], $workshopId, 'Cambio de aceite', 'Pendiente', '2025-05-01 10:00:00', '2025-05-01 11:00:00'],
-    [$userId, $vehicleIds[1], $workshopId, 'Revisión general', 'Confirmada', '2025-05-03 15:00:00', '2025-05-03 17:00:00']
+    [$userId, $vehicleIds[0], $workshopId, 'Cambio de aceite', 'Pendiente', '2025-05-01 10:00:00', '2025-05-01 11:00:00', 'Mantenimiento rutinario'],
+    [$userId, $vehicleIds[1], $workshopId, 'Revisión general', 'Confirmada', '2025-05-03 15:00:00', '2025-05-03 17:00:00', 'Revisión anual del vehículo']
 ];
 
 $appointmentIds = [];
-$sqlCita = "INSERT INTO Appointments (UserID, VehicleID, WorkshopID, Service, Status, StartDateTime, EndDateTime) VALUES (?, ?, ?, ?, ?, ?, ?)";
+$sqlCita = "INSERT INTO Appointments (UserID, VehicleID, WorkshopID, Service, Status, StartDateTime, EndDateTime, Description) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($sqlCita);
 foreach ($appointments as $a) {
-    [$uid, $vid, $wid, $servicio, $estado, $fechaInicio, $fechaFin] = $a;
-    $stmt->bind_param("iiissss", $uid, $vid, $wid, $servicio, $estado, $fechaInicio, $fechaFin);
+    [$uid, $vid, $wid, $servicio, $estado, $fechaInicio, $fechaFin, $descripcion] = $a;
+    $stmt->bind_param("iiisssss", $uid, $vid, $wid, $servicio, $estado, $fechaInicio, $fechaFin, $descripcion);
     if ($stmt->execute()) {
         $appointmentIds[] = $stmt->insert_id;
         echo "✅ Cita insertada con ID " . end($appointmentIds) . "<br>";
@@ -133,20 +133,19 @@ foreach ($appointments as $a) {
     }
 }
 
-
 // 6. Insertar facturas
 $facturas = [
-    [$appointmentIds[0], '2025-05-01', 49.99, 'Pendiente'],
-    [$appointmentIds[1], '2025-05-03', 89.50, 'Pagado']
+    [$appointmentIds[0], $userId, '2025-05-01', 49.99, 'Pendiente'],
+    [$appointmentIds[1], $userId, '2025-05-03', 89.50, 'Pagado']
 ];
 
-$sqlFactura = "INSERT INTO Invoices (AppointmentID, Date, TotalAmount, Estado) VALUES (?, ?, ?, ?)";
+$sqlFactura = "INSERT INTO Invoices (AppointmentID, UserID, Date, TotalAmount, Estado) VALUES (?, ?, ?, ?, ?)";
 $stmt = $conn->prepare($sqlFactura);
 $invoiceIds = [];
 
 foreach ($facturas as $f) {
-    [$aid, $fecha, $monto, $estado] = $f;
-    $stmt->bind_param("isds", $aid, $fecha, $monto, $estado);
+    [$aid, $uid, $fecha, $monto, $estado] = $f;
+    $stmt->bind_param("iisds", $aid, $uid, $fecha, $monto, $estado);
     if ($stmt->execute()) {
         $invoiceIds[] = $stmt->insert_id;
         echo "✅ Factura insertada con ID " . end($invoiceIds) . "<br>";
@@ -175,4 +174,6 @@ foreach ($items as $i) {
 
 $stmt->close();
 $conn->close();
+
+echo "<br>✅ <strong>Todos los datos de muestra han sido insertados correctamente.</strong>";
 ?>

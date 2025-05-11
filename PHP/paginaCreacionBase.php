@@ -112,10 +112,10 @@ if ($bdExiste || $accion === 'eliminar_bd' || $accion === 'crear_bd') {
             VehicleID INT NOT NULL,
             WorkshopID INT NOT NULL,
             Service TEXT NOT NULL,
-            Status ENUM('Pendiente', 'Confirmada', 'Finalizada', 'Cancelada') DEFAULT 'Pendiente',  -- Columna Status añadida
+            Status ENUM('Pendiente', 'Confirmada', 'Finalizada', 'Cancelada') DEFAULT 'Pendiente',
             StartDateTime DATETIME NOT NULL,
             EndDateTime DATETIME NOT NULL,
-            Description TEXT,  -- Nueva columna añadida
+            Description TEXT,
             CreateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
             FOREIGN KEY (VehicleID) REFERENCES Vehicles(VehicleID) ON DELETE CASCADE,
@@ -132,10 +132,12 @@ if ($bdExiste || $accion === 'eliminar_bd' || $accion === 'crear_bd') {
         $sqlInvoices = "CREATE TABLE IF NOT EXISTS Invoices (
             InvoiceID INT AUTO_INCREMENT PRIMARY KEY,
             AppointmentID INT NOT NULL,
+            UserID INT NOT NULL,
             Date DATE NOT NULL,
             TotalAmount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
             Estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
-            FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID) ON DELETE CASCADE
+            FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID) ON DELETE CASCADE,
+            FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
         )";
         if ($conn->query($sqlInvoices)) {
             echo "✅ Tabla 'Invoices' creada correctamente<br>";

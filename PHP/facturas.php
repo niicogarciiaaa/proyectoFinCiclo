@@ -1,12 +1,11 @@
 <?php
 header("Access-Control-Allow-Origin: http://localhost:4200");
 header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: POST, OPTIONS");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
 header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
 header("Content-Type: application/json; charset=UTF-8");
 
-
-session_start(); // Iniciar la sesión
+session_start();
 
 $host = "localhost";
 $usuario = "hmi";
@@ -16,110 +15,162 @@ $nombreBD = "AutoCareHub";
 // Conectar a la base de datos
 $conn = new mysqli($host, $usuario, $contrasena, $nombreBD);
 if ($conn->connect_error) {
-    die("❌ Conexión fallida: " . $conn->connect_error);
+    header('HTTP/1.1 500 Internal Server Error');
+    echo json_encode(['error' => 'Error de conexión: ' . $conn->connect_error]);
+    exit;
+}
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(200);
+    exit();
 }
 
-// Verificar si el usuario está autenticado
-// if (!isset($_SESSION['user'])) {
-//     die("❌ No estás autenticado. Inicia sesión para ver tus facturas.");
-// }
+// Verificar autenticación
+if (!isset($_SESSION['user'])) {
+    header('HTTP/1.1 401 Unauthorized');
+    echo json_encode(['error' => 'No estás autenticado. Inicia sesión para ver tus facturas.']);
+    exit;
+}
 
-// Obtener el ID del usuario y su rol desde la sesión
-$user_id = $_SESSION['user']['id'];  // Se usa $_SESSION['user']['id'] para obtener el user_id
-$user_role = $_SESSION['user']['role'];  // Se usa $_SESSION['user']['role'] para obtener el rol del usuario
+$user_id = $_SESSION['user']['id'];
+$user_role = $_SESSION['user']['role'];
 
+// Manejar solicitud POST (Crear factura)
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    // Obtener el cuerpo de la solicitud en formato JSON
-    $data = json_decode(file_get_contents("php://input"), true);
+    try {
+        $data = json_decode(file_get_contents("php://input"), true);
 
-    // Validación básica
-    $appointment_id = $data['appointment_id'] ?? null;
-    $date = $data['date'] ?? date('Y-m-d');
-    $estado = $data['estado'] ?? 'Pendiente';
-    $items = $data['items'] ?? [];
+        // Validación de datos
+        $appointment_id = $data['appointment_id'] ?? null;
+        $date = $data['date'] ?? date('Y-m-d');
+        $estado = $data['estado'] ?? 'Pendiente';
+        $items = $data['items'] ?? [];
 
-    if (!$appointment_id || empty($items)) {
-        die("❌ Falta el ID de la cita o los ítems de la factura.");
-    }
-
-    // Calcular el total
-    $total = 0;
-    foreach ($items as $item) {
-        $cantidad = floatval($item['quantity']);
-        $precio = floatval($item['unit_price']);
-        $iva = floatval($item['tax_rate']);
-        $importe = $cantidad * $precio * (1 + $iva / 100);
-        $total += $importe;
-    }
-
-    // Insertar factura
-    $stmt = $conn->prepare("INSERT INTO Invoices (AppointmentID, Date, TotalAmount, Estado, UserID) VALUES (?, ?, ?, ?, ?)");
-    $stmt->bind_param("isdsd", $appointment_id, $date, $total, $estado, $user_id);
-    if (!$stmt->execute()) {
-        die("❌ Error insertando factura: " . $stmt->error);
-    }
-
-    $invoice_id = $stmt->insert_id;
-    $stmt->close();
-
-    // Insertar cada ítem
-    $stmtItem = $conn->prepare("INSERT INTO InvoiceItems (InvoiceID, Description, Quantity, UnitPrice, TaxRate, Amount) VALUES (?, ?, ?, ?, ?, ?)");
-    foreach ($items as $item) {
-        $descripcion = $item['description'];
-        $cantidad = floatval($item['quantity']);
-        $precio = floatval($item['unit_price']);
-        $iva = floatval($item['tax_rate']);
-        $importe = $cantidad * $precio * (1 + $iva / 100);
-
-        $stmtItem->bind_param("isdddd", $invoice_id, $descripcion, $cantidad, $precio, $iva, $importe);
-        if (!$stmtItem->execute()) {
-            echo "❌ Error insertando ítem: " . $stmtItem->error . "<br>";
+        if (!$appointment_id || empty($items)) {
+            header('HTTP/1.1 400 Bad Request');
+            echo json_encode(['error' => 'Faltan datos requeridos (ID de cita o ítems)']);
+            exit;
         }
-    }
-    $stmtItem->close();
 
-    echo "✅ Factura creada correctamente con ID: $invoice_id<br>";
+        // Calcular total
+        $total = 0;
+        foreach ($items as $item) {
+            $cantidad = floatval($item['quantity']);
+            $precio = floatval($item['unit_price']);
+            $iva = floatval($item['tax_rate']);
+            $importe = $cantidad * $precio * (1 + $iva / 100);
+            $total += $importe;
+        }
+
+        // Iniciar transacción
+        $conn->begin_transaction();
+
+        // Insertar factura
+        $stmt = $conn->prepare("INSERT INTO Invoices (AppointmentID, Date, TotalAmount, Estado, UserID) VALUES (?, ?, ?, ?, ?)");
+        $stmt->bind_param("isdsd", $appointment_id, $date, $total, $estado, $user_id);
+        
+        if (!$stmt->execute()) {
+            throw new Exception('Error al crear la factura: ' . $stmt->error);
+        }
+
+        $invoice_id = $stmt->insert_id;
+        $stmt->close();
+
+        // Insertar items
+        $stmtItem = $conn->prepare("INSERT INTO InvoiceItems (InvoiceID, Description, Quantity, UnitPrice, TaxRate, Amount) VALUES (?, ?, ?, ?, ?, ?)");
+        
+        foreach ($items as $item) {
+            $descripcion = $item['description'];
+            $cantidad = floatval($item['quantity']);
+            $precio = floatval($item['unit_price']);
+            $iva = floatval($item['tax_rate']);
+            $importe = $cantidad * $precio * (1 + $iva / 100);
+
+            $stmtItem->bind_param("isdddd", $invoice_id, $descripcion, $cantidad, $precio, $iva, $importe);
+            if (!$stmtItem->execute()) {
+                throw new Exception('Error al insertar ítem: ' . $stmtItem->error);
+            }
+        }
+        $stmtItem->close();
+
+        // Confirmar transacción
+        $conn->commit();
+
+        echo json_encode([
+            'success' => true,
+            'message' => 'Factura creada correctamente',
+            'invoice_id' => $invoice_id
+        ]);
+
+    } catch (Exception $e) {
+        $conn->rollback();
+        header('HTTP/1.1 500 Internal Server Error');
+        echo json_encode(['error' => $e->getMessage()]);
+        exit;
+    }
 }
 
-// Recuperar todas las facturas del usuario o todas las facturas si el rol es 'Taller'
-if ($_SERVER['REQUEST_METHOD'] === 'GET') {
-    // Verificar si el usuario tiene rol 'Taller'
-    if ($user_role === 'Taller') {
-        // Los talleres pueden ver todas las facturas
-        $stmt = $conn->prepare("
-            SELECT i.InvoiceID, i.Date, i.TotalAmount, i.Estado, u.FullName AS UserName
-            FROM Invoices i
-            JOIN Appointments a ON i.AppointmentID = a.AppointmentID
-            JOIN Users u ON a.UserID = u.UserID
-        ");
-    } else {
-        // Los usuarios normales solo pueden ver sus propias facturas
-        $stmt = $conn->prepare("
-            SELECT i.InvoiceID, i.Date, i.TotalAmount, i.Estado
-            FROM Invoices i
-            JOIN Appointments a ON i.AppointmentID = a.AppointmentID
-            WHERE a.UserID = ?
-        ");
-        $stmt->bind_param("i", $user_id);
+// Manejar solicitud GET (Obtener facturas)
+else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    try {
+        if ($user_role === 'Taller') {
+            $stmt = $conn->prepare("
+                SELECT 
+                    i.InvoiceID,
+                    i.AppointmentID, 
+                    i.Date, 
+                    i.TotalAmount, 
+                    i.Estado, 
+                    u.FullName AS UserName
+                FROM Invoices i
+                JOIN Appointments a ON i.AppointmentID = a.AppointmentID
+                JOIN Users u ON a.UserID = u.UserID
+            ");
+        } else {
+            $stmt = $conn->prepare("
+                SELECT 
+                    i.InvoiceID, 
+                    i.AppointmentID,
+                    i.Date, 
+                    i.TotalAmount, 
+                    i.Estado
+                FROM Invoices i
+                JOIN Appointments a ON i.AppointmentID = a.AppointmentID
+                WHERE a.UserID = ?
+            ");
+            $stmt->bind_param("i", $user_id);
+        }
+
+        if (!$stmt->execute()) {
+            throw new Exception('Error al obtener las facturas');
+        }
+
+        $result = $stmt->get_result();
+        $invoices = [];
+        
+        while ($invoice = $result->fetch_assoc()) {
+            $invoices[] = $invoice;
+        }
+        
+        $stmt->close();
+
+        if (empty($invoices)) {
+            echo json_encode([
+                'success' => true,
+                'message' => 'No se encontraron facturas',
+                'invoices' => []
+            ]);
+        } else {
+            echo json_encode([
+                'success' => true,
+                'invoices' => $invoices
+            ]);
+        }
+
+    } catch (Exception $e) {
+        header('HTTP/1.1 500 Internal Server Error');
+        echo json_encode(['error' => $e->getMessage()]);
+        exit;
     }
-
-    $stmt->execute();
-    $result = $stmt->get_result();
-
-    // Comprobar si se encontraron facturas
-    if ($result->num_rows === 0) {
-        die("❌ No se encontraron facturas para este usuario.");
-    }
-
-    $invoices = [];
-    while ($invoice = $result->fetch_assoc()) {
-        $invoices[] = $invoice;
-    }
-    $stmt->close();
-
-    // Devolver las facturas en formato JSON
-    header('Content-Type: application/json');
-    echo json_encode(['invoices' => $invoices]);
 }
 
 $conn->close();
