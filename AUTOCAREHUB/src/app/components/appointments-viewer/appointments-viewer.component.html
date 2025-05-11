@@ -1,29 +1,39 @@
 <div class="p-4">
-    <h2 class="text-2xl font-semibold mb-4">Citas del Taller</h2>
-  
-    <table class="min-w-full border border-gray-300 rounded shadow-sm">
-      <thead class="bg-gray-100 text-left">
-        <tr>
-          <th class="px-4 py-2 border-b">Usuario</th>
-          <th class="px-4 py-2 border-b">Vehículo</th>
-          <th class="px-4 py-2 border-b">Fecha Inicio</th>
-          <th class="px-4 py-2 border-b">Fecha Fin</th>
-          <th class="px-4 py-2 border-b">Descripción</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr *ngFor="let cita of citas" class="hover:bg-gray-50">
-          <td class="px-4 py-2 border-b">{{ cita.UserName }}</td>
-          <td class="px-4 py-2 border-b">{{ cita.Vehiculo }}</td>
-          <td class="px-4 py-2 border-b">{{ cita.StartDateTime }}</td>
-          <td class="px-4 py-2 border-b">{{ cita.EndDateTime }}</td>
-          <td class="px-4 py-2 border-b">{{ cita.Description }}</td>
-        </tr>
-      </tbody>
-    </table>
-  
-    <div *ngIf="citas.length === 0" class="mt-4 text-gray-500">
-      No hay citas registradas para este taller.
-    </div>
+  <h2 class="text-2xl font-semibold mb-4">Citas del Taller</h2>
+
+  <div *ngIf="errorCitas" class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4">
+    {{ errorCitas }}
   </div>
+
   
+<button (click)="obtenerCitasDelTaller()" class="btn btn-primary btn-lg shadow-sm d-flex align-items-center justify-content-center gap-2 mb-2">
+    <i class="bi bi-arrow-clockwise me-1"></i>
+    Actualizar Citas
+</button>
+  <table class="min-w-full border border-gray-300 rounded shadow-sm" *ngIf="citas.length > 0">
+    <thead class="bg-gray-100 text-left">
+      <tr>
+        <th class="px-4 py-2 border-b">Usuario</th>
+        <th class="px-4 py-2 border-b">Vehículo</th>
+        <th class="px-4 py-2 border-b">Fecha Inicio</th>
+        <th class="px-4 py-2 border-b">Fecha Fin</th>
+        <th class="px-4 py-2 border-b">Descripción</th>
+        <th class="px-4 py-2 border-b">Estado</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let cita of citas" class="hover:bg-gray-50">
+        <td class="px-4 py-2 border-b">{{ cita.UserName }}</td>
+        <td class="px-4 py-2 border-b">{{ cita.Vehiculo }}</td>
+        <td class="px-4 py-2 border-b">{{ cita.StartDateTime | date:'dd/MM/yyyy HH:mm' }}</td>
+        <td class="px-4 py-2 border-b">{{ cita.EndDateTime | date:'dd/MM/yyyy HH:mm' }}</td>
+        <td class="px-4 py-2 border-b">{{ cita.Description }}</td>
+        <td class="px-4 py-2 border-b">{{ cita.Estado  || 'Pendiente' }}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div *ngIf="citas.length === 0 && !errorCitas" class="mt-4 text-gray-500">
+    No hay citas registradas para este taller.
+  </div>
+</div>

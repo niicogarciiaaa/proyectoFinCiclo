@@ -19,6 +19,7 @@ if ($conn->connect_error) {
     echo json_encode(['error' => 'Error de conexión: ' . $conn->connect_error]);
     exit;
 }
+
 if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     http_response_code(200);
     exit();
@@ -34,8 +35,15 @@ if (!isset($_SESSION['user'])) {
 $user_id = $_SESSION['user']['id'];
 $user_role = $_SESSION['user']['role'];
 
-// Manejar solicitud POST (Crear factura)
+// Manejar solicitud POST (Crear factura) - SOLO PARA USUARIOS DE TALLER
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    // Verificar si el usuario tiene rol de Taller
+    if ($user_role !== 'Taller') {
+        header('HTTP/1.1 403 Forbidden');
+        echo json_encode(['error' => 'No tienes permisos para crear facturas. Solo los usuarios de taller pueden realizar esta acción.']);
+        exit;
+    }
+
     try {
         $data = json_decode(file_get_contents("php://input"), true);
 
@@ -51,6 +59,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             exit;
         }
 
+        // Verificar que la cita exista y pertenezca a un cliente
+        $stmtCheck = $conn->prepare("SELECT UserID FROM Appointments WHERE AppointmentID = ?");
+        $stmtCheck->bind_param("i", $appointment_id);
+        
+        if (!$stmtCheck->execute()) {
+            throw new Exception('Error al verificar la cita: ' . $stmtCheck->error);
+        }
+        
+        $resultCheck = $stmtCheck->get_result();
+        if ($resultCheck->num_rows === 0) {
+            header('HTTP/1.1 404 Not Found');
+            echo json_encode(['error' => 'La cita especificada no existe.']);
+            exit;
+        }
+        
+        $appointmentData = $resultCheck->fetch_assoc();
+        $client_id = $appointmentData['UserID'];
+        $stmtCheck->close();
+
         // Calcular total
         $total = 0;
         foreach ($items as $item) {
@@ -64,9 +91,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         // Iniciar transacción
         $conn->begin_transaction();
 
-        // Insertar factura
+        // Insertar factura - El usuario del taller que crea la factura se registra como creador
         $stmt = $conn->prepare("INSERT INTO Invoices (AppointmentID, Date, TotalAmount, Estado, UserID) VALUES (?, ?, ?, ?, ?)");
-        $stmt->bind_param("isdsd", $appointment_id, $date, $total, $estado, $user_id);
+        $stmt->bind_param("isdsi", $appointment_id, $date, $total, $estado, $user_id);
         
         if (!$stmt->execute()) {
             throw new Exception('Error al crear la factura: ' . $stmt->error);
@@ -109,9 +136,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
-// Manejar solicitud GET (Obtener facturas)
-else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+// Manejar solicitud GET (Obtener facturas) - USUARIOS NORMALES PUEDEN VER SUS FACTURAS
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
     try {
+        // Si es usuario de taller, puede ver todas las facturas
         if ($user_role === 'Taller') {
             $stmt = $conn->prepare("
                 SELECT 
@@ -119,40 +147,77 @@ else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     i.AppointmentID, 
                     i.Date, 
                     i.TotalAmount, 
-                    i.Estado, 
-                    u.FullName AS UserName
+                    i.Estado,
+                    u.FullName AS UserName,
+                    a.VehicleID,
+                    v.Modelo,
+                    v.Anyo
                 FROM Invoices i
                 JOIN Appointments a ON i.AppointmentID = a.AppointmentID
                 JOIN Users u ON a.UserID = u.UserID
+                LEFT JOIN Vehicles v ON a.VehicleID = v.VehicleID
+                ORDER BY i.Date DESC
             ");
-        } else {
+        } 
+        // Si es usuario normal, solo puede ver sus propias facturas
+        else {
             $stmt = $conn->prepare("
                 SELECT 
                     i.InvoiceID, 
                     i.AppointmentID,
                     i.Date, 
                     i.TotalAmount, 
-                    i.Estado
+                    i.Estado,
+                    a.VehicleID,
+                    v.Marca,
+                    v.Modelo,
+                    v.Anyo
                 FROM Invoices i
                 JOIN Appointments a ON i.AppointmentID = a.AppointmentID
+                LEFT JOIN Vehicles v ON a.VehicleID = v.VehicleID
                 WHERE a.UserID = ?
+                ORDER BY i.Date DESC
             ");
             $stmt->bind_param("i", $user_id);
         }
-
+        
         if (!$stmt->execute()) {
-            throw new Exception('Error al obtener las facturas');
+            throw new Exception('Error al obtener las facturas: ' . $stmt->error);
         }
-
+        
         $result = $stmt->get_result();
         $invoices = [];
         
         while ($invoice = $result->fetch_assoc()) {
+            // Para cada factura, obtener sus ítems
+            $stmtItems = $conn->prepare("
+                SELECT 
+                    ItemID,
+                    Description,
+                    Quantity,
+                    UnitPrice,
+                    TaxRate,
+                    Amount
+                FROM InvoiceItems
+                WHERE InvoiceID = ?
+            ");
+            $stmtItems->bind_param("i", $invoice['InvoiceID']);
+            $stmtItems->execute();
+            $resultItems = $stmtItems->get_result();
+            
+            $items = [];
+            while ($item = $resultItems->fetch_assoc()) {
+                $items[] = $item;
+            }
+            
+            $invoice['items'] = $items;
             $invoices[] = $invoice;
+            
+            $stmtItems->close();
         }
         
         $stmt->close();
-
+        
         if (empty($invoices)) {
             echo json_encode([
                 'success' => true,
@@ -165,7 +230,6 @@ else if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                 'invoices' => $invoices
             ]);
         }
-
     } catch (Exception $e) {
         header('HTTP/1.1 500 Internal Server Error');
         echo json_encode(['error' => $e->getMessage()]);

@@ -3,7 +3,7 @@ import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataAccessService, Invoice } from '../../services/dataAccess.service';
 
-interface InvoiceItem {
+interface InvoiceItemWorkshop {
   description: string;
   quantity: number;
   unit_price: number;
@@ -20,7 +20,7 @@ interface InvoiceItem {
 export class InvoicesGeneratorComponent implements OnInit {
   facturas: Invoice[] = [];
   appointment_id: number | null = null;
-  items: InvoiceItem[] = [];
+  items: InvoiceItemWorkshop[] = [];
   estado: string = 'Pendiente';
   citasTaller: any[] = [];
   errorCitas: string = '';

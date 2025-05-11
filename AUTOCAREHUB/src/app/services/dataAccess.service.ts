@@ -25,6 +25,15 @@ interface RegisterResponse {
   };
 }
 
+export interface InvoiceItem {
+  ItemID: number;
+  Description: string;
+  Quantity: number;
+  UnitPrice: number;
+  TaxRate: number;
+  Amount: number;
+}
+
 export interface Invoice {
   InvoiceID: number;
   AppointmentID: number;
@@ -32,7 +41,12 @@ export interface Invoice {
   TotalAmount: number;
   Estado: string;
   UserName?: string; // Solo disponible para modo taller
+  Marca?: string; 
+  Modelo?: string;
+  Anyo: string;
+  items: InvoiceItem[];
 }
+
 
 export interface InvoiceResponse {
   invoices: Invoice[];

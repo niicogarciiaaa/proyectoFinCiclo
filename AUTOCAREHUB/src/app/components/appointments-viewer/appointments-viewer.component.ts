@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { CommonModule } from '@angular/common';
+import { MenuComponent } from '../menu/menu.component';
 
 interface Cita {
   AppointmentID: number;
@@ -23,11 +24,12 @@ interface Cita {
   styleUrl: './appointments-viewer.component.css'
 })
 export class AppointmentsViewerComponent {
-  citas: Cita[] = []; // Inicializado como array vacío
+  citas: Cita[] = []; 
   errorCitas: string = '';
   constructor(private dataAccessService: DataAccessService){}
   
   ngOnInit(): void {
+    this.obtenerCitasDelTaller();
     
   }
   obtenerCitasDelTaller(): void {

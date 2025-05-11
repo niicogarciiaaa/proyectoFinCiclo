@@ -1,0 +1,29 @@
+<div *ngIf="loading" class="text-center">Cargando facturas...</div>
+
+<div *ngIf="errorMessage" class="error text-center">{{ errorMessage }}</div>
+
+<div class="container mt-4">
+  <table *ngIf="!loading && invoices.length > 0" class="table table-bordered table-striped table-hover text-center mx-auto">
+    <thead>
+      <tr>
+        <th>ID Factura</th>
+        <th>Fecha</th>
+        <th>Total</th>
+        <th>Estado</th>
+        <th>Acciones</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let invoice of invoices">
+        <td>{{ invoice.InvoiceID }}</td>
+        <td>{{ invoice.Date }}</td>
+        <td>{{ invoice.TotalAmount }} €</td>
+        <td>{{ invoice.Estado }}</td>
+        <td>
+          <button (click)="selectInvoice(invoice)" class="btn btn-primary">Seleccionar Factura</button>
+          <button (click)="generatePDF()" [disabled]="!selectedInvoice" class="btn btn-success">Generar PDF</button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
