@@ -119,12 +119,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
         $stmtItem->close();
 
+        // Actualizar el estado de la cita a "Finalizada" ya que "Facturada" no es un estado válido según la definición de la tabla
+        $stmtUpdateAppointment = $conn->prepare("UPDATE Appointments SET Status = 'Finalizada' WHERE AppointmentID = ?");
+        $stmtUpdateAppointment->bind_param("i", $appointment_id);
+        
+        if (!$stmtUpdateAppointment->execute()) {
+            throw new Exception('Error al actualizar el estado de la cita: ' . $stmtUpdateAppointment->error);
+        }
+        
+        $stmtUpdateAppointment->close();
+
         // Confirmar transacción
         $conn->commit();
 
         echo json_encode([
             'success' => true,
-            'message' => 'Factura creada correctamente',
+            'message' => 'Factura creada correctamente y cita actualizada a estado Finalizada',
             'invoice_id' => $invoice_id
         ]);
 
@@ -238,4 +248,3 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
 }
 
 $conn->close();
-?>

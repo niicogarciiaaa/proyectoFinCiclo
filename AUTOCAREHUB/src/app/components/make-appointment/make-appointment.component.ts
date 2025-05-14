@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { MenuComponent } from '../menu/menu.component';
 
 interface WeekSlots {
   [key: string]: {
@@ -13,7 +14,7 @@ interface WeekSlots {
 @Component({
   selector: 'app-make-appointment',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule,MenuComponent],
   templateUrl: './make-appointment.component.html',
   styleUrl: './make-appointment.component.css'
 })

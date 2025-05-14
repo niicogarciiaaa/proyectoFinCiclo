@@ -261,6 +261,30 @@ export class DataAccessService {
       })
     );
   }
+// Método para eliminar un vehículo
+eliminarVehiculo(vehicleId: number): Observable<any> {
+  const body = {
+    accion: 'eliminar',
+    VehiculoID: vehicleId
+  };
+
+  return this.http.post<any>(`${this.apiUrl}/Vehicles.php`, body, {
+    headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+    withCredentials: true
+  }).pipe(
+    map(response => {
+      if (!response.success) {
+        console.warn('No se pudo eliminar el vehículo:', response.message);
+      }
+      return response;
+    }),
+    catchError(error => {
+      console.error('Error al eliminar el vehículo:', error);
+      return throwError(() => new Error('Error al eliminar el vehículo'));
+    })
+  );
+}
+
 
   // Método para obtener las citas de un taller
   obtenerCitasTaller(): Observable<any> {

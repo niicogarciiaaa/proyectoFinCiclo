@@ -160,6 +160,71 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
         $stmt->close();
         exit();
     }
+    // Eliminar un vehículo
+    else if ($accion === 'eliminar') {
+        $vehiculoID = $input["vehiculoID"] ?? 0;
+
+        if (!$vehiculoID) {
+            http_response_code(400);
+            echo json_encode(["success" => false, "message" => "ID de vehículo no proporcionado"]);
+            exit();
+        }
+
+        // Consultar si el vehículo existe y pertenece al usuario
+        $stmt = $conn->prepare("SELECT VehicleID, UserID FROM Vehicles WHERE VehicleID = ?");
+        if (!$stmt) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error en la preparación de la consulta"]);
+            exit();
+        }
+
+        $stmt->bind_param("i", $vehiculoID);
+        
+        if (!$stmt->execute()) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error al ejecutar la consulta"]);
+            exit();
+        }
+
+        $result = $stmt->get_result();
+        
+        if ($result->num_rows === 0) {
+            http_response_code(404);
+            echo json_encode(["success" => false, "message" => "Vehículo no encontrado"]);
+            exit();
+        }
+
+        $vehicle = $result->fetch_assoc();
+
+        // Verificar que el vehículo pertenece al usuario
+        if ($vehicle['UserID'] !== $user_id) {
+            http_response_code(403);
+            echo json_encode(["success" => false, "message" => "No tienes permiso para eliminar este vehículo"]);
+            exit();
+        }
+
+        // Eliminar el vehículo
+        $stmt = $conn->prepare("DELETE FROM Vehicles WHERE VehicleID = ?");
+        if (!$stmt) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error en la preparación de la consulta para eliminar"]);
+            exit();
+        }
+
+        $stmt->bind_param("i", $vehiculoID);
+        
+        if (!$stmt->execute()) {
+            http_response_code(500);
+            echo json_encode(["success" => false, "message" => "Error al eliminar el vehículo"]);
+            exit();
+        }
+
+        // Devolver respuesta exitosa
+        echo json_encode(["success" => true, "message" => "Vehículo eliminado con éxito"]);
+
+        $stmt->close();
+        exit();
+    }
 } else if ($_SERVER["REQUEST_METHOD"] === "GET") {
     // Recuperar los vehículos del usuario autenticado
     $stmt = $conn->prepare("SELECT VehicleID, UserID, marca, modelo, anyo, matricula FROM Vehicles WHERE UserID = ?");

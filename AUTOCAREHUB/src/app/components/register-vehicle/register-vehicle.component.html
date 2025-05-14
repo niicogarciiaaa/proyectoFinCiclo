@@ -1,32 +1,51 @@
 <div class="register-vehicle">
-    <h2>Registrar Vehículo</h2>
-  
-    <form (ngSubmit)="crearVehiculo()">
-      <div>
-        <label for="marca">Marca:</label>
-        <input id="marca" type="text" [(ngModel)]="marca" name="marca" required />
-      </div>
-  
-      <div>
-        <label for="modelo">Modelo:</label>
-        <input id="modelo" type="text" [(ngModel)]="modelo" name="modelo" required />
-      </div>
-  
-      <div>
-        <label for="anyo">Año:</label>
-        <input id="anyo" type="number" [(ngModel)]="anyo" name="anyo" required />
-      </div>
-  
-      <div>
-        <label for="matricula">Matrícula:</label>
-        <input id="matricula" type="text" [(ngModel)]="matricula" name="matricula" required />
-      </div>
-  
-      <button type="submit">Registrar Vehículo</button>
-    </form>
-  
-    <!-- Mensajes de error o éxito -->
-    <div *ngIf="mensajeExito" class="mensaje-exito">{{ mensajeExito }}</div>
-    <div *ngIf="mensajeError" class="mensaje-error">{{ mensajeError }}</div>
+  <h2 class="form-title">Registrar Vehículo</h2>
+
+  <form (ngSubmit)="crearVehiculo()" class="vehicle-form">
+    <div class="form-group">
+      <label for="marca">Marca:</label>
+      <input id="marca" type="text" [(ngModel)]="marca" name="marca" required placeholder="Introduce la marca" />
+    </div>
+
+    <div class="form-group">
+      <label for="modelo">Modelo:</label>
+      <input id="modelo" type="text" [(ngModel)]="modelo" name="modelo" required placeholder="Introduce el modelo" />
+    </div>
+
+    <div class="form-group">
+      <label for="anyo">Año:</label>
+      <input id="anyo" type="number" [(ngModel)]="anyo" name="anyo" required placeholder="Introduce el año" />
+    </div>
+
+    <div class="form-group">
+      <label for="matricula">Matrícula:</label>
+      <input id="matricula" type="text" [(ngModel)]="matricula" name="matricula" required placeholder="Introduce la matrícula" />
+    </div>
+
+    <button type="submit" class="submit-btn">Registrar Vehículo</button>
+  </form>
+
+  <!-- Mensajes de error o éxito -->
+  <div *ngIf="mensajeExito" class="mensaje-exito">{{ mensajeExito }}</div>
+  <div *ngIf="mensajeError" class="mensaje-error">{{ mensajeError }}</div>
+</div>
+
+<!-- Lista de vehículos, fuera del formulario -->
+<div *ngIf="vehiculos.length > 0" class="vehicles-list">
+  <h3 class="list-title">Vehículos Registrados</h3>
+  <div class="vehicles-container">
+    <div *ngFor="let vehiculo of vehiculos" class="vehicle-card">
+  <h4>{{ vehiculo.marca }} - {{ vehiculo.modelo }}</h4>
+  <p><strong>Año:</strong> {{ vehiculo.anyo }}</p>
+  <p><strong>Matrícula:</strong> {{ vehiculo.matricula }}</p>
+
+  <!-- Botón para eliminar -->
+  <button (click)="eliminarVehiculo(vehiculo.VehicleID)" class="delete-btn">Eliminar</button>
+</div>
+
   </div>
-  
+</div>
+
+<ng-template #noVehicles>
+  <p class="no-vehicles">No tienes vehículos registrados aún.</p>
+</ng-template>

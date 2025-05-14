@@ -2,6 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 import { DataAccessService, Invoice } from '../../services/dataAccess.service';
+import { MenuComponent } from '../menu/menu.component';
+import { AppointmentsViewerComponent } from "../appointments-viewer/appointments-viewer.component";
 
 interface InvoiceItemWorkshop {
   description: string;
@@ -15,7 +17,7 @@ interface InvoiceItemWorkshop {
   standalone: true,
   templateUrl: './invoices-generator.component.html',
   styleUrls: ['./invoices-generator.component.css'],
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, MenuComponent, AppointmentsViewerComponent],
 })
 export class InvoicesGeneratorComponent implements OnInit {
   facturas: Invoice[] = [];

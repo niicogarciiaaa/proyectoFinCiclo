@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { jsPDF } from "jspdf";
 import { DataAccessService, Invoice } from '../../services/dataAccess.service';
 import { CommonModule } from '@angular/common';
+import { MenuComponent } from "../menu/menu.component";
 
 @Component({
   selector: 'app-invoice-viewer',
   templateUrl: './invoice-viewer.component.html',
   styleUrls: ['./invoice-viewer.component.css'],
   standalone: true,
-  imports: [CommonModule]
+  imports: [CommonModule, MenuComponent]
 })
 export class InvoiceViewerComponent implements OnInit {
   invoices: Invoice[] = [];

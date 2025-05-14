@@ -19,7 +19,7 @@ interface Cita {
 @Component({
   selector: 'app-appointments-viewer',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule,MenuComponent],
   templateUrl: './appointments-viewer.component.html',
   styleUrl: './appointments-viewer.component.css'
 })

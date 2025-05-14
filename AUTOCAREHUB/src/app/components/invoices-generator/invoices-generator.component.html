@@ -1,231 +1,232 @@
-<div class="container">
-  <div class="row mb-4">
-    <div class="col-12">
-      <h2>Generador de Facturas</h2>
+<app-menu></app-menu>
+  <div class="container">
+    <div class="row mb-4">
+      <div class="col-12">
+        <h2>Generador de Facturas</h2>
 
-      <!-- Mensajes de error y éxito -->
-      <div *ngIf="errorMessage" class="alert alert-danger mt-3">
-        {{ errorMessage }}
-      </div>
-      <div *ngIf="successMessage" class="alert alert-success mt-3">
-        {{ successMessage }}
-      </div>
+        <!-- Mensajes de error y éxito -->
+        <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+          {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="alert alert-success mt-3">
+          {{ successMessage }}
+        </div>
 
-      <!-- Spinner de carga -->
-      <div *ngIf="isLoading" class="d-flex justify-content-center mt-3">
-        <div class="spinner-border" role="status">
-          <span class="visually-hidden">Cargando...</span>
+        <!-- Spinner de carga -->
+        <div *ngIf="isLoading" class="d-flex justify-content-center mt-3">
+          <div class="spinner-border" role="status">
+            <span class="visually-hidden">Cargando...</span>
+          </div>
         </div>
       </div>
     </div>
-  </div>
 
-  <!-- Formulario para crear una nueva factura -->
-  <div class="row">
-    <div class="col-12 col-lg-6">
-      <div class="card mb-4">
-        <div class="card-header">
-          <h4>Nueva Factura</h4>
+    <!-- Formulario para crear una nueva factura -->
+    <div class="row">
+      <div class="col-12 col-lg-6">
+        <div class="card mb-4">
+          <div class="card-header">
+            <h4>Nueva Factura</h4>
+          </div>
+          <div class="card-body">
+            <form (submit)="crearFactura()">
+              <div class="mb-3">
+                <label for="appointment_id" class="form-label">ID de la Cita</label>
+                <input type="number" class="form-control" id="appointment_id" [(ngModel)]="appointment_id"
+                      name="appointment_id" required min="1">
+              </div>
+
+              <div class="mb-3">
+                <label for="estado" class="form-label">Estado</label>
+                <select class="form-select" id="estado" [(ngModel)]="estado" name="estado">
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="Pagado">Pagado</option>
+                  <option value="Cancelado">Cancelado</option>
+                </select>
+              </div>
+
+              <h5 class="mt-4">Ítems de la Factura</h5>
+              <div class="table-responsive" *ngIf="items.length > 0">
+                <table class="table table-striped">
+                  <thead>
+                    <tr>
+                      <th>Descripción</th>
+                      <th>Cantidad</th>
+                      <th>Precio Unitario</th>
+                      <th>IVA %</th>
+                      <th>Importe</th>
+                      <th>Acciones</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let item of items; let i = index">
+                      <td>{{ item.description }}</td>
+                      <td>{{ item.quantity }}</td>
+                      <td>{{ item.unit_price | currency:'EUR' }}</td>
+                      <td>{{ item.tax_rate }}%</td>
+                      <td>{{ (item.quantity * item.unit_price * (1 + item.tax_rate/100)) | currency:'EUR' }}</td>
+                      <td>
+                        <button type="button" class="btn btn-sm btn-danger" (click)="eliminarItem(i)">
+                          <i class="bi bi-trash"></i> Eliminar
+                        </button>
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot>
+                    <tr>
+                      <td colspan="4" class="text-end fw-bold">Subtotal:</td>
+                      <td colspan="2">{{ calcularSubtotal() | currency:'EUR' }}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="4" class="text-end fw-bold">IVA:</td>
+                      <td colspan="2">{{ calcularIVA() | currency:'EUR' }}</td>
+                    </tr>
+                    <tr>
+                      <td colspan="4" class="text-end fw-bold">Total:</td>
+                      <td colspan="2" class="fw-bold">{{ calcularTotal() | currency:'EUR' }}</td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+
+              <div *ngIf="items.length === 0" class="alert alert-info">
+                No hay ítems añadidos a la factura.
+              </div>
+
+              <div class="card mt-3">
+                <div class="card-header">
+                  <h5>Añadir Ítem</h5>
+                </div>
+                <div class="card-body">
+                  <div class="row">
+                    <div class="col-md-12 mb-2">
+                      <label for="description" class="form-label">Descripción</label>
+                      <input type="text" class="form-control" id="description" [(ngModel)]="newItemDescription"
+                            name="description" required>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                      <label for="quantity" class="form-label">Cantidad</label>
+                      <input type="number" class="form-control" id="quantity" [(ngModel)]="newItemQuantity"
+                            name="quantity" min="1" required>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                      <label for="unit_price" class="form-label">Precio Unitario</label>
+                      <div class="input-group">
+                        <span class="input-group-text">€</span>
+                        <input type="number" class="form-control" id="unit_price" [(ngModel)]="newItemPrice"
+                              name="unit_price" min="0" step="0.01" required>
+                      </div>
+                    </div>
+                    <div class="col-md-4 mb-2">
+                      <label for="tax_rate" class="form-label">IVA %</label>
+                      <input type="number" class="form-control" id="tax_rate" [(ngModel)]="newItemTaxRate"
+                            name="tax_rate" min="0" max="100" required>
+                    </div>
+                  </div>
+                  <button type="button" class="btn btn-secondary mt-2" (click)="agregarItem()">
+                    <i class="bi bi-plus-circle"></i> Añadir Ítem
+                  </button>
+                </div>
+              </div>
+
+              <div class="mt-4">
+                <button type="submit" class="btn btn-primary" [disabled]="isLoading || items.length === 0">
+                  <i class="bi bi-save"></i> Crear Factura
+                </button>
+                <button type="button" class="btn btn-outline-secondary ms-2" (click)="resetForm()">
+                  <i class="bi bi-arrow-counterclockwise"></i> Reiniciar
+                </button>
+              </div>
+            </form>
+          </div>
         </div>
-        <div class="card-body">
-          <form (submit)="crearFactura()">
-            <div class="mb-3">
-              <label for="appointment_id" class="form-label">ID de la Cita</label>
-              <input type="number" class="form-control" id="appointment_id" [(ngModel)]="appointment_id"
-                     name="appointment_id" required min="1">
+      </div>
+
+      <div class="col-12 col-lg-6">
+        <div class="card mb-4">
+          <div class="card-header d-flex justify-content-between align-items-center">
+            <h4>Facturas</h4>
+            <button class="btn btn-sm btn-outline-primary" (click)="obtenerFacturas()">
+              <i class="bi bi-arrow-clockwise"></i> Actualizar
+            </button>
+          </div>
+          <div class="card-body">
+            <div *ngIf="isLoading" class="d-flex justify-content-center">
+              <div class="spinner-border" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
             </div>
 
-            <div class="mb-3">
-              <label for="estado" class="form-label">Estado</label>
-              <select class="form-select" id="estado" [(ngModel)]="estado" name="estado">
-                <option value="Pendiente">Pendiente</option>
-                <option value="Pagado">Pagado</option>
-                <option value="Cancelado">Cancelado</option>
-              </select>
+            <div *ngIf="facturas.length === 0 && !isLoading" class="alert alert-info">
+              No hay facturas disponibles.
             </div>
 
-            <h5 class="mt-4">Ítems de la Factura</h5>
-            <div class="table-responsive" *ngIf="items.length > 0">
+            <div class="table-responsive" *ngIf="facturas.length > 0">
               <table class="table table-striped">
                 <thead>
                   <tr>
-                    <th>Descripción</th>
-                    <th>Cantidad</th>
-                    <th>Precio Unitario</th>
-                    <th>IVA %</th>
-                    <th>Importe</th>
-                    <th>Acciones</th>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Total</th>
+                    <th>Estado</th>
+                    <th *ngIf="isTaller">Cliente</th>
                   </tr>
                 </thead>
                 <tbody>
-                  <tr *ngFor="let item of items; let i = index">
-                    <td>{{ item.description }}</td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.unit_price | currency:'EUR' }}</td>
-                    <td>{{ item.tax_rate }}%</td>
-                    <td>{{ (item.quantity * item.unit_price * (1 + item.tax_rate/100)) | currency:'EUR' }}</td>
+                  <tr *ngFor="let factura of facturas">
+                    <td>{{ factura.InvoiceID }}</td>
+                    <td>{{ factura.Date | date:'dd/MM/yyyy' }}</td>
+                    <td>{{ factura.TotalAmount | currency:'EUR' }}</td>
                     <td>
-                      <button type="button" class="btn btn-sm btn-danger" (click)="eliminarItem(i)">
-                        <i class="bi bi-trash"></i> Eliminar
-                      </button>
+                      <span [ngClass]="{
+                        'badge bg-warning': factura.Estado === 'Pendiente',
+                        'badge bg-success': factura.Estado === 'Pagado',
+                        'badge bg-danger': factura.Estado === 'Cancelado'
+                      }">{{ factura.Estado }}</span>
                     </td>
+                    <td *ngIf="isTaller">{{ factura.UserName }}</td>
                   </tr>
                 </tbody>
-                <tfoot>
-                  <tr>
-                    <td colspan="4" class="text-end fw-bold">Subtotal:</td>
-                    <td colspan="2">{{ calcularSubtotal() | currency:'EUR' }}</td>
-                  </tr>
-                  <tr>
-                    <td colspan="4" class="text-end fw-bold">IVA:</td>
-                    <td colspan="2">{{ calcularIVA() | currency:'EUR' }}</td>
-                  </tr>
-                  <tr>
-                    <td colspan="4" class="text-end fw-bold">Total:</td>
-                    <td colspan="2" class="fw-bold">{{ calcularTotal() | currency:'EUR' }}</td>
-                  </tr>
-                </tfoot>
               </table>
             </div>
-
-            <div *ngIf="items.length === 0" class="alert alert-info">
-              No hay ítems añadidos a la factura.
-            </div>
-
-            <div class="card mt-3">
-              <div class="card-header">
-                <h5>Añadir Ítem</h5>
-              </div>
-              <div class="card-body">
-                <div class="row">
-                  <div class="col-md-12 mb-2">
-                    <label for="description" class="form-label">Descripción</label>
-                    <input type="text" class="form-control" id="description" [(ngModel)]="newItemDescription"
-                           name="description" required>
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label for="quantity" class="form-label">Cantidad</label>
-                    <input type="number" class="form-control" id="quantity" [(ngModel)]="newItemQuantity"
-                           name="quantity" min="1" required>
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label for="unit_price" class="form-label">Precio Unitario</label>
-                    <div class="input-group">
-                      <span class="input-group-text">€</span>
-                      <input type="number" class="form-control" id="unit_price" [(ngModel)]="newItemPrice"
-                             name="unit_price" min="0" step="0.01" required>
-                    </div>
-                  </div>
-                  <div class="col-md-4 mb-2">
-                    <label for="tax_rate" class="form-label">IVA %</label>
-                    <input type="number" class="form-control" id="tax_rate" [(ngModel)]="newItemTaxRate"
-                           name="tax_rate" min="0" max="100" required>
-                  </div>
-                </div>
-                <button type="button" class="btn btn-secondary mt-2" (click)="agregarItem()">
-                  <i class="bi bi-plus-circle"></i> Añadir Ítem
-                </button>
-              </div>
-            </div>
-
-            <div class="mt-4">
-              <button type="submit" class="btn btn-primary" [disabled]="isLoading || items.length === 0">
-                <i class="bi bi-save"></i> Crear Factura
-              </button>
-              <button type="button" class="btn btn-outline-secondary ms-2" (click)="resetForm()">
-                <i class="bi bi-arrow-counterclockwise"></i> Reiniciar
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <div class="col-12 col-lg-6">
-      <div class="card mb-4">
-        <div class="card-header d-flex justify-content-between align-items-center">
-          <h4>Facturas</h4>
-          <button class="btn btn-sm btn-outline-primary" (click)="obtenerFacturas()">
-            <i class="bi bi-arrow-clockwise"></i> Actualizar
-          </button>
-        </div>
-        <div class="card-body">
-          <div *ngIf="isLoading" class="d-flex justify-content-center">
-            <div class="spinner-border" role="status">
-              <span class="visually-hidden">Cargando...</span>
-            </div>
-          </div>
-
-          <div *ngIf="facturas.length === 0 && !isLoading" class="alert alert-info">
-            No hay facturas disponibles.
-          </div>
-
-          <div class="table-responsive" *ngIf="facturas.length > 0">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Fecha</th>
-                  <th>Total</th>
-                  <th>Estado</th>
-                  <th *ngIf="isTaller">Cliente</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let factura of facturas">
-                  <td>{{ factura.InvoiceID }}</td>
-                  <td>{{ factura.Date | date:'dd/MM/yyyy' }}</td>
-                  <td>{{ factura.TotalAmount | currency:'EUR' }}</td>
-                  <td>
-                    <span [ngClass]="{
-                      'badge bg-warning': factura.Estado === 'Pendiente',
-                      'badge bg-success': factura.Estado === 'Pagado',
-                      'badge bg-danger': factura.Estado === 'Cancelado'
-                    }">{{ factura.Estado }}</span>
-                  </td>
-                  <td *ngIf="isTaller">{{ factura.UserName }}</td>
-                </tr>
-              </tbody>
-            </table>
           </div>
         </div>
-      </div>
 
-      <div class="card">
-        <div class="card-header">
-          <h4>Citas del Taller</h4>
-        </div>
-        <div class="card-body">
-          <div *ngIf="citasTaller.length === 0" class="alert alert-info">
-            No hay citas registradas para este taller.
+        <div class="card">
+          <div class="card-header">
+            <h4>Citas del Taller</h4>
           </div>
+          <div class="card-body">
+            <div *ngIf="citasTaller.length === 0" class="alert alert-info">
+              No hay citas registradas para este taller.
+            </div>
 
-          <div class="table-responsive" *ngIf="citasTaller.length > 0">
-            <table class="table table-striped">
-              <thead>
-                <tr>
-                  <th>ID</th>
-                  <th>Fecha</th>
-                  <th>Vehículo</th>
-                  <th>Servicio</th>
-                  <th>Estado</th>
-                  <th>Usuario</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let cita of citasTaller">
-                  <td>{{ cita.AppointmentID }}</td>
-                  <td>{{ cita.StartDateTime | date:'dd/MM/yyyy HH:mm' }}</td>
-                  <td>{{ cita.Vehiculo }}</td>
-                  <td>{{ cita.Description }}</td>
-                  <td>{{ cita.Status }}</td>
-                  <td>{{ cita.UserName }}</td>
-                </tr>
-              </tbody>
-            </table>
+            <div class="table-responsive" *ngIf="citasTaller.length > 0">
+              <table class="table table-striped">
+                <thead>
+                  <tr>
+                    <th>ID</th>
+                    <th>Fecha</th>
+                    <th>Vehículo</th>
+                    <th>Servicio</th>
+                    <th>Estado</th>
+                    <th>Usuario</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let cita of citasTaller">
+                    <td>{{ cita.AppointmentID }}</td>
+                    <td>{{ cita.StartDateTime | date:'dd/MM/yyyy HH:mm' }}</td>
+                    <td>{{ cita.Vehiculo }}</td>
+                    <td>{{ cita.Description }}</td>
+                    <td>{{ cita.Status }}</td>
+                    <td>{{ cita.UserName }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       </div>
     </div>
   </div>
-</div>

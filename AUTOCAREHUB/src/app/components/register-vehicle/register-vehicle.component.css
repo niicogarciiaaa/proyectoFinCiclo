@@ -1,58 +1,110 @@
+/* Estilos generales */
 .register-vehicle {
-    max-width: 400px;
-    margin: 20px auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 8px;
-    background-color: #f9f9f9;
-  }
-  
-  .register-vehicle h2 {
-    text-align: center;
-  }
-  
-  .register-vehicle form {
-    display: flex;
-    flex-direction: column;
-  }
-  
-  .register-vehicle form div {
-    margin-bottom: 15px;
-  }
-  
-  .register-vehicle form label {
-    font-weight: bold;
-  }
-  
-  .register-vehicle form input {
-    padding: 8px;
-    margin-top: 5px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-  }
-  
-  .register-vehicle form button {
-    padding: 10px;
-    background-color: #4CAF50;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-  }
-  
-  .register-vehicle form button:hover {
-    background-color: #45a049;
-  }
-  
-  .mensaje-exito {
-    margin-top: 10px;
-    color: green;
-    font-weight: bold;
-  }
-  
-  .mensaje-error {
-    margin-top: 10px;
-    color: red;
-    font-weight: bold;
-  }
-  
+  max-width: 400px;
+  margin: 20px auto;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  background-color: #f9f9f9;
+  font-family: Arial, sans-serif;
+}
+
+.form-title {
+  color: #333;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+/* Estilos para el formulario */
+.register-vehicle form {
+  display: flex;
+  flex-direction: column;
+}
+
+.register-vehicle form div {
+  margin-bottom: 15px;
+}
+
+.register-vehicle form label {
+  font-weight: bold;
+}
+
+.register-vehicle form input {
+  padding: 8px;
+  margin-top: 5px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+.register-vehicle form button {
+  padding: 10px;
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.register-vehicle form button:hover {
+  background-color: #45a049;
+}
+
+/* Mensajes de éxito y error */
+.mensaje-exito {
+  margin-top: 10px;
+  color: green;
+  font-weight: bold;
+}
+
+.mensaje-error {
+  margin-top: 10px;
+  color: red;
+  font-weight: bold;
+}
+
+/* Estilos para la lista de vehículos */
+.vehicles-list {
+  margin-top: 30px;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.list-title {
+  text-align: center;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+}
+
+.vehicles-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.vehicle-card {
+  background-color: #f8f9fa;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 15px;
+  width: 250px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.vehicle-card h4 {
+  font-size: 1.2rem;
+  margin-bottom: 10px;
+}
+
+.vehicle-card p {
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.no-vehicles {
+  text-align: center;
+  font-size: 1rem;
+  color: #666;
+}

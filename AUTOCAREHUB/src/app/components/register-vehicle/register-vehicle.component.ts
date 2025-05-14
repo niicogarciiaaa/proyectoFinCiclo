@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
@@ -6,11 +6,11 @@ import { CommonModule } from '@angular/common';
 @Component({
   selector: 'app-register-vehicle',
   standalone: true,
-  imports: [FormsModule,CommonModule],
+  imports: [FormsModule, CommonModule],
   templateUrl: './register-vehicle.component.html',
   styleUrls: ['./register-vehicle.component.css']
 })
-export class RegisterVehicleComponent {
+export class RegisterVehicleComponent implements OnInit {
 
   marca: string = '';
   modelo: string = '';
@@ -18,8 +18,13 @@ export class RegisterVehicleComponent {
   matricula: string = '';
   mensajeError: string = '';
   mensajeExito: string = '';
+  vehiculos: any[] = [];  // Array para almacenar los vehículos del usuario
 
   constructor(private dataAccessService: DataAccessService) { }
+
+  ngOnInit(): void {
+    this.obtenerVehiculos();  // Llamada a la API para obtener los vehículos al iniciar el componente
+  }
 
   // Método que se ejecuta al enviar el formulario
   crearVehiculo() {
@@ -35,7 +40,7 @@ export class RegisterVehicleComponent {
         if (response.success) {
           this.mensajeExito = 'Vehículo registrado con éxito';
           this.mensajeError = ''; // Limpiar mensaje de error
-          // Puedes hacer algo adicional aquí, como redirigir al usuario o limpiar el formulario
+          this.obtenerVehiculos(); // Recargar la lista de vehículos
         } else {
           this.mensajeExito = ''; // Limpiar mensaje de éxito
           this.mensajeError = 'Error al registrar el vehículo: ' + response.message;
@@ -48,4 +53,40 @@ export class RegisterVehicleComponent {
       }
     );
   }
+
+  // Método para obtener los vehículos del usuario
+  obtenerVehiculos() {
+    this.dataAccessService.obtenerVehiculos().subscribe(
+      response => {
+        if (response) {
+          console.log('Vehículos obtenidos:', response);
+          this.vehiculos = response.vehicles; // Asignamos los vehículos a la propiedad vehiculos
+        } else {
+          this.mensajeError = 'No se pudieron cargar los vehículos.';
+        }
+      },
+      error => {
+        this.mensajeError = 'Hubo un error al obtener los vehículos';
+        console.error('Error al obtener los vehículos:', error);
+      }
+    );
+  }
+  // Método para eliminar un vehículo
+  eliminarVehiculo(id: number) {
+    this.dataAccessService.eliminarVehiculo(id).subscribe({
+  next: (res) => {
+    if (res.success) {
+      console.log('Vehículo eliminado correctamente');
+      // Refresca la lista si es necesario
+    } else {
+      alert('No se pudo eliminar el vehículo: ' + res.message);
+    }
+  },
+  error: (err) => {
+    console.error(err);
+    alert('Error al eliminar el vehículo');
+  }
+});
+
+}
 }
