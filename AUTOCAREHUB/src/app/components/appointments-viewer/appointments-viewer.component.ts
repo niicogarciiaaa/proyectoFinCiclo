@@ -9,7 +9,7 @@ interface Cita {
   Vehiculo: string;
   WorkshopID: number;
   Service: string;
-  Estado: string;
+  Status: string;
   StartDateTime: string;
   EndDateTime: string;
   Description: string;
@@ -37,6 +37,7 @@ export class AppointmentsViewerComponent {
       next: (respuesta) => {
         if (respuesta) {
           this.citas = respuesta.citas || [];
+          
         } else {
           this.citas = respuesta.message || 'No se pudieron obtener las citas del taller';
         }

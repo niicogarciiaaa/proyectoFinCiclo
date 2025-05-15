@@ -1,104 +1,240 @@
 .appointment-container {
-  max-width: 1300px;
-  margin: auto;
+  max-width: 1200px;
+  margin: 0 auto;
   padding: 20px;
+  font-family: Arial, sans-serif;
+}
+
+h2 {
+  color: #333;
+  text-align: center;
+  margin-bottom: 30px;
 }
 
 .loading {
+  text-align: center;
+  padding: 20px;
   font-style: italic;
   color: #666;
 }
 
 .error-message {
-  color: red;
-  margin-bottom: 10px;
+  background-color: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 20px;
+  text-align: center;
 }
 
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.page-button {
+  background-color: #1976d2;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.page-button:hover {
+  background-color: #1565c0;
+}
+
+.page-button:disabled {
+  background-color: #bbdefb;
+  cursor: not-allowed;
+}
+
+.page-info {
+  margin: 0 15px;
+  font-weight: bold;
+}
+
+/* Calendar Styles */
 .week-slots {
   display: flex;
-  gap: 20px;
-  flex-wrap: nowrap; /* ← No permitir que se bajen */
-  overflow-x: auto;   /* ← Scroll horizontal si no entran */
-  justify-content: flex-start;
+  justify-content: space-between;
+  margin-bottom: 30px;
+  overflow: auto;
 }
 
 .day-column {
-  flex: 0 0 180px; /* ← Fijo para que quepan exactamente 5 */
-  border: 1px solid #ccc;
-  padding: 10px;
+  flex: 1;
+  min-width: 150px;
+  margin: 0 5px;
+  padding: 15px;
+  background-color: #f5f5f5;
   border-radius: 6px;
-  background-color: #f9f9f9;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.day-column h3 {
+  margin-top: 0;
+  margin-bottom: 5px;
+  color: #1976d2;
+  text-align: center;
+}
+
+.date {
+  text-align: center;
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 0.9em;
+  color: #666;
 }
 
 .time-slots {
-  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 
 .slot {
-  padding: 8px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  margin: 5px 0;
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: 4px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
+  transition: all 0.2s;
+}
+
+.available {
+  background-color: #e8f5e9;
+  border: 1px solid #c8e6c9;
+}
+
+.occupied {
+  background-color: #ffebee;
+  border: 1px solid #ffcdd2;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.selected {
+  background-color: #bbdefb;
+  border: 1px solid #90caf9;
+  font-weight: bold;
+}
+
+.slot:hover:not(.occupied) {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.time {
+  font-weight: 500;
+}
+
+.status {
+  font-size: 0.8em;
+  color: #666;
+}
+
+/* Selected Slots */
+.selected-slots {
+  margin-bottom: 30px;
+  padding: 15px;
+  background-color: #e3f2fd;
+  border-radius: 6px;
+}
+
+.selected-slots h3 {
+  margin-top: 0;
+  color: #1976d2;
+}
+
+.selected-slots ul {
+  list-style-type: none;
+  padding: 0;
+}
+
+.selected-slots li {
+  padding: 8px 0;
+  border-bottom: 1px solid #bbdefb;
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.slot.available {
-  background-color: #d4edda;
-  color: #155724;
+.remove-slot {
+  background-color: #ef5350;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
 }
 
-.slot.available:hover {
-  background-color: #b8e1c8;
+/* Form Elements */
+.vehicle-selection, .motivo-selection {
+  margin-bottom: 20px;
 }
 
-.slot.occupied {
-  background-color: #f8d7da;
-  color: #721c24;
-  cursor: not-allowed;
+label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
 }
 
-.slot.selected {
-  background-color: #cce5ff;
-  border: 2px solid #007bff;
-  color: #004085;
-}
-
-.selected-slots {
-  margin-top: 20px;
-}
-
-.vehicle-selection,
-.motivo-selection {
-  margin-top: 20px;
-}
-
-.vehicle-selection select,
-.motivo-selection textarea {
+select, textarea {
   width: 100%;
-  padding: 8px;
-  border-radius: 6px;
-  border: 1px solid #ccc;
-  margin-top: 5px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+textarea {
+  min-height: 100px;
+  resize: vertical;
 }
 
 .actions {
-  margin-top: 20px;
-  text-align: right;
+  text-align: center;
 }
 
-button {
-  padding: 10px 20px;
-  background-color: #007bff;
+.actions button {
+  background-color: #43a047;
   color: white;
   border: none;
-  border-radius: 6px;
+  padding: 12px 30px;
+  border-radius: 4px;
+  font-size: 16px;
   cursor: pointer;
+  transition: background-color 0.3s;
 }
 
-button:hover {
-  background-color: #0056b3;
+.actions button:hover {
+  background-color: #2e7d32;
+}
+
+.actions button:disabled {
+  background-color: #a5d6a7;
+  cursor: not-allowed;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .week-slots {
+    flex-direction: column;
+  }
+  
+  .day-column {
+    margin-bottom: 15px;
+  }
 }

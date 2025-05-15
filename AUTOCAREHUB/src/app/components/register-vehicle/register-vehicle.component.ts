@@ -28,6 +28,22 @@ export class RegisterVehicleComponent implements OnInit {
 
   // Método que se ejecuta al enviar el formulario
   crearVehiculo() {
+    const anyoActual = new Date().getFullYear();
+
+  // Validación de matrícula sin espacios
+  if (this.matricula.includes(' ')) {
+    this.mensajeError = 'La matrícula no puede contener espacios en blanco.';
+    this.mensajeExito = '';
+    return;
+  }
+
+  // Validación de año no superior al actual
+  const anyoNumero = parseInt(this.anyo, 10);
+  if (isNaN(anyoNumero) || anyoNumero > anyoActual) {
+    this.mensajeError = `El año del vehículo no puede ser mayor que ${anyoActual}.`;
+    this.mensajeExito = '';
+    return;
+  }
     const vehiculo = {
       marca: this.marca,
       modelo: this.modelo,
@@ -72,21 +88,26 @@ export class RegisterVehicleComponent implements OnInit {
     );
   }
   // Método para eliminar un vehículo
-  eliminarVehiculo(id: number) {
-    this.dataAccessService.eliminarVehiculo(id).subscribe({
-  next: (res) => {
-    if (res.success) {
-      console.log('Vehículo eliminado correctamente');
-      // Refresca la lista si es necesario
-    } else {
-      alert('No se pudo eliminar el vehículo: ' + res.message);
+    eliminarVehiculo(id: number) {
+    if (confirm('¿Estás seguro de que deseas eliminar este vehículo?')) {
+      this.dataAccessService.eliminarVehiculo(id).subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.mensajeExito = 'Vehículo eliminado correctamente';
+            this.mensajeError = '';
+            // Actualizar la lista de vehículos
+            this.obtenerVehiculos();
+          } else {
+            this.mensajeError = 'No se pudo eliminar el vehículo: ' + response.message;
+            this.mensajeExito = '';
+          }
+        },
+        error: (error) => {
+          console.error('Error al eliminar el vehículo:', error);
+          this.mensajeError = 'Error al eliminar el vehículo';
+          this.mensajeExito = '';
+        }
+      });
     }
-  },
-  error: (err) => {
-    console.error(err);
-    alert('Error al eliminar el vehículo');
   }
-});
-
-}
 }

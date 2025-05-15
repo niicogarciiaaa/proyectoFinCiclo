@@ -45,6 +45,9 @@ export interface Invoice {
   Modelo?: string;
   Anyo: string;
   items: InvoiceItem[];
+  WorkshopName?: string; // Solo disponible para modo usuario
+  WorkshopAddress?: string; // Solo disponible para modo usuario
+  WorkshopPhone?: string; // Solo disponible para modo usuario
 }
 
 
@@ -262,47 +265,43 @@ export class DataAccessService {
     );
   }
 // Método para eliminar un vehículo
-eliminarVehiculo(vehicleId: number): Observable<any> {
-  const body = {
+eliminarVehiculo(id: number): Observable<any> {
+  const payload = {
     accion: 'eliminar',
-    VehiculoID: vehicleId
+    vehiculoID: id
   };
-
-  return this.http.post<any>(`${this.apiUrl}/Vehicles.php`, body, {
-    headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-    withCredentials: true
-  }).pipe(
-    map(response => {
-      if (!response.success) {
-        console.warn('No se pudo eliminar el vehículo:', response.message);
-      }
-      return response;
-    }),
-    catchError(error => {
-      console.error('Error al eliminar el vehículo:', error);
-      return throwError(() => new Error('Error al eliminar el vehículo'));
-    })
+  return this.http.post<{ success: boolean; message: string }>(
+    `${this.apiUrl}/Vehicles.php`, // Añadimos la ruta correcta
+    payload,
+    { 
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      withCredentials: true 
+    }
   );
 }
 
 
   // Método para obtener las citas de un taller
-  obtenerCitasTaller(): Observable<any> {
-    const body = {
-      accion: 'ver_citas_taller', 
-      WorkshopID: 1  // Cambia esto al ID del taller que necesites
-    };
-
-    return this.http.post<any>(`${this.apiUrl}/Create_Appointment.php`, body, {
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-      withCredentials: true
-    }).pipe(
-      map(response => response),
-      catchError(error => {
-        console.error('Error al obtener las citas del taller:', error);
-        return throwError(() => new Error('Error en la petición al servidor'));
-      })
-    );
+   obtenerCitasTaller(): Observable<any> {
+      const currentUser = this.getCurrentUser();
+      if (!currentUser || currentUser.role !== 'Taller') {
+          return throwError(() => new Error('No autorizado'));
+      }
+  
+      const body = {
+          accion: 'ver_citas_taller'
+      };
+  
+      return this.http.post<any>(`${this.apiUrl}/Create_Appointment.php`, body, {
+          headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+          withCredentials: true
+      }).pipe(
+          map(response => response),
+          catchError(error => {
+              console.error('Error al obtener las citas del taller:', error);
+              return throwError(() => new Error('Error en la petición al servidor'));
+          })
+      );
   }
 
   // Método para obtener el usuario actual desde el localStorage

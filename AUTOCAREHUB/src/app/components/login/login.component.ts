@@ -37,38 +37,39 @@ export class LoginComponent {
     this.selectedLang = lang;
   }
 
-  checkAccount() {
-    if (this.loginForm.valid) {
-      this.loading = true;
-      this.errorMessage = '';
+    checkAccount() {
+  if (this.loginForm.valid) {
+    this.loading = true;
+    this.errorMessage = '';
 
-      const email = this.loginForm.get('email')?.value;
-      const password = this.loginForm.get('password')?.value;
+    const email = this.loginForm.get('email')?.value;
+    const password = this.loginForm.get('password')?.value;
 
-      this.dataAccessService.checkUserAccount(email, password).subscribe({
-        next: (response) => {
-          if (response.success) {
-            localStorage.setItem('userName', response.user?.name || '');
-            if (response.success) {
-              this.router.navigate(['/home']);
-            }
-          } else {
-            this.errorMessage = response.message || this.i18n.t('errorIniciarSesion');
-          }
-        },
-        error: (error) => {
-          if (error.status === 429) {
-            this.errorMessage = this.i18n.t('demasiadosIntentos');
-          } else {
-            this.errorMessage = error.error?.message || this.i18n.t('errorServidor');
-          }
-        },
-        complete: () => {
-          this.loading = false;
+    this.dataAccessService.checkUserAccount(email, password).subscribe({
+      next: (response) => {
+        this.loading = false; 
+        if (response.success) {
+          localStorage.setItem('userName', response.user?.name || '');
+          this.router.navigate(['/home']);
+        } else {
+          this.errorMessage = response.message || this.i18n.t('errorIniciarSesion');
+          this.loginForm.patchValue({ password: '' });
         }
-      });
-    } else {
-      this.errorMessage = this.i18n.t('camposIncorrectos');
-    }
+      },
+      error: (error) => {
+        this.loading = false; 
+        if (error.status === 429) {
+          this.errorMessage = this.i18n.t('demasiadosIntentos');
+        } else {
+          this.errorMessage = error.error?.message || this.i18n.t('errorServidor');
+        }
+        this.loginForm.patchValue({ password: '' });
+      }
+    });
+  } else {
+    this.errorMessage = this.i18n.t('camposIncorrectos');
+    this.loading = false;
   }
+}
+
 }

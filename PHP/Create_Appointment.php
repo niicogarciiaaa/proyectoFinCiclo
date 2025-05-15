@@ -49,25 +49,22 @@ if ($method === 'POST') {
 
     $accion = $data['accion'];
 
-    // Consultar huecos disponibles por semana (solo lunes a viernes)
+    // Consultar huecos disponibles por mes (solo lunes a viernes)
     if ($accion === 'consultar_semana') {
         $tallerID = $data['WorkshopID'] ?? null;
-        $fechaInicio = $data['FechaInicio'] ?? null;
-        $fechaFin = $data['FechaFin'] ?? null;
-
-        if (!$tallerID || !$fechaInicio || !$fechaFin) {
+        
+        if (!$tallerID) {
             http_response_code(400);
             echo json_encode(["success" => false, "message" => "Faltan parámetros"]);
             exit();
         }
-
-        // Validar que la fecha inicial sea un día laborable (lunes a viernes)
-        $diaInicioSemana = date('N', strtotime($fechaInicio));
-        if ($diaInicioSemana >= 6) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "La fecha inicial debe ser un día laborable (lunes a viernes)"]);
-            exit();
-        }
+        
+        // Fecha de inicio es el día actual
+        $fechaActual = new DateTime();
+        $fechaInicio = $fechaActual->format('Y-m-d');
+        
+        // Calcular la fecha fin (30 días después del día actual)
+        $fechaFin = (clone $fechaActual)->modify('+30 days')->format('Y-m-d');
 
         $horaInicio = 9;
         $horaFin = 18;
@@ -92,8 +89,8 @@ if ($method === 'POST') {
             $ocupadas[$fecha][] = $hora;
         }
 
-        // Generar huecos solo de lunes a viernes
-        $slotsSemana = [];
+        // Generar huecos solo de lunes a viernes para todo el mes
+        $slotsDelMes = [];
         $period = new DatePeriod(
             new DateTime($fechaInicio),
             new DateInterval('P1D'),
@@ -114,12 +111,12 @@ if ($method === 'POST') {
                     "estado" => $estado
                 ];
             }
-            $slotsSemana[$fechaStr] = $slots;
+            $slotsDelMes[$fechaStr] = $slots;
         }
 
         echo json_encode([
             "success" => true,
-            "slotsSemana" => $slotsSemana
+            "slotsSemana" => $slotsDelMes
         ]);
         exit();
     }
@@ -236,55 +233,60 @@ if ($method === 'POST') {
     }
 
     // Ver todas las citas de un taller
-    if ($accion === 'ver_citas_taller') {
-        if ($userRole !== 'Taller') {
-            http_response_code(403);
-            echo json_encode(['success' => false, 'message' => 'Acción no permitida. Solo los talleres pueden ver sus citas.']);
-            exit();
-        }
-
-        $tallerID = $data['WorkshopID'] ?? null;
-
-        if (!$tallerID) {
-            http_response_code(400);
-            echo json_encode(["success" => false, "message" => "Faltan parámetros"]);
-            exit();
-        }
-
-        // Obtener todas las citas del taller (incluyendo las reservadas y no reservadas)
-        // Obtener todas las citas del taller (sin importar el estado)
-        $stmt = $conn->prepare("
-    SELECT 
-        a.AppointmentID, 
-        a.StartDateTime, 
-        a.EndDateTime, 
-        CONCAT(v.Marca, ' ', v.Modelo) AS Vehiculo, 
-        a.Description, 
-        a.Status, 
-        u.FullName AS UserName 
-    FROM Appointments a 
-    JOIN Vehicles v ON a.VehicleID = v.VehicleID 
-    JOIN Users u ON v.UserID = u.UserID 
-    WHERE a.WorkshopID = ?
-");
-
+        // Ver todas las citas de un taller
+        if ($accion === 'ver_citas_taller') {
+            if ($userRole !== 'Taller') {
+                http_response_code(403);
+                echo json_encode(['success' => false, 'message' => 'Acción no permitida. Solo los talleres pueden ver sus citas.']);
+                exit();
+            }
     
-$stmt->bind_param("i", $tallerID);
-$stmt->execute();
-$result = $stmt->get_result();
-
-$citas = [];
-while ($row = $result->fetch_assoc()) {
-$citas[] = $row;
-}
-
-echo json_encode([
-"success" => true,
-"citas" => $citas
-]);
-exit();
-
-    }
+            // Usar el ID del usuario de la sesión para obtener el ID del taller
+            $stmt = $conn->prepare("SELECT WorkshopID FROM Workshops WHERE UserID = ?");
+            $stmt->bind_param("i", $userID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+            
+            if ($result->num_rows === 0) {
+                http_response_code(400);
+                echo json_encode(["success" => false, "message" => "No se encontró el taller asociado al usuario"]);
+                exit();
+            }
+            
+            $workshop = $result->fetch_assoc();
+            $tallerID = $workshop['WorkshopID'];
+    
+            // Obtener todas las citas del taller
+            $stmt = $conn->prepare("
+                SELECT 
+                    a.AppointmentID, 
+                    a.StartDateTime, 
+                    a.EndDateTime, 
+                    CONCAT(v.Marca, ' ', v.Modelo) AS Vehiculo, 
+                    a.Description, 
+                    a.Status, 
+                    u.FullName AS UserName 
+                FROM Appointments a 
+                JOIN Vehicles v ON a.VehicleID = v.VehicleID 
+                JOIN Users u ON v.UserID = u.UserID 
+                WHERE a.WorkshopID = ?
+            ");
+    
+            $stmt->bind_param("i", $tallerID);
+            $stmt->execute();
+            $result = $stmt->get_result();
+    
+            $citas = [];
+            while ($row = $result->fetch_assoc()) {
+                $citas[] = $row;
+            }
+    
+            echo json_encode([
+                "success" => true,
+                "citas" => $citas
+            ]);
+            exit();
+        }
 } else {
     http_response_code(405);
     echo json_encode(["success" => false, "message" => "Método no permitido"]);

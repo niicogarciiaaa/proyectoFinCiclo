@@ -161,16 +161,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     u.FullName AS UserName,
                     a.VehicleID,
                     v.Modelo,
-                    v.Anyo
+                    v.Anyo,
+                    w.WorkshopID,
+                    w.Name AS WorkshopName,
+                    w.Address AS WorkshopAddress,
+                    w.Phone AS WorkshopPhone
                 FROM Invoices i
                 JOIN Appointments a ON i.AppointmentID = a.AppointmentID
                 JOIN Users u ON a.UserID = u.UserID
                 LEFT JOIN Vehicles v ON a.VehicleID = v.VehicleID
+                LEFT JOIN Workshops w ON a.WorkshopID = w.WorkshopID
                 ORDER BY i.Date DESC
             ");
-        } 
-        // Si es usuario normal, solo puede ver sus propias facturas
-        else {
+        } else {
             $stmt = $conn->prepare("
                 SELECT 
                     i.InvoiceID, 
@@ -181,25 +184,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
                     a.VehicleID,
                     v.Marca,
                     v.Modelo,
-                    v.Anyo
+                    v.Anyo,
+                    w.WorkshopID,
+                    w.Name AS WorkshopName,
+                    w.Address AS WorkshopAddress,
+                    w.Phone AS WorkshopPhone
                 FROM Invoices i
                 JOIN Appointments a ON i.AppointmentID = a.AppointmentID
                 LEFT JOIN Vehicles v ON a.VehicleID = v.VehicleID
+                LEFT JOIN Workshops w ON a.WorkshopID = w.WorkshopID
                 WHERE a.UserID = ?
                 ORDER BY i.Date DESC
             ");
             $stmt->bind_param("i", $user_id);
         }
-        
+
         if (!$stmt->execute()) {
             throw new Exception('Error al obtener las facturas: ' . $stmt->error);
         }
-        
+
         $result = $stmt->get_result();
         $invoices = [];
-        
+
         while ($invoice = $result->fetch_assoc()) {
-            // Para cada factura, obtener sus ítems
+            // Obtener ítems
             $stmtItems = $conn->prepare("
                 SELECT 
                     ItemID,
@@ -214,37 +222,30 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET') {
             $stmtItems->bind_param("i", $invoice['InvoiceID']);
             $stmtItems->execute();
             $resultItems = $stmtItems->get_result();
-            
+
             $items = [];
             while ($item = $resultItems->fetch_assoc()) {
                 $items[] = $item;
             }
-            
+
             $invoice['items'] = $items;
             $invoices[] = $invoice;
-            
+
             $stmtItems->close();
         }
-        
+
         $stmt->close();
-        
-        if (empty($invoices)) {
-            echo json_encode([
-                'success' => true,
-                'message' => 'No se encontraron facturas',
-                'invoices' => []
-            ]);
-        } else {
-            echo json_encode([
-                'success' => true,
-                'invoices' => $invoices
-            ]);
-        }
+
+        echo json_encode([
+            'success' => true,
+            'invoices' => $invoices
+        ]);
     } catch (Exception $e) {
         header('HTTP/1.1 500 Internal Server Error');
         echo json_encode(['error' => $e->getMessage()]);
         exit;
     }
 }
+
 
 $conn->close();

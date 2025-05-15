@@ -7,7 +7,6 @@
   <table *ngIf="!loading && invoices.length > 0" class="table table-bordered table-striped table-hover text-center mx-auto">
     <thead>
       <tr>
-        <th>ID Factura</th>
         <th>Fecha</th>
         <th>Total</th>
         <th>Estado</th>
@@ -16,7 +15,6 @@
     </thead>
     <tbody>
       <tr *ngFor="let invoice of invoices">
-        <td>{{ invoice.InvoiceID }}</td>
         <td>{{ invoice.Date }}</td>
         <td>{{ invoice.TotalAmount }} €</td>
         <td>{{ invoice.Estado }}</td>

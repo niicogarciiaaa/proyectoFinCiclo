@@ -29,7 +29,7 @@
         <td class="px-4 py-2 border-b">{{ cita.StartDateTime | date:'dd/MM/yyyy HH:mm' }}</td>
         <td class="px-4 py-2 border-b">{{ cita.EndDateTime | date:'dd/MM/yyyy HH:mm' }}</td>
         <td class="px-4 py-2 border-b">{{ cita.Description }}</td>
-        <td class="px-4 py-2 border-b">{{ cita.Estado  || 'Pendiente' }}</td>
+        <td class="px-4 py-2 border-b">{{ cita.Status }}</td>
       </tr>
     </tbody>
   </table>

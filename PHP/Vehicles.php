@@ -12,6 +12,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
     exit();
 }
 
+
 // Definir las credenciales de la base de datos
 $DB_HOST = "localhost";
 $DB_NAME = "AutoCareHub";

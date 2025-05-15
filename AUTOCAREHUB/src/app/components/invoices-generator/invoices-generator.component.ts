@@ -17,7 +17,7 @@ interface InvoiceItemWorkshop {
   standalone: true,
   templateUrl: './invoices-generator.component.html',
   styleUrls: ['./invoices-generator.component.css'],
-  imports: [FormsModule, CommonModule, MenuComponent, AppointmentsViewerComponent],
+  imports: [FormsModule, CommonModule, MenuComponent],
 })
 export class InvoicesGeneratorComponent implements OnInit {
   facturas: Invoice[] = [];

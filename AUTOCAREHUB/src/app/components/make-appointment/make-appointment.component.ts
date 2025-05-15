@@ -14,7 +14,7 @@ interface WeekSlots {
 @Component({
   selector: 'app-make-appointment',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule,MenuComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MenuComponent],
   templateUrl: './make-appointment.component.html',
   styleUrl: './make-appointment.component.css'
 })
@@ -23,18 +23,24 @@ export class MakeAppointmentComponent implements OnInit {
   appointmentForm: any;
   errorMessage: string = '';
   vehiclesErrorMessage: string = '';
-  weekSlots: WeekSlots = {};
+  monthSlots: WeekSlots = {};
   loading: boolean = false;
   loadingVehicles: boolean = false;
   selectedSlots: { fecha: string, hora: string }[] = [];
   selectedVehicle: number = 0;
   motivo: string = '';
   vehicles: any[] = [];
+  
+  // Pagination properties
+  visibleDates: string[] = [];
+  currentPage: number = 1;
+  datesPerPage: number = 5;
+  totalPages: number = 1;
 
   constructor(private dataAccess: DataAccessService) {}
 
   ngOnInit(): void {
-    this.consultarSemana();
+    this.consultarMes();
     this.cargarVehiculos();
   }
 
@@ -46,7 +52,6 @@ export class MakeAppointmentComponent implements OnInit {
       next: (response) => {
         if (response && response.success) {
           this.vehicles = response.vehicles || [];
-          console.log('Vehículos cargados:', this.vehicles);
           if (this.vehicles.length > 0 && !this.selectedVehicle) {
             this.selectedVehicle = this.vehicles[0].VehicleID;
           }
@@ -56,7 +61,6 @@ export class MakeAppointmentComponent implements OnInit {
       },
       error: (error) => {
         this.vehiclesErrorMessage = 'Error de conexión al cargar vehículos';
-        console.error('Error al cargar vehículos:', error);
       },
       complete: () => {
         this.loadingVehicles = false;
@@ -64,33 +68,53 @@ export class MakeAppointmentComponent implements OnInit {
     });
   }
 
-  consultarSemana() {
+  consultarMes() {
     this.loading = true;
+    this.errorMessage = '';
+    
+    // El backend ya maneja la consulta de un mes entero
     const today = new Date();
-    const currentDay = today.getDay();
-    const monday = new Date(today);
-    monday.setDate(today.getDate() - currentDay + (currentDay === 0 ? -6 : 1));
-    const friday = new Date(monday);
-    friday.setDate(monday.getDate() + 4);
-    const fechaInicio = monday.toISOString().split('T')[0];
-    const fechaFin = friday.toISOString().split('T')[0];
-
-    this.dataAccess.consultarSemana(1, fechaInicio, fechaFin).subscribe({
+    const currentDate = today.toISOString().split('T')[0];
+    
+    this.dataAccess.consultarSemana(1, currentDate, '').subscribe({
       next: (response) => {
         if (response.success) {
-          this.weekSlots = response.slotsSemana;
+          this.monthSlots = response.slotsSemana;
+          this.setupPagination();
         } else {
           this.errorMessage = 'Error al consultar los huecos disponibles';
         }
       },
       error: (error) => {
         this.errorMessage = 'Error de conexión al servidor';
-        console.error('Error:', error);
       },
       complete: () => {
         this.loading = false;
       }
     });
+  }
+
+  setupPagination() {
+    const allDates = Object.keys(this.monthSlots).sort();
+    this.totalPages = Math.ceil(allDates.length / this.datesPerPage);
+    this.goToPage(1);
+  }
+
+  goToPage(page: number) {
+    if (page < 1 || page > this.totalPages) return;
+    
+    this.currentPage = page;
+    const allDates = Object.keys(this.monthSlots).sort();
+    const startIndex = (page - 1) * this.datesPerPage;
+    this.visibleDates = allDates.slice(startIndex, startIndex + this.datesPerPage);
+  }
+
+  prevPage() {
+    this.goToPage(this.currentPage - 1);
+  }
+
+  nextPage() {
+    this.goToPage(this.currentPage + 1);
   }
 
   toggleSlotSelection(fecha: string, hora: string) {
@@ -116,8 +140,7 @@ export class MakeAppointmentComponent implements OnInit {
       const cita = {
         Fecha: slot.fecha,
         HoraInicio: slot.hora,
-        HoraFin: this.calculateEndTime(slot.hora),
-        VehicleID: this.selectedVehicle, // Cambiar de VehiculoID a VehicleID
+        VehicleID: this.selectedVehicle,
         WorkshopID: 1,
         Motivo: this.motivo
       };
@@ -127,11 +150,10 @@ export class MakeAppointmentComponent implements OnInit {
           if (response && response.success) {
             citasCreadas++;
             if (citasCreadas === totalCitas) {
-              this.consultarSemana();
+              this.consultarMes();
               this.selectedSlots = [];
               this.motivo = '';
               this.errorMessage = 'Citas creadas correctamente';
-              console.log('Datos de la cita:', cita);
             }
           } else {
             this.errorMessage = 'No se pudo crear la cita: ' + (response?.message || '');
@@ -139,7 +161,6 @@ export class MakeAppointmentComponent implements OnInit {
         },
         error: (error) => {
           this.errorMessage = 'Error al crear la cita: ' + (error.error?.message || error.message || 'Error desconocido');
-          console.error('Error al crear la cita:', error);
         },
         complete: () => {
           this.loading = false;
@@ -147,7 +168,6 @@ export class MakeAppointmentComponent implements OnInit {
       });
     });
   }
-  
 
   makeAppointment() {
     if (this.selectedSlots.length === 0) {
@@ -166,19 +186,6 @@ export class MakeAppointmentComponent implements OnInit {
     }
 
     this.crearCitas();
-  }
-
-  calculateEndTime(startTime: string): string {
-    const [hours, minutes] = startTime.split(':').map(Number);
-    let endMinutes = minutes + 30;
-    let endHours = hours;
-
-    if (endMinutes >= 60) {
-      endHours += 1;
-      endMinutes -= 60;
-    }
-
-    return `${endHours}:${endMinutes < 10 ? '0' : ''}${endMinutes}`;
   }
 
   getDayName(date: string): string {
