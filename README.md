@@ -7,8 +7,15 @@ Lo que tendremos que hacer, es copiar la carpeta que tenemos en el repositorio q
 
 Lo tendremos que copiar todo en un servidor, algo del estilo de XAMPP o parecido, teniendo los ficheros de la web en la raíz del proyecto, y la carpeta de PHP en la raíz.
 
-Una vez tenemos esto, tendremos que visitar la url **localhost/PHP/paginaCreacionBase.php**, donde tenemos la definición de la base de datos.
-Después de hacer eso, tenemos que ejecutar los inserts de prueba, que se encuentran en la URL **localhost/PHP/insertsPrueba.php**
-Una vez tenemos esto listo, tendremos que visitar la url **localhost/index.html**, y ya nos cargará el inicio de sesión.
+Una vez tenemos esto, tendremos que seguir estos pasos:
 
+1. Visitar la siguiente URL para crear la base de datos:
+   > **`localhost/PHP/paginaCreacionBase.php`**
 
+2. Ejecutar los inserts de prueba en:
+   > **`localhost/PHP/insertsPrueba.php`**
+
+3. Finalmente, acceder a la aplicación en:
+   > **`localhost/index.html`**
+
+Ya nos cargará el inicio de sesión.
