@@ -2,36 +2,13 @@
 Este es el repositorio que tengo para el proyecto de final de  ciclo.
 
 
-if ($accion === 'crear_invoices') {
-    $sqlInvoices = "CREATE TABLE IF NOT EXISTS Invoices (
-        InvoiceID INT AUTO_INCREMENT PRIMARY KEY,
-        AppointmentID INT NOT NULL,
-        Date DATE NOT NULL,
-        TotalAmount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-        Estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
-        FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID) ON DELETE CASCADE
-    )";
-    if ($conn->query($sqlInvoices)) {
-        echo "✅ Tabla 'Invoices' creada correctamente<br>";
-    } else {
-        echo "❌ Error creando tabla 'Invoices': " . $conn->error . "<br>";
-    }
-}
+## Visualización del proyecto
+Lo que tendremos que hacer, es copiar la carpeta que tenemos en el repositorio que se llama COMPILADO, que es una carpeta que tenemos con todo lo necesario, tenemos también que copiar la carpeta de PHP, para poder tener la API.
 
-if ($accion === 'crear_invoice_items') {
-    $sqlInvoiceItems = "CREATE TABLE IF NOT EXISTS InvoiceItems (
-        ItemID INT AUTO_INCREMENT PRIMARY KEY,
-        InvoiceID INT NOT NULL,
-        Description TEXT NOT NULL,
-        Quantity DECIMAL(10,2) NOT NULL DEFAULT 1,
-        UnitPrice DECIMAL(10,2) NOT NULL,
-        TaxRate DECIMAL(5,2) NOT NULL DEFAULT 21.00,
-        Amount DECIMAL(10,2) NOT NULL,
-        FOREIGN KEY (InvoiceID) REFERENCES Invoices(InvoiceID) ON DELETE CASCADE
-    )";
-    if ($conn->query($sqlInvoiceItems)) {
-        echo "✅ Tabla 'InvoiceItems' creada correctamente<br>";
-    } else {
-        echo "❌ Error creando tabla 'InvoiceItems': " . $conn->error . "<br>";
-    }
-}
+Lo tendremos que copiar todo en un servidor, algo del estilo de XAMPP o parecido, teniendo los ficheros de la web en la raíz del proyecto, y la carpeta de PHP en la raíz.
+
+Una vez tenemos esto, tendremos que visitar la url **localhost/PHP/paginaCreacionBase.php**, donde tenemos la definición de la base de datos.
+Después de hacer eso, tenemos que ejecutar los inserts de prueba, que se encuentran en la URL **localhost/PHP/insertsPrueba.php**
+Una vez tenemos esto listo, tendremos que visitar la url **localhost/index.html**, y ya nos cargará el inicio de sesión.
+
+

@@ -2,11 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
+import { MenuComponent } from "../menu/menu.component";
 
 @Component({
   selector: 'app-register-vehicle',
   standalone: true,
-  imports: [FormsModule, CommonModule],
+  imports: [FormsModule, CommonModule, MenuComponent],
   templateUrl: './register-vehicle.component.html',
   styleUrls: ['./register-vehicle.component.css']
 })

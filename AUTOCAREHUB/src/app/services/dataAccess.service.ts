@@ -59,7 +59,7 @@ export interface InvoiceResponse {
   providedIn: 'root'
 })
 export class DataAccessService {
-  private apiUrl = 'http://localhost/PHP';
+  private apiUrl = 'http://localhost/PHP/routes';
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json'
@@ -126,7 +126,7 @@ export class DataAccessService {
       return throwError(() => new Error('Usuario no autenticado'));
     }
 
-    return this.http.get<InvoiceResponse>(`${this.apiUrl}/facturas.php`, this.httpOptions).pipe(
+    return this.http.get<InvoiceResponse>(`${this.apiUrl}/Invoices.php`, this.httpOptions).pipe(
       map(response => response),
       catchError(error => {
         console.error('Error al obtener las facturas:', error);
@@ -151,7 +151,7 @@ export class DataAccessService {
       items: items
     };
 
-    return this.http.post<any>(`${this.apiUrl}/facturas.php`, body, this.httpOptions).pipe(
+    return this.http.post<any>(`${this.apiUrl}/Invoices.php`, body, this.httpOptions).pipe(
       map(response => response),
       catchError(error => {
         console.error('Error al crear la factura:', error);
@@ -169,7 +169,7 @@ export class DataAccessService {
       FechaFin: fechaFin
     };
 
-    return this.http.post<any>(`${this.apiUrl}/Create_Appointment.php`, body, {
+    return this.http.post<any>(`${this.apiUrl}/appointments.php`, body, {
       ...this.httpOptions,
       withCredentials: true
     }).pipe(
@@ -201,7 +201,7 @@ export class DataAccessService {
 
     console.log('Enviando datos de cita:', body);
 
-    return this.http.post<any>(`${this.apiUrl}/Create_Appointment.php`, body, {
+    return this.http.post<any>(`${this.apiUrl}/appointments.php`, body, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
       withCredentials: true
     }).pipe(
@@ -266,13 +266,13 @@ export class DataAccessService {
   }
 // Método para eliminar un vehículo
 eliminarVehiculo(id: number): Observable<any> {
-  const payload = {
+  const body = {
     accion: 'eliminar',
     vehiculoID: id
   };
   return this.http.post<{ success: boolean; message: string }>(
     `${this.apiUrl}/Vehicles.php`, // Añadimos la ruta correcta
-    payload,
+    body,
     { 
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
       withCredentials: true 
@@ -282,7 +282,7 @@ eliminarVehiculo(id: number): Observable<any> {
 
 
   // Método para obtener las citas de un taller
-   obtenerCitasTaller(): Observable<any> {
+     obtenerCitasTaller(): Observable<any> {
       const currentUser = this.getCurrentUser();
       if (!currentUser || currentUser.role !== 'Taller') {
           return throwError(() => new Error('No autorizado'));
@@ -292,16 +292,14 @@ eliminarVehiculo(id: number): Observable<any> {
           accion: 'ver_citas_taller'
       };
   
-      return this.http.post<any>(`${this.apiUrl}/Create_Appointment.php`, body, {
-          headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-          withCredentials: true
-      }).pipe(
-          map(response => response),
-          catchError(error => {
-              console.error('Error al obtener las citas del taller:', error);
-              return throwError(() => new Error('Error en la petición al servidor'));
+      // Corregida la ruta eliminando la duplicación de 'routes'
+      return this.http.post<any>(`${this.apiUrl}/appointments.php`, body, {
+          withCredentials: true,
+          headers: new HttpHeaders({
+              'Content-Type': 'application/json',
+              'X-Requested-With': 'XMLHttpRequest'
           })
-      );
+      });
   }
 
   // Método para obtener el usuario actual desde el localStorage
