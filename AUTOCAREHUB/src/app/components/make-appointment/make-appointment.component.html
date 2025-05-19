@@ -49,30 +49,41 @@
         <button class="remove-slot" (click)="toggleSlotSelection(slot.fecha, slot.hora)">✕</button>
       </li>
     </ul>
+    <button class="confirm-button" (click)="showPopup()" *ngIf="selectedSlots.length > 0">
+      Continuar con la reserva
+    </button>
   </div>
-  
-  <!-- Vehicle Selection -->
-  <div class="vehicle-selection">
-    <label for="vehicle">Selecciona un Vehículo:</label>
-    <select id="vehicle" [(ngModel)]="selectedVehicle" name="vehicle">
-      <option value="0" disabled>Selecciona un vehículo</option>
-      <option *ngFor="let vehicle of vehicles" [value]="vehicle.VehicleID">
-        {{ vehicle.marca }} {{ vehicle.modelo }}
-      </option>
-    </select>
-    <div *ngIf="vehiclesErrorMessage" class="error-message">
-      {{ vehiclesErrorMessage }}
+
+  <!-- Popup Form -->
+  <div class="popup-overlay" *ngIf="isPopupVisible" (click)="closePopup($event)">
+    <div class="popup-content">
+      <button class="close-popup" (click)="closePopup($event)">✕</button>
+      <h3>Detalles de la Cita</h3>
+      
+      <!-- Vehicle Selection -->
+      <div class="vehicle-selection">
+        <label for="vehicle">Selecciona un Vehículo:</label>
+        <select id="vehicle" [(ngModel)]="selectedVehicle" name="vehicle">
+          <option value="0" disabled>Selecciona un vehículo</option>
+          <option *ngFor="let vehicle of vehicles" [value]="vehicle.VehicleID">
+            {{ vehicle.marca }} {{ vehicle.modelo }}
+          </option>
+        </select>
+        <div *ngIf="vehiclesErrorMessage" class="error-message">
+          {{ vehiclesErrorMessage }}
+        </div>
+      </div>
+      
+      <!-- Appointment Reason -->
+      <div class="motivo-selection">
+        <label for="motivo">Motivo de la Cita:</label>
+        <textarea id="motivo" [(ngModel)]="motivo" name="motivo" placeholder="Escribe el motivo de la cita"></textarea>
+      </div>
+      
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button (click)="makeAppointment()" [disabled]="loading">Confirmar Cita</button>
+      </div>
     </div>
-  </div>
-  
-  <!-- Appointment Reason -->
-  <div class="motivo-selection">
-    <label for="motivo">Motivo de la Cita:</label>
-    <textarea id="motivo" [(ngModel)]="motivo" name="motivo" placeholder="Escribe el motivo de la cita"></textarea>
-  </div>
-  
-  <!-- Action Buttons -->
-  <div class="actions">
-    <button (click)="makeAppointment()" [disabled]="loading">Confirmar Cita</button>
   </div>
 </div>

@@ -30,6 +30,7 @@ export class MakeAppointmentComponent implements OnInit {
   selectedVehicle: number = 0;
   motivo: string = '';
   vehicles: any[] = [];
+  isPopupVisible = false;
   
   // Pagination properties
   visibleDates: string[] = [];
@@ -203,6 +204,7 @@ export class MakeAppointmentComponent implements OnInit {
         }
       });
     });
+    this.isPopupVisible= false;
   }
 
   /**
@@ -237,6 +239,14 @@ export class MakeAppointmentComponent implements OnInit {
     const dayIndex = new Date(date).getDay();
     return days[dayIndex];
   }
+  showPopup() {
+  this.isPopupVisible = true;
+}
+closePopup(event: any) {
+  if (event.target.classList.contains('popup-overlay') || event.target.classList.contains('close-popup')) {
+    this.isPopupVisible = false;
+  }
+}
 
   /**
    * Formatea una fecha al formato español (dd/mm/yyyy)
