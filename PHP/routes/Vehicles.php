@@ -75,6 +75,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             echo json_encode($result);
             break;
             
+        case 'editar':
+            // Obtener datos del vehículo
+            $vehiculoID = $input["vehiculoID"] ?? 0;
+            $marca = $input["marca"] ?? '';
+            $modelo = $input["modelo"] ?? '';
+            $anyo = $input["anyo"] ?? '';
+            $matricula = $input["matricula"] ?? '';
+            
+            // Editar vehículo
+            $result = $vehicleController->updateVehicle($user_id, $vehiculoID, $marca, $modelo, $anyo, $matricula);
+            echo json_encode($result);
+            break;
+            
         default:
             http_response_code(400);
             echo json_encode(["success" => false, "message" => "Acción no válida"]);

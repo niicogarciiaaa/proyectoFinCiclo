@@ -58,7 +58,7 @@ export class InvoicesGeneratorComponent implements OnInit {
     
   }
 
-  // Método para obtener todas las facturas
+  /**  Método para obtener todas las facturas */
   obtenerFacturas(): void {
     this.isLoading = true;
     this.errorMessage = '';
@@ -76,7 +76,7 @@ export class InvoicesGeneratorComponent implements OnInit {
     });
   }
 
-  // Método para crear una nueva factura
+  /**Método para crear una nueva factura */
   crearFactura(): void {
     if (!this.appointment_id) {
       this.errorMessage = 'Debes proporcionar el ID de la cita';
@@ -108,7 +108,7 @@ export class InvoicesGeneratorComponent implements OnInit {
     });
   }
 
-  // Método para agregar un ítem a la factura
+  /**Método para agregar un ítem a la factura*/
   agregarItem(): void {
     if (!this.newItemDescription || this.newItemQuantity <= 0 || this.newItemPrice < 0 || this.newItemTaxRate < 0) {
       this.errorMessage = 'Todos los campos del ítem deben ser válidos.';
@@ -130,26 +130,26 @@ export class InvoicesGeneratorComponent implements OnInit {
   }
   
   
-  // Método para eliminar un ítem de la lista
+  /**  Método para eliminar un ítem de la lista */
   eliminarItem(index: number): void {
     this.items.splice(index, 1);
   }
   
-  // Método para calcular el subtotal (sin IVA)
+  /**Método para calcular el subtotal (sin IVA)*/
   calcularSubtotal(): number {
     return this.items.reduce((total, item) => {
       return total + (item.quantity * item.unit_price);
     }, 0);
   }
   
-  // Método para calcular el IVA total
+  /**  Método para calcular el IVA total */
   calcularIVA(): number {
     return this.items.reduce((total, item) => {
       return total + (item.quantity * item.unit_price * (item.tax_rate / 100));
     }, 0);
   }
   
-  // Método para calcular el total con IVA
+  /**Método para calcular el total con IVA*/
   calcularTotal(): number {
     return this.calcularSubtotal() + this.calcularIVA();
   }
@@ -170,7 +170,7 @@ export class InvoicesGeneratorComponent implements OnInit {
   }
   
   
-  // Método para resetear el formulario
+  /** Método para resetear el formulario*/
   resetForm(): void {
     this.appointment_id = null;
     this.items = [];

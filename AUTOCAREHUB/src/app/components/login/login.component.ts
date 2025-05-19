@@ -32,11 +32,13 @@ export class LoginComponent {
     });
   }
 
+  /** Cambia el idioma de la aplicación */
   changeLang(lang: string) {
     this.i18n.setLang(lang);
     this.selectedLang = lang;
   }
 
+  /** Comprueba si los datos del formulario son correctos */
     checkAccount() {
   if (this.loginForm.valid) {
     this.loading = true;

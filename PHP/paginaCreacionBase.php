@@ -135,7 +135,7 @@ if ($bdExiste || $accion === 'eliminar_bd' || $accion === 'crear_bd') {
             UserID INT NOT NULL,
             Date DATE NOT NULL,
             TotalAmount DECIMAL(10,2) NOT NULL DEFAULT 0.00,
-            Estado VARCHAR(50) NOT NULL DEFAULT 'Pendiente',
+            Estado ENUM('Pendiente', 'Pagado') NOT NULL DEFAULT 'Pendiente',
             FOREIGN KEY (AppointmentID) REFERENCES Appointments(AppointmentID) ON DELETE CASCADE,
             FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE
         )";

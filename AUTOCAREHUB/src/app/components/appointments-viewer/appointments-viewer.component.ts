@@ -32,6 +32,7 @@ export class AppointmentsViewerComponent {
     this.obtenerCitasDelTaller();
     
   }
+  /**Obtiene las citas del taller,pero solo en caso de ser un taller, y las añade dentro del array */
   obtenerCitasDelTaller(): void {
     this.dataAccessService.obtenerCitasTaller().subscribe({
       next: (respuesta) => {

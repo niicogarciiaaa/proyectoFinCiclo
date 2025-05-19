@@ -7,6 +7,7 @@ import { RegisterVehicleComponent } from './components/register-vehicle/register
 import { AppointmentsViewerComponent } from './components/appointments-viewer/appointments-viewer.component';
 import { InvoicesGeneratorComponent } from './components/invoices-generator/invoices-generator.component';
 import { InvoiceViewerComponent } from './components/invoice-viewer/invoice-viewer.component';
+import { StatisticsViewerComponent } from './components/statistics-viewer/statistics-viewer.component';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent }, 
@@ -17,5 +18,6 @@ export const routes: Routes = [
     { path: 'registerVehicle', component: RegisterVehicleComponent }, 
     {path: 'viewAppointments', component: AppointmentsViewerComponent}, 
     {path: 'invoiceGenerator', component: InvoicesGeneratorComponent},
-    {path: 'invoiceViewer', component: InvoiceViewerComponent}, 
+    {path: 'invoiceViewer', component: InvoiceViewerComponent},
+    {path:'statistics', component: StatisticsViewerComponent},
 ];

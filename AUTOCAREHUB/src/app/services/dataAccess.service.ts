@@ -50,6 +50,20 @@ export interface Invoice {
   WorkshopPhone?: string; // Solo disponible para modo usuario
 }
 
+export interface InvoiceStats {
+  total_facturas: number;
+  total_facturado: number;
+  promedio_factura: number;
+  pendientes: number;
+  pagadas: number;
+}
+
+// Añadir después de las interfaces existentes pero antes de la clase DataAccessService
+export interface InvoiceSearchParams {
+  startDate?: string;
+  endDate?: string;
+  estado?: 'Pendiente' | 'Pagada' | null;
+}
 
 export interface InvoiceResponse {
   invoices: Invoice[];
@@ -69,7 +83,12 @@ export class DataAccessService {
 
   constructor(private http: HttpClient) {}
 
-  // Método para comprobar la cuenta de usuario (Login)
+  /**
+   * Autentica al usuario mediante sus credenciales
+   * @param email - Correo electrónico del usuario
+   * @param password - Contraseña del usuario
+   * @returns Observable con la respuesta del login
+   */
   checkUserAccount(email: string, password: string): Observable<LoginResponse> {
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/login.php`,
@@ -92,14 +111,17 @@ export class DataAccessService {
     );
   }
 
-  // Método para registrar un nuevo usuario
-  registerUser(
-    email: string,
-    fullName: string,
-    password: string,
-    notificationType: string,
-    contactValue: string
-  ): Observable<RegisterResponse> {
+  /**
+   * Registra un nuevo usuario en el sistema
+   * @param email - Correo electrónico del nuevo usuario
+   * @param fullName - Nombre completo
+   * @param password - Contraseña
+   * @param notificationType - Tipo de notificación preferida
+   * @param contactValue - Valor de contacto según el tipo de notificación
+   * @returns Observable con la respuesta del registro
+   */
+  registerUser(email: string, fullName: string, password: string, 
+    notificationType: string, contactValue: string): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(
       `${this.apiUrl}/register.php`,
       { email, fullName, password, notificationType, contactValue },
@@ -118,8 +140,10 @@ export class DataAccessService {
     );
   }
 
-  // Método para consultar las facturas de un taller o usuario
-  // Modificado para usar GET en lugar de POST según el PHP proporcionado
+  /**
+   * Obtiene las facturas del usuario o taller actual
+   * @returns Observable con la lista de facturas
+   */
   obtenerFacturas(): Observable<InvoiceResponse> {
     const currentUser = this.getCurrentUser();
     if (!currentUser) {
@@ -138,7 +162,13 @@ export class DataAccessService {
     );
   }
 
-  // Método para crear una nueva factura
+  /**
+   * Crea una nueva factura
+   * @param appointmentId - ID de la cita asociada
+   * @param items - Array de items de la factura
+   * @param estado - Estado de la factura (por defecto 'Pendiente')
+   * @returns Observable con la respuesta de la creación
+   */
   crearFactura(appointmentId: number, items: any[], estado: string = 'Pendiente'): Observable<any> {
     const currentUser = this.getCurrentUser();
     if (!currentUser) {
@@ -160,7 +190,13 @@ export class DataAccessService {
     );
   }
 
-  // Método para consultar la semana y los horarios de un taller
+  /**
+   * Consulta los horarios disponibles de un taller
+   * @param workshopID - ID del taller
+   * @param fechaInicio - Fecha de inicio de la consulta
+   * @param fechaFin - Fecha fin de la consulta
+   * @returns Observable con los horarios disponibles
+   */
   consultarSemana(workshopID: number, fechaInicio: string, fechaFin: string): Observable<any> {
     const body = {
       accion: 'consultar_semana',
@@ -181,14 +217,13 @@ export class DataAccessService {
     );
   }
 
-  // Método para crear una cita
-  crearCita(cita: {
-    Fecha: string,
-    HoraInicio: string,
-    VehicleID: number,
-    WorkshopID: number,
-    Motivo: string
-  }): Observable<any> {
+  /**
+   * Crea una nueva cita en el sistema
+   * @param cita - Objeto con los datos de la cita
+   * @returns Observable con la respuesta de la creación
+   */
+  crearCita(cita: { Fecha: string, HoraInicio: string, VehicleID: number, 
+    WorkshopID: number, Motivo: string }): Observable<any> {
     const body = {
       accion: 'crear',
       Fecha: cita.Fecha,
@@ -219,13 +254,13 @@ export class DataAccessService {
     );
   }
 
-  // Método para crear un nuevo vehículo
-  crearVehiculo(vehiculo: {
-    marca: string,
-    modelo: string,
-    anyo: string,
-    matricula: string
-  }): Observable<any> {
+  /**
+   * Crea un nuevo vehículo para el usuario actual
+   * @param vehiculo - Objeto con los datos del vehículo
+   * @returns Observable con la respuesta de la creación
+   */
+  crearVehiculo(vehiculo: { marca: string, modelo: string, anyo: string, 
+    matricula: string }): Observable<any> {
     const body = {
       accion: 'crear', 
       marca: vehiculo.marca,
@@ -251,7 +286,10 @@ export class DataAccessService {
     );
   }
 
-  // Método para obtener todos los vehículos
+  /**
+   * Obtiene todos los vehículos del usuario actual
+   * @returns Observable con la lista de vehículos
+   */
   obtenerVehiculos(): Observable<any> {
     return this.http.get<any>(`${this.apiUrl}/Vehicles.php`, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
@@ -264,45 +302,133 @@ export class DataAccessService {
       })
     );
   }
-// Método para eliminar un vehículo
-eliminarVehiculo(id: number): Observable<any> {
-  const body = {
-    accion: 'eliminar',
-    vehiculoID: id
-  };
-  return this.http.post<{ success: boolean; message: string }>(
-    `${this.apiUrl}/Vehicles.php`, // Añadimos la ruta correcta
-    body,
-    { 
-      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-      withCredentials: true 
-    }
-  );
-}
 
-
-  // Método para obtener las citas de un taller
-     obtenerCitasTaller(): Observable<any> {
-      const currentUser = this.getCurrentUser();
-      if (!currentUser || currentUser.role !== 'Taller') {
-          return throwError(() => new Error('No autorizado'));
+  /**
+   * Elimina un vehículo específico
+   * @param id - ID del vehículo a eliminar
+   * @returns Observable con la respuesta de la eliminación
+   */
+  eliminarVehiculo(id: number): Observable<any> {
+    const body = {
+      accion: 'eliminar',
+      vehiculoID: id
+    };
+    return this.http.post<{ success: boolean; message: string }>(
+      `${this.apiUrl}/Vehicles.php`, // Añadimos la ruta correcta
+      body,
+      { 
+        headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+        withCredentials: true 
       }
-  
-      const body = {
-          accion: 'ver_citas_taller'
-      };
-  
-      // Corregida la ruta eliminando la duplicación de 'routes'
-      return this.http.post<any>(`${this.apiUrl}/appointments.php`, body, {
-          withCredentials: true,
-          headers: new HttpHeaders({
-              'Content-Type': 'application/json',
-              'X-Requested-With': 'XMLHttpRequest'
-          })
-      });
+    );
   }
 
-  // Método para obtener el usuario actual desde el localStorage
+  /**
+   * Actualiza un vehículo existente
+   * @param id - ID del vehículo a actualizar
+   * @param vehiculo - Datos actualizados del vehículo
+   */
+  editarVehiculo(id: number, vehiculo: { marca: string, modelo: string, anyo: string, matricula: string }): Observable<any> {
+    const body = {
+      accion: 'editar',
+      vehiculoID: id,
+      marca: vehiculo.marca,
+      modelo: vehiculo.modelo,
+      anyo: vehiculo.anyo,
+      matricula: vehiculo.matricula
+    };
+
+    return this.http.post<any>(`${this.apiUrl}/Vehicles.php`, body, {
+      headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
+      withCredentials: true
+    });
+  }
+
+  /**
+   * Obtiene todas las citas asociadas al taller actual
+   * @returns Observable con la lista de citas
+   */
+  obtenerCitasTaller(): Observable<any> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser || currentUser.role !== 'Taller') {
+        return throwError(() => new Error('No autorizado'));
+    }
+
+    const body = {
+        accion: 'ver_citas_taller'
+    };
+
+    // Corregida la ruta eliminando la duplicación de 'routes'
+    return this.http.post<any>(`${this.apiUrl}/appointments.php`, body, {
+        withCredentials: true,
+        headers: new HttpHeaders({
+            'Content-Type': 'application/json',
+            'X-Requested-With': 'XMLHttpRequest'
+        })
+    });
+  }
+
+  /**
+   * Obtiene estadísticas de facturación por período
+   * @param startDate - Fecha inicial del período
+   * @param endDate - Fecha final del período
+   * @returns Observable con las estadísticas de facturación
+   */
+  obtenerEstadisticasFacturacion(startDate: string, endDate: string): Observable<InvoiceStats> {
+    return this.http.get<{stats: InvoiceStats}>(
+      `${this.apiUrl}/Invoices.php?action=estadisticas&start_date=${startDate}&end_date=${endDate}`,
+      this.httpOptions
+    ).pipe(
+      map(response => response.stats),
+      catchError(error => {
+        console.error('Error al obtener estadísticas:', error);
+        return throwError(() => new Error('Error al obtener estadísticas de facturación'));
+      })
+    );
+  }
+
+  /**
+   * Busca facturas por período y estado
+   * @param params - Parámetros de búsqueda (fechas y estado)
+   * @returns Observable con las facturas encontradas
+   */
+  buscarFacturas(params: InvoiceSearchParams): Observable<InvoiceResponse> {
+    let queryParams = new URLSearchParams();
+    queryParams.append('action', 'buscar');
+    
+    if (params.startDate) queryParams.append('start_date', params.startDate);
+    if (params.endDate) queryParams.append('end_date', params.endDate);
+    if (params.estado) queryParams.append('estado', params.estado);
+
+    return this.http.get<InvoiceResponse>(
+      `${this.apiUrl}/Invoices.php?${queryParams.toString()}`,
+      this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error en búsqueda de facturas:', error);
+        return throwError(() => new Error('Error al buscar facturas'));
+      })
+    );
+  }
+
+  /**
+   * Obtiene el resumen de facturación del mes actual
+   * @returns Observable con las estadísticas del mes en curso
+   */
+  obtenerResumenMesActual(): Observable<InvoiceStats> {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1)
+      .toISOString().split('T')[0];
+    const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
+      .toISOString().split('T')[0];
+    
+    return this.obtenerEstadisticasFacturacion(firstDay, lastDay);
+  }
+
+  /**
+   * Obtiene los datos del usuario actualmente autenticado
+   * @returns Objeto con los datos del usuario o null si no hay sesión
+   */
   getCurrentUser(): any {
     const user = localStorage.getItem('currentUser');
     return user ? JSON.parse(user) : null;

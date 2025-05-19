@@ -130,5 +130,22 @@ class AppointmentModel {
         
         return $stmt->get_result()->num_rows === 0;
     }
+    
+    // Método para obtener el nombre del taller
+    public function getWorkshopName($workshopId) {
+        $stmt = $this->conn->prepare("SELECT Name FROM Workshops WHERE WorkshopID = ?");
+        $stmt->bind_param("i", $workshopId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        
+        if ($row = $result->fetch_assoc()) {
+            return $row['Name'];
+        }
+        return "Taller no encontrado";
+    }
+
+    public function getConnection() {
+        return $this->conn;  // Cambiado de $this->db a $this->conn
+    }
 }
 ?>

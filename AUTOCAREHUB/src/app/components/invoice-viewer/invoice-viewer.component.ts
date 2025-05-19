@@ -23,7 +23,7 @@ export class InvoiceViewerComponent implements OnInit {
     this.loadInvoices();
   }
 
-  // Método para cargar las facturas
+  /**Carga las facturas del usuario */
   loadInvoices(): void {
     this.loading = true;
     this.dataService.obtenerFacturas().subscribe(
@@ -39,12 +39,12 @@ export class InvoiceViewerComponent implements OnInit {
     );
   }
 
-  // Método para seleccionar una factura
+  /**Método para seleccionar una factura*/
   selectInvoice(invoice: Invoice): void {
     this.selectedInvoice = invoice;
   }
 
-  // Método para generar el PDF de la factura seleccionada
+  /**Método para generar el PDF de la factura seleccionada*/
   generatePDF(): void {
   if (!this.selectedInvoice) return;
 

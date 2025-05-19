@@ -197,5 +197,56 @@ class VehicleController {
             "message" => "Vehículo eliminado con éxito"
         ];
     }
+    
+    // Método para actualizar un vehículo
+    public function updateVehicle($user_id, $vehiculoID, $marca, $modelo, $anyo, $matricula) {
+        if (!$vehiculoID) {
+            return [
+                "success" => false, 
+                "message" => "ID de vehículo no proporcionado"
+            ];
+        }
+
+        // Verificar que el vehículo existe y pertenece al usuario
+        $detalles = $this->getVehicleDetails($vehiculoID);
+        if (!$detalles["success"]) {
+            return [
+                "success" => false, 
+                "message" => "Vehículo no encontrado"
+            ];
+        }
+
+        if ($detalles["vehicle"]["UserID"] != $user_id) {
+            return [
+                "success" => false, 
+                "message" => "No tienes permiso para editar este vehículo"
+            ];
+        }
+
+        // Actualizar el vehículo
+        $stmt = $this->conn->prepare("UPDATE Vehicles SET marca = ?, modelo = ?, anyo = ?, matricula = ? WHERE VehicleID = ? AND UserID = ?");
+        if (!$stmt) {
+            return [
+                "success" => false, 
+                "message" => "Error en la preparación de la consulta"
+            ];
+        }
+
+        $stmt->bind_param("ssssii", $marca, $modelo, $anyo, $matricula, $vehiculoID, $user_id);
+
+        if (!$stmt->execute()) {
+            return [
+                "success" => false, 
+                "message" => "Error al actualizar el vehículo"
+            ];
+        }
+
+        $stmt->close();
+
+        return [
+            "success" => true,
+            "message" => "Vehículo actualizado con éxito"
+        ];
+    }
 }
 ?>

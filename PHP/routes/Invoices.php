@@ -44,7 +44,18 @@ try {
             break;
             
         case 'GET':
-            $controller->listar();
+            $action = $_GET['action'] ?? 'listar';
+            switch ($action) {
+                case 'estadisticas':
+                    $controller->obtenerEstadisticas();
+                    break;
+                case 'buscar':
+                    $controller->buscarFacturas();
+                    break;
+                default:
+                    $controller->listar();
+                    break;
+            }
             break;
             
         default:

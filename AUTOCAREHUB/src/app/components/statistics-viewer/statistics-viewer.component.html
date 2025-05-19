@@ -1,0 +1,67 @@
+<app-menu></app-menu>
+
+<div class="statistics-container">
+  <div class="date-selector">
+    <label>
+      Desde:
+      <input type="date" [(ngModel)]="startDate" (change)="onDateChange()">
+    </label>
+    <label>
+      Hasta:
+      <input type="date" [(ngModel)]="endDate" (change)="onDateChange()">
+    </label>
+  </div>
+
+  <div *ngIf="error" class="error-message">
+    {{ error }}
+  </div>
+
+  <div *ngIf="loading" class="loading">
+    Cargando estadísticas...
+  </div>
+
+  <div *ngIf="stats && !loading" class="stats-grid">
+    <div class="stat-card">
+      <h3>Total Facturas</h3>
+      <p>{{ stats.total_facturas }}</p>
+    </div>
+    <div class="stat-card">
+      <h3>Total Facturado</h3>
+      <p>{{ formatCurrency(stats.total_facturado) }}</p>
+    </div>
+    <div class="stat-card">
+      <h3>Promedio por Factura</h3>
+      <p>{{ formatCurrency(stats.promedio_factura) }}</p>
+    </div>
+    <div class="stat-card">
+      <h3>Estado Facturas</h3>
+      <p>Pendientes: {{ stats.pendientes }}</p>
+      <p>Pagadas: {{ stats.pagadas }}</p>
+      <div class="progress-bar">
+        <div class="progress" [style.width.%]="getPendingPercentage()"></div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="invoices.length > 0" class="invoices-table">
+    <h3>Facturas del Período</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Importe</th>
+          <th>Estado</th>
+          <th>Cliente/Taller</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let invoice of invoices">
+          <td>{{ formatDate(invoice.Date) }}</td>
+          <td>{{ formatCurrency(invoice.TotalAmount) }}</td>
+          <td>{{ invoice.Estado }}</td>
+          <td>{{ invoice.UserName || invoice.WorkshopName }}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>

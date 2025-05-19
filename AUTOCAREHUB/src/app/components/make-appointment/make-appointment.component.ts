@@ -39,11 +39,17 @@ export class MakeAppointmentComponent implements OnInit {
 
   constructor(private dataAccess: DataAccessService) {}
 
+  /** 
+   * Inicializa el componente cargando los datos del mes actual y los vehículos del usuario
+   */
   ngOnInit(): void {
     this.consultarMes();
     this.cargarVehiculos();
   }
 
+  /**
+   * Carga los vehículos del usuario de la sesion 
+   */
   cargarVehiculos() {
     this.loadingVehicles = true;
     this.vehiclesErrorMessage = '';
@@ -68,6 +74,9 @@ export class MakeAppointmentComponent implements OnInit {
     });
   }
 
+  /** 
+   * Consulta en la base de datos el estado de las citas de este mes, en función del día actual 
+   */
   consultarMes() {
     this.loading = true;
     this.errorMessage = '';
@@ -94,12 +103,19 @@ export class MakeAppointmentComponent implements OnInit {
     });
   }
 
+  /**
+   * Configura la paginación inicial basada en las fechas disponibles
+   */
   setupPagination() {
     const allDates = Object.keys(this.monthSlots).sort();
     this.totalPages = Math.ceil(allDates.length / this.datesPerPage);
     this.goToPage(1);
   }
 
+  /**
+   * Navega a una página específica de la paginación
+   * @param page Número de página a la que se desea navegar
+   */
   goToPage(page: number) {
     if (page < 1 || page > this.totalPages) return;
     
@@ -109,14 +125,25 @@ export class MakeAppointmentComponent implements OnInit {
     this.visibleDates = allDates.slice(startIndex, startIndex + this.datesPerPage);
   }
 
+  /**
+   * Navega a la página anterior
+   */
   prevPage() {
     this.goToPage(this.currentPage - 1);
   }
 
+  /**
+   * Navega a la página siguiente
+   */
   nextPage() {
     this.goToPage(this.currentPage + 1);
   }
 
+  /**
+   * Alterna la selección de un horario específico
+   * @param fecha Fecha del horario
+   * @param hora Hora del horario
+   */
   toggleSlotSelection(fecha: string, hora: string) {
     const index = this.selectedSlots.findIndex(slot => slot.fecha === fecha && slot.hora === hora);
     if (index > -1) {
@@ -126,10 +153,19 @@ export class MakeAppointmentComponent implements OnInit {
     }
   }
 
+  /**
+   * Verifica si un horario específico está seleccionado
+   * @param fecha Fecha del horario
+   * @param hora Hora del horario
+   * @returns true si el horario está seleccionado, false en caso contrario
+   */
   isSelected(fecha: string, hora: string): boolean {
     return this.selectedSlots.some(slot => slot.fecha === fecha && slot.hora === hora);
   }
 
+  /**
+   * Crea las citas seleccionadas en el sistema
+   */
   crearCitas() {
     this.loading = true;
     this.errorMessage = '';
@@ -169,6 +205,9 @@ export class MakeAppointmentComponent implements OnInit {
     });
   }
 
+  /**
+   * Valida y procesa la creación de una nueva cita
+   */
   makeAppointment() {
     if (this.selectedSlots.length === 0) {
       this.errorMessage = 'Por favor, selecciona al menos un horario disponible.';
@@ -188,12 +227,22 @@ export class MakeAppointmentComponent implements OnInit {
     this.crearCitas();
   }
 
+  /**
+   * Obtiene el nombre del día de la semana en español
+   * @param date Fecha en formato string
+   * @returns Nombre del día en español
+   */
   getDayName(date: string): string {
     const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
     const dayIndex = new Date(date).getDay();
     return days[dayIndex];
   }
 
+  /**
+   * Formatea una fecha al formato español (dd/mm/yyyy)
+   * @param date Fecha en formato string
+   * @returns Fecha formateada en formato español
+   */
   formatDate(date: string): string {
     return new Date(date).toLocaleDateString('es-ES', {
       day: '2-digit',

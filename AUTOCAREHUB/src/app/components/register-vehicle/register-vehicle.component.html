@@ -1,9 +1,9 @@
 <app-menu></app-menu>
   <div class="register-vehicle">
 
-    <h2 class="form-title">Registrar Vehículo</h2>
+    <h2 class="form-title">{{ vehiculoEnEdicion ? 'Editar Vehículo' : 'Registrar Vehículo' }}</h2>
 
-    <form (ngSubmit)="crearVehiculo()" class="vehicle-form">
+    <form (ngSubmit)="vehiculoEnEdicion ? guardarCambios() : crearVehiculo()" class="vehicle-form">
       <div class="form-group">
         <label for="marca">Marca:</label>
         <input id="marca" type="text" [(ngModel)]="marca" name="marca" required placeholder="Introduce la marca" />
@@ -24,7 +24,14 @@
         <input id="matricula" type="text" [(ngModel)]="matricula" name="matricula" required placeholder="Introduce la matrícula" />
       </div>
 
-      <button type="submit" class="submit-btn">Registrar Vehículo</button>
+      <div class="button-group">
+        <button type="submit" class="submit-btn">
+          {{ vehiculoEnEdicion ? 'Guardar Cambios' : 'Registrar Vehículo' }}
+        </button>
+        <button *ngIf="vehiculoEnEdicion" type="button" class="cancel-btn" (click)="cancelarEdicion()">
+          Cancelar
+        </button>
+      </div>
     </form>
 
     <!-- Mensajes de error o éxito -->
@@ -37,14 +44,15 @@
     <h3 class="list-title">Vehículos Registrados</h3>
     <div class="vehicles-container">
       <div *ngFor="let vehiculo of vehiculos" class="vehicle-card">
-    <h4>{{ vehiculo.marca }} - {{ vehiculo.modelo }}</h4>
-    <p><strong>Año:</strong> {{ vehiculo.anyo }}</p>
-    <p><strong>Matrícula:</strong> {{ vehiculo.matricula }}</p>
+        <h4>{{ vehiculo.marca }} - {{ vehiculo.modelo }}</h4>
+        <p><strong>Año:</strong> {{ vehiculo.anyo }}</p>
+        <p><strong>Matrícula:</strong> {{ vehiculo.matricula }}</p>
 
-    <!-- Botón para eliminar -->
-    <button (click)="eliminarVehiculo(vehiculo.VehicleID)" class="delete-btn">Eliminar</button>
-  </div>
-
+        <div class="button-group">
+          <button (click)="editarVehiculo(vehiculo)" class="edit-btn">Editar</button>
+          <button (click)="eliminarVehiculo(vehiculo.VehicleID)" class="delete-btn">Eliminar</button>
+        </div>
+      </div>
     </div>
   </div>
 

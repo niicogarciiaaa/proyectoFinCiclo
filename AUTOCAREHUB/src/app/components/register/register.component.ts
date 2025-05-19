@@ -26,7 +26,7 @@ interface RegisterResponse {
   templateUrl: './register.component.html',
   styleUrl: './register.component.css'
 })
-export class RegisterComponent implements OnInit {
+export class RegisterComponent {
   registerForm: FormGroup;
   loading = false;
   errorMessage = '';
@@ -57,19 +57,32 @@ export class RegisterComponent implements OnInit {
     });
   }
 
-  ngOnInit(): void {}
+ 
 
+  /**
+   * Cambia el idioma de la aplicación
+   * @param lang - Código del idioma a establecer ('es', 'en', etc.)
+   */
   changeLang(lang: string) {
     this.i18n.setLang(lang);
     this.selectedLang = lang;
   }
 
+  /**
+   * Valida que las contraseñas coincidan
+   * @param group - Grupo de formulario que contiene los campos de contraseña
+   * @returns null si las contraseñas coinciden, o un objeto de error si no coinciden
+   */
   passwordMatchValidator(group: FormGroup) {
     const password = group.get('password')?.value;
     const confirmPassword = group.get('confirmPassword')?.value;
     return password === confirmPassword ? null : { passwordMismatch: true };
   }
 
+  /**
+   * Maneja el envío del formulario de registro
+   * Valida el formulario y envía los datos al servidor
+   */
   onSubmit(): void {
     if (this.registerForm.valid) {
       this.loading = true;
@@ -102,6 +115,10 @@ export class RegisterComponent implements OnInit {
     }
   }
 
+  /**
+   * Marca todos los campos del formulario como tocados para mostrar errores
+   * @param formGroup - Grupo de formulario cuyos campos se marcarán
+   */
   private markFormGroupTouched(formGroup: FormGroup): void {
     Object.values(formGroup.controls).forEach(control => {
       control.markAsTouched();
@@ -111,11 +128,21 @@ export class RegisterComponent implements OnInit {
     });
   }
 
+  /**
+   * Verifica si un campo específico del formulario es inválido
+   * @param fieldName - Nombre del campo a verificar
+   * @returns true si el campo es inválido y ha sido tocado
+   */
   isFieldInvalid(fieldName: string): boolean {
     const field = this.registerForm.get(fieldName);
     return field ? !field.valid && field.touched : false;
   }
 
+  /**
+   * Obtiene el mensaje de error para un campo específico
+   * @param fieldName - Nombre del campo del que se obtendrá el mensaje de error
+   * @returns Mensaje de error correspondiente al tipo de error presente
+   */
   getErrorMessage(fieldName: string): string {
     const control = this.registerForm.get(fieldName);
 
