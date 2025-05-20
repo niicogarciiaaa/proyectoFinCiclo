@@ -1,8 +1,7 @@
 <nav class="navbar">
     <ul class="menu">
       <li *ngFor="let route of menuRoutes">
-        <a [routerLink]="route.path">{{ route.label }}</a>
+        <a [routerLink]="route.path">{{ i18n.t(route.label) }}</a>
       </li>
     </ul>
-  </nav>
-  
+</nav>

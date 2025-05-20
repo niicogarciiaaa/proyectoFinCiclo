@@ -1,7 +1,6 @@
 export const USER_MENU_ROUTES = [
-    { path: '/makeAppointment', label: 'Pedir Citas' },
-    { path: '/registerVehicle', label: 'Registrar vehículo' },
-    { path: '/invoiceViewer', label: 'Ver facturas' },
-
+    { path: '/makeAppointment', label: 'menu.makeAppointment' },
+    { path: '/registerVehicle', label: 'menu.registerVehicle' },
+    { path: '/invoiceViewer', label: 'menu.invoiceViewer' },
+    { path:'/chat', label:'menu.chat'}
   ];
-  

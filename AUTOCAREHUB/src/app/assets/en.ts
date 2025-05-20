@@ -35,5 +35,29 @@ export const EN_TEXTS = {
   errorConexion: 'Error connecting to the server.',
   campoRequerido: 'This field is required',
   minCaracteres: 'Must be at least {min} characters',
-  contrasenasNoCoinciden: 'Passwords do not match'
+  contrasenasNoCoinciden: 'Passwords do not match',
+  // Chat texts
+  CHAT: {
+    TITULO: 'Conversations',
+    NUEVO_CHAT: 'New Chat',
+    NO_MENSAJES: 'No messages',
+    ESCRIBIR_MENSAJE: 'Type a message...',
+    ENVIAR: 'Send',
+    SELECCIONAR_CONVERSACION: 'Select a conversation to start',
+    SELECCIONAR_TALLER: 'Select Workshop',
+    BUSCAR_TALLER: 'Search workshop...'
+  },
+  home: {
+    welcome: "Welcome to AutocareHub!",
+    subtitle: "The easy way to take care of your car"
+  },
+  menu: {
+    makeAppointment: 'Make Appointment',
+    registerVehicle: 'Register Vehicle',
+    invoiceViewer: 'View Invoices',
+    chat: 'Chats',
+    invoiceGenerator: 'Generate Invoice',
+    viewAppointments: 'View Appointments',
+    statistics: 'Statistics'
+  }
 };

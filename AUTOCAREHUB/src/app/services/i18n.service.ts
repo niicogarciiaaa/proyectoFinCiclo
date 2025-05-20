@@ -6,7 +6,7 @@ import { EN_TEXTS } from '../assets/en';
   providedIn: 'root'
 })
 export class I18nService {
-  public currentLang = 'es'; // Cambiado a public para acceso externo
+  public currentLang = 'es'; 
 
   private translations: any = {
     es: ES_TEXTS,
@@ -18,7 +18,15 @@ export class I18nService {
   }
 
   t(key: string, vars?: { [key: string]: any }): string {
-    let text = this.translations[this.currentLang][key] || key;
+    const keys = key.split('.');
+    let text = this.translations[this.currentLang];
+    
+    // Navegar por el objeto de traducciones siguiendo la ruta de keys
+    for (const k of keys) {
+      if (text[k] === undefined) return key;
+      text = text[k];
+    }
+
     if (vars) {
       Object.keys(vars).forEach(k => {
         text = text.replace(new RegExp(`{${k}}`, 'g'), vars[k]);

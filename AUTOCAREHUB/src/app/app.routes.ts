@@ -8,6 +8,7 @@ import { AppointmentsViewerComponent } from './components/appointments-viewer/ap
 import { InvoicesGeneratorComponent } from './components/invoices-generator/invoices-generator.component';
 import { InvoiceViewerComponent } from './components/invoice-viewer/invoice-viewer.component';
 import { StatisticsViewerComponent } from './components/statistics-viewer/statistics-viewer.component';
+import { ChatComponent } from './components/chat/chat.component';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent }, 
@@ -20,4 +21,5 @@ export const routes: Routes = [
     {path: 'invoiceGenerator', component: InvoicesGeneratorComponent},
     {path: 'invoiceViewer', component: InvoiceViewerComponent},
     {path:'statistics', component: StatisticsViewerComponent},
+    { path: 'chat', component:ChatComponent },
 ];

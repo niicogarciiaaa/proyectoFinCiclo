@@ -3,6 +3,7 @@ import { USER_MENU_ROUTES } from './user-menu-routes';
 import { WORKSHOP_MENU_ROUTES } from './workshop-menu-routes';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
+import { I18nService } from '../../services/i18n.service';
 
 @Component({
   selector: 'app-menu',
@@ -13,6 +14,8 @@ import { CommonModule } from '@angular/common';
 })
 export class MenuComponent implements OnInit {
   menuRoutes: { path: string, label: string }[] = [];
+
+  constructor(public i18n: I18nService) {}
 
   ngOnInit(): void {
     const currentUser = localStorage.getItem('currentUser');

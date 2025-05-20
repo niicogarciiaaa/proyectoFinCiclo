@@ -164,6 +164,36 @@ if ($bdExiste || $accion === 'eliminar_bd' || $accion === 'crear_bd') {
         }
     }
 
+    if ($accion === 'crear_chats') {
+        $sqlChats = "CREATE TABLE IF NOT EXISTS Chats (
+            ChatID INT AUTO_INCREMENT PRIMARY KEY,
+            UserID INT NOT NULL,
+            WorkshopID INT NOT NULL,
+            LastMessage TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            Status ENUM('Active', 'Archived') DEFAULT 'Active',
+            CreateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (UserID) REFERENCES Users(UserID) ON DELETE CASCADE,
+            FOREIGN KEY (WorkshopID) REFERENCES Workshops(WorkshopID) ON DELETE CASCADE
+        )";
+        
+        $sqlMessages = "CREATE TABLE IF NOT EXISTS Messages (
+            MessageID INT AUTO_INCREMENT PRIMARY KEY,
+            ChatID INT NOT NULL,
+            SenderID INT NOT NULL,
+            Message TEXT NOT NULL,
+            IsRead BOOLEAN DEFAULT FALSE,
+            CreateAt TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (ChatID) REFERENCES Chats(ChatID) ON DELETE CASCADE,
+            FOREIGN KEY (SenderID) REFERENCES Users(UserID) ON DELETE CASCADE
+        )";
+        
+        if ($conn->query($sqlChats) && $conn->query($sqlMessages)) {
+            echo "✅ Tablas 'Chats' y 'Messages' creadas correctamente<br>";
+        } else {
+            echo "❌ Error creando tablas de chat: " . $conn->error . "<br>";
+        }
+    }
+
     if ($accion === 'eliminar_bd') {
         $sql = "DROP DATABASE IF EXISTS $nombreBD";
         if ($conn->query($sql)) {
@@ -195,6 +225,7 @@ $conn->close();
         <button name="accion" value="crear_appointments">Crear Tabla Appointments</button>
         <button name="accion" value="crear_invoices">Crear Tabla Invoices</button>
         <button name="accion" value="crear_invoice_items">Crear Tabla InvoiceItems</button>
+        <button name="accion" value="crear_chats">Crear Tablas de Chat</button>
         <button name="accion" value="eliminar_bd" onclick="return confirm('¿Estás seguro de que deseas eliminar TODA la base de datos? Esta acción no se puede deshacer.')">🗑️ Eliminar Base de Datos</button>
     </form>
 </body>

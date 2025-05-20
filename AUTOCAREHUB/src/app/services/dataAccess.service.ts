@@ -69,6 +69,29 @@ export interface InvoiceResponse {
   invoices: Invoice[];
 }
 
+// Añadir después de las interfaces existentes
+export interface Chat {
+  ChatID: number;
+  UserID: number;
+  WorkshopID: number;
+  LastMessage: string;
+  Status: 'Active' | 'Archived';
+  CreateAt: string;
+  WorkshopName?: string;
+  UserName?: string;
+  unreadCount: number;
+}
+
+export interface Message {
+  MessageID: number;
+  ChatID: number;
+  SenderID: number;
+  Message: string;
+  IsRead: boolean;
+  CreateAt: string;
+  SenderName: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -426,11 +449,99 @@ export class DataAccessService {
   }
 
   /**
+   * Obtiene la lista de talleres disponibles
+   */
+  obtenerTalleres(): Observable<any> {
+    return this.http.get(`${this.apiUrl}/workshops.php`, this.httpOptions).pipe(
+      catchError(error => {
+        console.error('Error al obtener talleres:', error);
+        return throwError(() => new Error('Error al obtener la lista de talleres'));
+      })
+    );
+  }
+
+  /**
    * Obtiene los datos del usuario actualmente autenticado
    * @returns Objeto con los datos del usuario o null si no hay sesión
    */
   getCurrentUser(): any {
     const user = localStorage.getItem('currentUser');
     return user ? JSON.parse(user) : null;
+  }
+
+  /**
+   * Obtiene todos los chats del usuario actual
+   */
+  obtenerChats(): Observable<{success: boolean, chats: Chat[]}> {
+    return this.http.get<{success: boolean, chats: Chat[]}>(
+      `${this.apiUrl}/chats.php`,
+      this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener chats:', error);
+        return throwError(() => new Error('Error al obtener los chats'));
+      })
+    );
+  }
+
+  /**
+   * Obtiene los mensajes de un chat específico
+   */
+  obtenerMensajes(chatId: number): Observable<{success: boolean, messages: Message[]}> {
+    return this.http.get<{success: boolean, messages: Message[]}>(
+      `${this.apiUrl}/chats.php?chat_id=${chatId}`,
+      this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener mensajes:', error);
+        return throwError(() => new Error('Error al obtener los mensajes'));
+      })
+    );
+  }
+
+  /**
+   * Envía un mensaje en un chat
+   */
+  enviarMensaje(chatId: number, message: string): Observable<{success: boolean, message: string}> {
+    return this.http.post<{success: boolean, message: string}>(
+      `${this.apiUrl}/chats.php`,
+      {
+        action: 'enviar_mensaje',
+        chat_id: chatId,
+        message: message
+      },
+      this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al enviar mensaje:', error);
+        return throwError(() => new Error('Error al enviar el mensaje'));
+      })
+    );
+  }
+
+  /**
+   * Inicia un nuevo chat con un taller
+   */
+  iniciarChat(workshopId: number): Observable<{success: boolean, message: string, chat_id: number}> {
+    return this.http.post<{success: boolean, message: string, chat_id: number}>(
+      `${this.apiUrl}/chats.php`,
+      {
+        action: 'iniciar_chat',
+        workshop_id: workshopId
+      },
+      this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al iniciar chat:', error);
+        return throwError(() => new Error('Error al iniciar el chat'));
+      })
+    );
+  }
+
+  /**
+   * Obtiene el número total de mensajes no leídos
+   */
+  getUnreadCount(chats: Chat[]): number {
+    return chats.reduce((total, chat) => total + (chat.unreadCount || 0), 0);
   }
 }
