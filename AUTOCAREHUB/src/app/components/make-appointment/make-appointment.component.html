@@ -40,6 +40,17 @@
     </div>
   </div>
   
+  <!-- Selección de Taller -->
+  <div class="workshop-selection">
+    <label for="workshop">Selecciona un Taller:</label>
+    <select id="workshop" [(ngModel)]="selectedWorkshop" name="workshop" (change)="onWorkshopChange()">
+      <option value="0" disabled>Selecciona un taller</option>
+      <option *ngFor="let workshop of workshops" [value]="workshop.WorkshopID">
+        {{ workshop.Name }}
+      </option>
+    </select>
+  </div>
+  
   <!-- Selected Appointments -->
   <div *ngIf="selectedSlots.length > 0" class="selected-slots">
     <h3>Citas Seleccionadas</h3>
@@ -79,7 +90,7 @@
         <label for="motivo">Motivo de la Cita:</label>
         <textarea id="motivo" [(ngModel)]="motivo" name="motivo" placeholder="Escribe el motivo de la cita"></textarea>
       </div>
-      
+
       <!-- Action Buttons -->
       <div class="actions">
         <button (click)="makeAppointment()" [disabled]="loading">Confirmar Cita</button>
