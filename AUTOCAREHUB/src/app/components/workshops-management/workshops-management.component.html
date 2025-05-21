@@ -1,0 +1,117 @@
+<div class="container">
+    <app-menu></app-menu>
+
+    <div class="section">
+        <h2>{{ i18n.t('workshops.management.title') }}</h2>
+
+        <!-- Mensajes de error y éxito -->
+        <div *ngIf="errorMessage" class="alert alert-danger">
+            {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="alert alert-success">
+            {{ successMessage }}
+        </div>
+
+        <!-- Formulario de creación -->
+        <div *ngIf="!isEditing" class="workshop-form">
+            <h3>{{ i18n.t('workshops.management.create.title') }}</h3>
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.name') }}</label>
+                <input type="text" class="form-control" [(ngModel)]="newWorkshop.Name">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.address') }}</label>
+                <input type="text" class="form-control" [(ngModel)]="newWorkshop.Address">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.phone') }}</label>
+                <input type="tel" class="form-control" [(ngModel)]="newWorkshop.Phone">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.email') }}</label>
+                <input type="email" class="form-control" [(ngModel)]="newWorkshop.Email">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.fullName') }}</label>
+                <input type="text" class="form-control" [(ngModel)]="newWorkshop.FullName">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.description') }}</label>
+                <textarea class="form-control" [(ngModel)]="newWorkshop.Description"></textarea>
+            </div>
+
+            <button class="btn btn-primary" (click)="createWorkshop()">
+                {{ i18n.t('workshops.management.create.button') }}
+            </button>
+        </div>
+
+        <!-- Formulario de edición -->
+        <div *ngIf="isEditing && editingWorkshop" class="workshop-form">
+            <h3>{{ i18n.t('workshops.management.edit.title') }}</h3>
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.name') }}</label>
+                <input type="text" class="form-control" [(ngModel)]="editingWorkshop.Name">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.address') }}</label>
+                <input type="text" class="form-control" [(ngModel)]="editingWorkshop.Address">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.phone') }}</label>
+                <input type="tel" class="form-control" [(ngModel)]="editingWorkshop.Phone">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.email') }}</label>
+                <input type="email" class="form-control" [(ngModel)]="editingWorkshop.Email">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.fullName') }}</label>
+                <input type="text" class="form-control" [(ngModel)]="editingWorkshop.FullName">
+            </div>
+
+            <div class="form-group">
+                <label>{{ i18n.t('workshops.form.description') }}</label>
+                <textarea class="form-control" [(ngModel)]="editingWorkshop.Description"></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button class="btn btn-success" (click)="updateWorkshop()">
+                    {{ i18n.t('workshops.management.edit.save') }}
+                </button>
+                <button class="btn btn-secondary" (click)="cancelEditing()">
+                    {{ i18n.t('workshops.management.edit.cancel') }}
+                </button>
+            </div>
+        </div>
+
+        <!-- Lista de talleres -->
+        <div class="workshops-list">
+            <h3>{{ i18n.t('workshops.management.list.title') }}</h3>
+            <div *ngFor="let workshop of workshops" class="workshop-card">
+                <div class="workshop-info">
+                    <h4>{{ workshop.Name }}</h4>
+                    <p><strong>{{ i18n.t('workshops.form.address') }}:</strong> {{ workshop.Address }}</p>
+                    <p><strong>{{ i18n.t('workshops.form.phone') }}:</strong> {{ workshop.Phone }}</p>
+                    <p><strong>{{ i18n.t('workshops.form.email') }}:</strong> {{ workshop.Email }}</p>
+                    <p *ngIf="workshop.Description">
+                        <strong>{{ i18n.t('workshops.form.description') }}:</strong> {{ workshop.Description }}
+                    </p>
+                </div>
+                <div class="workshop-actions">
+                    <button class="btn btn-primary" (click)="startEditing(workshop)">
+                        {{ i18n.t('workshops.management.edit.button') }}
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

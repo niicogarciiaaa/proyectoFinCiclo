@@ -92,6 +92,17 @@ export interface Message {
   SenderName: string;
 }
 
+export interface Workshop {
+  WorkshopID?: number;
+  UserID?: number;
+  Name: string;
+  Address: string;
+  Phone: string;
+  Description?: string;
+  Email?: string;
+  FullName?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -543,5 +554,45 @@ export class DataAccessService {
    */
   getUnreadCount(chats: Chat[]): number {
     return chats.reduce((total, chat) => total + (chat.unreadCount || 0), 0);
+  }
+
+  /**
+   * Actualiza la información de un taller existente
+   * @param workshop - Datos actualizados del taller
+   * @returns Observable con la respuesta de la actualización
+   */
+  updateWorkshop(workshop: Workshop): Observable<any> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser || currentUser.role.toLowerCase() !== 'administrador') {
+      return throwError(() => new Error('No autorizado'));
+    }
+
+    return this.http.put<any>(`${this.apiUrl}/admin_workshops.php`, workshop, this.httpOptions).pipe(
+      map(response => response),
+      catchError(error => {
+        console.error('Error al actualizar taller:', error);
+        return throwError(() => new Error('Error al actualizar el taller'));
+      })
+    );
+  }
+
+  /**
+   * Crea un nuevo taller en el sistema
+   * @param workshop - Datos del nuevo taller
+   * @returns Observable con la respuesta de la creación
+   */
+  createWorkshop(workshop: Workshop): Observable<any> {
+    const currentUser = this.getCurrentUser();
+    if (!currentUser || currentUser.role.toLowerCase() !== 'administrador') {
+      return throwError(() => new Error('No autorizado'));
+    }
+
+    return this.http.post<any>(`${this.apiUrl}/admin_workshops.php`, workshop, this.httpOptions).pipe(
+      map(response => response),
+      catchError(error => {
+        console.error('Error al crear taller:', error);
+        return throwError(() => new Error('Error al crear el taller'));
+      })
+    );
   }
 }

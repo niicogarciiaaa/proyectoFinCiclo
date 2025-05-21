@@ -1,6 +1,6 @@
 <?php
 require_once __DIR__ . '/../config/cors.php';
-require_once __DIR__ . '/../controllers/ChatController.php';
+require_once __DIR__ . '/../controllers/WorkshopController.php';
 require_once __DIR__ . '/../config/database.php';
 
 configureCors();
@@ -17,7 +17,7 @@ $db = new Database();
 $conn = $db->getConnection();
 
 try {
-    $controller = new ChatController(
+    $controller = new WorkshopController(
         $conn, 
         $_SESSION['user']['id'],
         $_SESSION['user']['role']
@@ -25,36 +25,43 @@ try {
 
     switch ($_SERVER['REQUEST_METHOD']) {
         case 'POST':
+            // Crear nuevo taller
             $input = json_decode(file_get_contents("php://input"), true);
             if (!$input) {
                 throw new Exception("Error al procesar los datos de entrada");
             }
             
-            if (!isset($input['action'])) {
-                throw new Exception("Falta el parámetro 'action'");
+            $controller->createWorkshop($input);
+            break;
+            
+        case 'PUT':
+            // Actualizar información del taller
+            $input = json_decode(file_get_contents("php://input"), true);
+            if (!$input) {
+                throw new Exception("Error al procesar los datos de entrada");
             }
             
-            switch ($input['action']) {
-                case 'iniciar_chat':
-                    $controller->iniciarChat($input);
-                    break;
-                case 'enviar_mensaje':
-                    $controller->enviarMensaje($input);
-                    break;
-                default:
-                    throw new Exception("Acción no válida");
-            }
+            $controller->updateWorkshop($input);
             break;
             
         case 'GET':
-            if (isset($_GET['chat_id'])) {
-                $chatId = filter_var($_GET['chat_id'], FILTER_VALIDATE_INT);
-                if (!$chatId) {
-                    throw new Exception("ID de chat inválido");
+            // Listar todos los talleres
+            $stmt = $conn->query("SELECT w.*, u.Email, u.FullName 
+                                FROM Workshops w 
+                                JOIN Users u ON w.UserID = u.UserID");
+            
+            if ($stmt) {
+                $workshops = [];
+                while ($row = $stmt->fetch_assoc()) {
+                    $workshops[] = $row;
                 }
-                $controller->obtenerMensajes($chatId);
+                
+                echo json_encode([
+                    'success' => true,
+                    'workshops' => $workshops
+                ]);
             } else {
-                $controller->obtenerChats();
+                throw new Exception("Error al obtener los talleres");
             }
             break;
             

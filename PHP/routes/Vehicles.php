@@ -1,20 +1,9 @@
 <?php
-// Habilitar CORS (Cross-Origin Resource Sharing)
-header("Access-Control-Allow-Origin: http://localhost:4200");
-header("Access-Control-Allow-Credentials: true");
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
-header("Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With");
-header("Content-Type: application/json; charset=UTF-8");
+require_once __DIR__ . '/../config/cors.php';
+require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../controllers/VehicleController.php';
 
-// Manejar solicitudes preflight OPTIONS
-if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-    http_response_code(200);
-    exit();
-}
-
-// Incluir archivos necesarios
-require_once '../config/database.php';
-require_once '../controllers/VehicleController.php';
+configureCors();
 
 // Iniciar sesión
 session_start();

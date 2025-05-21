@@ -60,6 +60,34 @@ export const ES_TEXTS = {
     chat: 'Chats',
     invoiceGenerator: 'Generar Factura',
     viewAppointments: 'Ver citas',
-    statistics: 'Estadísticas'
+    statistics: 'Estadísticas',
+    workshopsManagement: 'Gestión de Talleres'
+  },
+  workshops: {
+    management: {
+      title: 'Gestión de Talleres',
+      create: {
+        button: 'Crear Nuevo Taller',
+        title: 'Crear Taller'
+      },
+      edit: {
+        button: 'Editar',
+        title: 'Editar Taller',
+        save: 'Guardar Cambios',
+        cancel: 'Cancelar'
+      },
+      list: {
+        title: 'Lista de Talleres'
+      }
+    },
+    form: {
+      name: 'Nombre del Taller',
+      address: 'Dirección',
+      phone: 'Teléfono',
+      description: 'Descripción',
+      email: 'Correo Electrónico',
+      fullName: 'Nombre Completo del Responsable',
+      password: 'Contraseña'
+    }
   }
 };

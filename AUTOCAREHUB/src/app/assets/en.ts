@@ -58,6 +58,34 @@ export const EN_TEXTS = {
     chat: 'Chats',
     invoiceGenerator: 'Generate Invoice',
     viewAppointments: 'View Appointments',
-    statistics: 'Statistics'
+    statistics: 'Statistics',
+    workshopsManagement: 'Workshops Management'
+  },
+  workshops: {
+    management: {
+      title: 'Workshops Management',
+      create: {
+        button: 'Create New Workshop',
+        title: 'Create Workshop'
+      },
+      edit: {
+        button: 'Edit',
+        title: 'Edit Workshop',
+        save: 'Save Changes',
+        cancel: 'Cancel'
+      },
+      list: {
+        title: 'Workshops List'
+      }
+    },
+    form: {
+      name: 'Workshop Name',
+      address: 'Address',
+      phone: 'Phone',
+      description: 'Description',
+      email: 'Email',
+      fullName: 'Manager Full Name',
+      password: 'Password'
+    }
   }
 };

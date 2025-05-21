@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { USER_MENU_ROUTES } from './user-menu-routes';
 import { WORKSHOP_MENU_ROUTES } from './workshop-menu-routes';
+import { ADMIN_MENU_ROUTES } from './admin-menu-routes';
 import { RouterLink } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { I18nService } from '../../services/i18n.service';
@@ -22,12 +23,17 @@ export class MenuComponent implements OnInit {
 
     if (currentUser) {
       const user = JSON.parse(currentUser);
-      const role = user.role.toLowerCase(); // "usuario" o "taller"
+      const role = user.role.toLowerCase(); // "usuario", "taller" o "administrador"
 
-      if (role === 'taller') {
-        this.menuRoutes = WORKSHOP_MENU_ROUTES;
-      } else {
-        this.menuRoutes = USER_MENU_ROUTES;
+      switch(role) {
+        case 'taller':
+          this.menuRoutes = WORKSHOP_MENU_ROUTES;
+          break;
+        case 'administrador':
+          this.menuRoutes = ADMIN_MENU_ROUTES;
+          break;
+        default:
+          this.menuRoutes = USER_MENU_ROUTES;
       }
     }
   }

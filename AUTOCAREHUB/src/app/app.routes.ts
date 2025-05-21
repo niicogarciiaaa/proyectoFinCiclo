@@ -9,6 +9,7 @@ import { InvoicesGeneratorComponent } from './components/invoices-generator/invo
 import { InvoiceViewerComponent } from './components/invoice-viewer/invoice-viewer.component';
 import { StatisticsViewerComponent } from './components/statistics-viewer/statistics-viewer.component';
 import { ChatComponent } from './components/chat/chat.component';
+import { WorkshopsManagementComponent } from './components/workshops-management/workshops-management.component';
 
 export const routes: Routes = [
     { path: 'login', component: LoginComponent }, 
@@ -17,9 +18,10 @@ export const routes: Routes = [
     { path: 'home', component: HomeComponent }, 
     { path: 'makeAppointment', component: MakeAppointmentComponent }, 
     { path: 'registerVehicle', component: RegisterVehicleComponent }, 
-    {path: 'viewAppointments', component: AppointmentsViewerComponent}, 
-    {path: 'invoiceGenerator', component: InvoicesGeneratorComponent},
-    {path: 'invoiceViewer', component: InvoiceViewerComponent},
-    {path:'statistics', component: StatisticsViewerComponent},
-    { path: 'chat', component:ChatComponent },
+    { path: 'viewAppointments', component: AppointmentsViewerComponent}, 
+    { path: 'invoiceGenerator', component: InvoicesGeneratorComponent},
+    { path: 'invoiceViewer', component: InvoiceViewerComponent},
+    { path: 'statistics', component: StatisticsViewerComponent},
+    { path: 'chat', component: ChatComponent },
+    { path: 'workshops-management', component: WorkshopsManagementComponent },
 ];
