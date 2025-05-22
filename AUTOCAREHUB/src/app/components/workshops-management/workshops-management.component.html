@@ -14,35 +14,52 @@
     <h3>Crear Nuevo Taller</h3>
     <div class="form-group">
       <label>Nombre</label>
-      <input type="text" class="form-control" [(ngModel)]="newWorkshop.Name">
+      <input type="text" class="form-control" [(ngModel)]="newWorkshop.Name" />
     </div>
 
     <div class="form-group">
       <label>Dirección</label>
-      <input type="text" class="form-control" [(ngModel)]="newWorkshop.Address">
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="newWorkshop.Address"
+      />
     </div>
 
     <div class="form-group">
       <label>Teléfono</label>
-      <input type="tel" class="form-control" [(ngModel)]="newWorkshop.Phone">
+      <input type="tel" class="form-control" [(ngModel)]="newWorkshop.Phone" />
     </div>
 
     <div class="form-group">
       <label>Correo Electrónico</label>
-      <input type="email" class="form-control" [(ngModel)]="newWorkshop.Email">
+      <input
+        type="email"
+        class="form-control"
+        [(ngModel)]="newWorkshop.Email"
+      />
     </div>
 
     <div class="form-group">
       <label>Nombre Completo</label>
-      <input type="text" class="form-control" [(ngModel)]="newWorkshop.FullName">
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="newWorkshop.FullName"
+      />
     </div>
 
     <div class="form-group">
       <label>Descripción</label>
-      <textarea class="form-control" [(ngModel)]="newWorkshop.Description"></textarea>
+      <textarea
+        class="form-control"
+        [(ngModel)]="newWorkshop.Description"
+      ></textarea>
     </div>
 
-    <button class="btn btn-primary" (click)="createWorkshop()">Crear Taller</button>
+    <button class="btn btn-primary" (click)="createWorkshop()">
+      Crear Taller
+    </button>
   </div>
 
   <!-- Lista de talleres -->
@@ -53,7 +70,9 @@
       <p><strong>Dirección:</strong> {{ workshop.Address }}</p>
       <p><strong>Teléfono:</strong> {{ workshop.Phone }}</p>
       <p><strong>Correo Electrónico:</strong> {{ workshop.Email }}</p>
-      <p *ngIf="workshop.Description"><strong>Descripción:</strong> {{ workshop.Description }}</p>
+      <p *ngIf="workshop.Description">
+        <strong>Descripción:</strong> {{ workshop.Description }}
+      </p>
     </div>
   </div>
 </div>

@@ -8,9 +8,9 @@
   </div>
 
   <!-- Logo en la esquina superior izquierda -->
-  <img 
-    src="img/LogoAzulAplicacion.png" 
-    alt="Logo" 
+  <img
+    src="img/LogoAzulAplicacion.png"
+    alt="Logo"
     class="position-absolute img-fluid bg-white p-1"
     style="top: 10px; left: 10px; width: 100px; height: 100px; object-fit: contain;"
   >
@@ -24,11 +24,11 @@
           <form [formGroup]="loginForm" (ngSubmit)="checkAccount()">
             <div class="mb-3">
               <label for="email" class="form-label">{{ i18n.t('email') }}</label>
-              <input 
-                type="email" 
+              <input
+                type="email"
                 class="form-control"
-                id="email" 
-                formControlName="email" 
+                id="email"
+                formControlName="email"
                 [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
                 [placeholder]="i18n.t('placeholderEmail')"
               >
@@ -42,10 +42,10 @@
 
             <div class="mb-3">
               <label for="password" class="form-label">{{ i18n.t('contrasena') }}</label>
-              <input 
-                type="password" 
+              <input
+                type="password"
                 class="form-control"
-                id="password" 
+                id="password"
                 formControlName="password"
                 [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
                 [placeholder]="i18n.t('placeholderContrasena')"
@@ -64,8 +64,8 @@
             </div>
 
             <div class="d-grid gap-2">
-              <button 
-                type="submit" 
+              <button
+                type="submit"
                 class="btn btn-primary"
                 [disabled]="loginForm.invalid || loading">
                 <span class="spinner-border spinner-border-sm me-2" *ngIf="loading"></span>
@@ -76,7 +76,7 @@
 
           <!-- Enlace para crear una cuenta si el usuario no tiene una -->
           <p class="text-center mt-3 mb-0">
-            {{ i18n.t('noTienesCuenta') }} 
+            {{ i18n.t('noTienesCuenta') }}
             <a routerLink="/register" class="text-primary">{{ i18n.t('creaCuenta') }}</a>
           </p>
         </div>

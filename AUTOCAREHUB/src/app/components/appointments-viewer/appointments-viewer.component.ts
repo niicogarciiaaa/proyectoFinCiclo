@@ -19,18 +19,17 @@ interface Cita {
 @Component({
   selector: 'app-appointments-viewer',
   standalone: true,
-  imports: [CommonModule,MenuComponent],
+  imports: [CommonModule, MenuComponent],
   templateUrl: './appointments-viewer.component.html',
-  styleUrl: './appointments-viewer.component.css'
+  styleUrl: './appointments-viewer.component.css',
 })
 export class AppointmentsViewerComponent {
-  citas: Cita[] = []; 
+  citas: Cita[] = [];
   errorCitas: string = '';
-  constructor(private dataAccessService: DataAccessService){}
-  
+  constructor(private dataAccessService: DataAccessService) {}
+
   ngOnInit(): void {
     this.obtenerCitasDelTaller();
-    
   }
   /**Obtiene las citas del taller,pero solo en caso de ser un taller, y las añade dentro del array */
   obtenerCitasDelTaller(): void {
@@ -38,14 +37,14 @@ export class AppointmentsViewerComponent {
       next: (respuesta) => {
         if (respuesta) {
           this.citas = respuesta.citas || [];
-          
         } else {
-          this.citas = respuesta.message || 'No se pudieron obtener las citas del taller';
+          this.citas =
+            respuesta.message || 'No se pudieron obtener las citas del taller';
         }
       },
       error: (error) => {
         this.errorCitas = error.message || 'Error al obtener las citas';
-      }
+      },
     });
-}
+  }
 }

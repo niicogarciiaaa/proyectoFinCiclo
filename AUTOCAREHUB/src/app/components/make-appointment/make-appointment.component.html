@@ -1,15 +1,15 @@
 <app-menu></app-menu>
 <div class="appointment-container">
   <h2>Reservar Cita</h2>
-  
+
   <div *ngIf="loading" class="loading">
     Cargando horarios disponibles...
   </div>
-  
+
   <div *ngIf="errorMessage" class="error-message">
     {{ errorMessage }}
   </div>
-  
+
   <!-- Pagination Controls -->
   <div class="pagination-controls" *ngIf="!loading && totalPages > 1">
     <button [disabled]="currentPage === 1" (click)="prevPage()" class="page-button">
@@ -20,7 +20,7 @@
       Siguiente &raquo;
     </button>
   </div>
-  
+
   <!-- Calendar View -->
   <div class="week-slots" *ngIf="!loading">
     <div class="day-column" *ngFor="let dateKey of visibleDates">
@@ -39,7 +39,7 @@
       </div>
     </div>
   </div>
-  
+
   <!-- Selección de Taller -->
   <div class="workshop-selection">
     <label for="workshop">Selecciona un Taller:</label>
@@ -50,7 +50,7 @@
       </option>
     </select>
   </div>
-  
+
   <!-- Selected Appointments -->
   <div *ngIf="selectedSlots.length > 0" class="selected-slots">
     <h3>Citas Seleccionadas</h3>
@@ -70,7 +70,7 @@
     <div class="popup-content">
       <button class="close-popup" (click)="closePopup($event)">✕</button>
       <h3>Detalles de la Cita</h3>
-      
+
       <!-- Vehicle Selection -->
       <div class="vehicle-selection">
         <label for="vehicle">Selecciona un Vehículo:</label>
@@ -84,7 +84,7 @@
           {{ vehiclesErrorMessage }}
         </div>
       </div>
-      
+
       <!-- Appointment Reason -->
       <div class="motivo-selection">
         <label for="motivo">Motivo de la Cita:</label>

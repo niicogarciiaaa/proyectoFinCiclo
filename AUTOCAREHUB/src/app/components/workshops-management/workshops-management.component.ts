@@ -8,7 +8,7 @@ import { DataAccessService, Workshop } from '../../services/dataAccess.service';
   standalone: true,
   imports: [CommonModule, FormsModule],
   templateUrl: './workshops-management.component.html',
-  styleUrls: ['./workshops-management.component.css']
+  styleUrls: ['./workshops-management.component.css'],
 })
 export class WorkshopsManagementComponent implements OnInit {
   workshops: Workshop[] = [];
@@ -18,7 +18,7 @@ export class WorkshopsManagementComponent implements OnInit {
     Phone: '',
     Email: '',
     FullName: '',
-    Description: ''
+    Description: '',
   };
   errorMessage: string = '';
   successMessage: string = '';
@@ -35,17 +35,23 @@ export class WorkshopsManagementComponent implements OnInit {
         if (response.success) {
           this.workshops = response.workshops;
         } else {
-          this.errorMessage = response.message || 'Error al cargar los talleres';
+          this.errorMessage =
+            response.message || 'Error al cargar los talleres';
         }
       },
       error: () => {
         this.errorMessage = 'Error al cargar los talleres';
-      }
+      },
     });
   }
 
   createWorkshop(): void {
-    if (!this.newWorkshop.Name || !this.newWorkshop.Address || !this.newWorkshop.Phone || !this.newWorkshop.Email) {
+    if (
+      !this.newWorkshop.Name ||
+      !this.newWorkshop.Address ||
+      !this.newWorkshop.Phone ||
+      !this.newWorkshop.Email
+    ) {
       this.errorMessage = 'Por favor, completa todos los campos requeridos';
       return;
     }
@@ -62,7 +68,7 @@ export class WorkshopsManagementComponent implements OnInit {
       },
       error: () => {
         this.errorMessage = 'Error al crear el taller';
-      }
+      },
     });
   }
 
@@ -73,7 +79,7 @@ export class WorkshopsManagementComponent implements OnInit {
       Phone: '',
       Email: '',
       FullName: '',
-      Description: ''
+      Description: '',
     };
   }
 }

@@ -1,7 +1,11 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataAccessService, Chat, Message } from '../../services/dataAccess.service';
+import {
+  DataAccessService,
+  Chat,
+  Message,
+} from '../../services/dataAccess.service';
 import { MenuComponent } from '../menu/menu.component';
 import { interval, Subscription } from 'rxjs';
 import { I18nService } from '../../services/i18n.service';
@@ -79,12 +83,12 @@ export class ChatComponent implements OnInit, OnDestroy {
   seleccionarChat(chat: Chat) {
     this.selectedChat = chat;
     this.cargarMensajes(chat.ChatID);
-    
+
     // Cancelar la suscripción anterior si existe
     if (this.actualizacionMensajes) {
       this.actualizacionMensajes.unsubscribe();
     }
-    
+
     // Actualizar mensajes del chat seleccionado cada 20 segundos
     this.actualizacionMensajes = interval(20000).subscribe(() => {
       this.cargarMensajes(chat.ChatID);
@@ -105,15 +109,17 @@ export class ChatComponent implements OnInit, OnDestroy {
   enviarMensaje() {
     if (!this.nuevoMensaje.trim() || !this.selectedChat) return;
 
-    this.dataService.enviarMensaje(this.selectedChat.ChatID, this.nuevoMensaje).subscribe(
-      (response) => {
-        if (response.success) {
-          this.nuevoMensaje = '';
-          this.cargarMensajes(this.selectedChat!.ChatID);
-        }
-      },
-      (error) => console.error('Error al enviar mensaje:', error)
-    );
+    this.dataService
+      .enviarMensaje(this.selectedChat.ChatID, this.nuevoMensaje)
+      .subscribe(
+        (response) => {
+          if (response.success) {
+            this.nuevoMensaje = '';
+            this.cargarMensajes(this.selectedChat!.ChatID);
+          }
+        },
+        (error) => console.error('Error al enviar mensaje:', error)
+      );
   }
 
   esMiMensaje(mensaje: Message): boolean {
@@ -152,9 +158,10 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   filtrarTalleres() {
     const busqueda = this.busquedaTaller.toLowerCase();
-    this.talleresFiltrados = this.talleres.filter((taller) =>
-      taller.Name.toLowerCase().includes(busqueda) ||
-      taller.Address.toLowerCase().includes(busqueda)
+    this.talleresFiltrados = this.talleres.filter(
+      (taller) =>
+        taller.Name.toLowerCase().includes(busqueda) ||
+        taller.Address.toLowerCase().includes(busqueda)
     );
   }
 
@@ -172,7 +179,7 @@ export class ChatComponent implements OnInit, OnDestroy {
             LastMessage: 'Chat iniciado',
             Status: 'Active',
             CreateAt: new Date().toISOString(),
-            unreadCount: 0
+            unreadCount: 0,
           };
           this.seleccionarChat(nuevoChat);
         }

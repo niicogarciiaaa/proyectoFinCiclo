@@ -1,7 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { DataAccessService, InvoiceStats, Invoice } from '../../services/dataAccess.service';
+import {
+  DataAccessService,
+  InvoiceStats,
+  Invoice,
+} from '../../services/dataAccess.service';
 import { MenuComponent } from '../menu/menu.component';
 
 @Component({
@@ -9,7 +13,7 @@ import { MenuComponent } from '../menu/menu.component';
   standalone: true,
   imports: [CommonModule, FormsModule, MenuComponent],
   templateUrl: './statistics-viewer.component.html',
-  styleUrl: './statistics-viewer.component.css'
+  styleUrl: './statistics-viewer.component.css',
 })
 export class StatisticsViewerComponent implements OnInit {
   startDate: string = '';
@@ -36,7 +40,8 @@ export class StatisticsViewerComponent implements OnInit {
     this.error = '';
 
     // Cargar estadísticas
-    this.dataAccess.obtenerEstadisticasFacturacion(this.startDate, this.endDate)
+    this.dataAccess
+      .obtenerEstadisticasFacturacion(this.startDate, this.endDate)
       .subscribe({
         next: (stats) => {
           this.stats = stats;
@@ -45,21 +50,23 @@ export class StatisticsViewerComponent implements OnInit {
         error: (error) => {
           this.error = 'Error al cargar estadísticas';
           this.loading = false;
-        }
+        },
       });
 
     // Cargar facturas del período
-    this.dataAccess.buscarFacturas({
-      startDate: this.startDate,
-      endDate: this.endDate
-    }).subscribe({
-      next: (response) => {
-        this.invoices = response.invoices;
-      },
-      error: (error) => {
-        this.error = 'Error al cargar facturas';
-      }
-    });
+    this.dataAccess
+      .buscarFacturas({
+        startDate: this.startDate,
+        endDate: this.endDate,
+      })
+      .subscribe({
+        next: (response) => {
+          this.invoices = response.invoices;
+        },
+        error: (error) => {
+          this.error = 'Error al cargar facturas';
+        },
+      });
   }
 
   onDateChange() {
@@ -69,7 +76,7 @@ export class StatisticsViewerComponent implements OnInit {
   formatCurrency(amount: number): string {
     return new Intl.NumberFormat('es-ES', {
       style: 'currency',
-      currency: 'EUR'
+      currency: 'EUR',
     }).format(amount);
   }
 

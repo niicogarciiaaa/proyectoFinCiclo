@@ -16,7 +16,7 @@ interface WeekSlots {
   standalone: true,
   imports: [CommonModule, FormsModule, ReactiveFormsModule, MenuComponent],
   templateUrl: './make-appointment.component.html',
-  styleUrl: './make-appointment.component.css'
+  styleUrl: './make-appointment.component.css',
 })
 export class MakeAppointmentComponent implements OnInit {
   selectedLang: string = 'es';
@@ -27,14 +27,14 @@ export class MakeAppointmentComponent implements OnInit {
   loading: boolean = false;
   loadingVehicles: boolean = false;
   loadingWorkshops: boolean = false;
-  selectedSlots: { fecha: string, hora: string }[] = [];
+  selectedSlots: { fecha: string; hora: string }[] = [];
   selectedVehicle: number = 0;
   selectedWorkshop: number = 0;
   motivo: string = '';
   vehicles: any[] = [];
   workshops: any[] = [];
   isPopupVisible = false;
-  
+
   // Pagination properties
   visibleDates: string[] = [];
   currentPage: number = 1;
@@ -43,7 +43,7 @@ export class MakeAppointmentComponent implements OnInit {
 
   constructor(private dataAccess: DataAccessService) {}
 
-  /** 
+  /**
    * Inicializa el componente cargando los datos del mes actual, los vehículos y los talleres
    */
   ngOnInit(): void {
@@ -53,12 +53,12 @@ export class MakeAppointmentComponent implements OnInit {
   }
 
   /**
-   * Carga los vehículos del usuario de la sesion 
+   * Carga los vehículos del usuario de la sesion
    */
   cargarVehiculos() {
     this.loadingVehicles = true;
     this.vehiclesErrorMessage = '';
-    
+
     this.dataAccess.obtenerVehiculos().subscribe({
       next: (response) => {
         if (response && response.success) {
@@ -75,7 +75,7 @@ export class MakeAppointmentComponent implements OnInit {
       },
       complete: () => {
         this.loadingVehicles = false;
-      }
+      },
     });
   }
 
@@ -100,11 +100,11 @@ export class MakeAppointmentComponent implements OnInit {
       },
       complete: () => {
         this.loadingWorkshops = false;
-      }
+      },
     });
   }
 
-  /** 
+  /**
    * Consulta en la base de datos el estado de las citas de este mes, en función del día actual y el taller seleccionado
    */
   consultarMes() {
@@ -119,22 +119,24 @@ export class MakeAppointmentComponent implements OnInit {
     const today = new Date();
     const currentDate = today.toISOString().split('T')[0];
 
-    this.dataAccess.consultarSemana(this.selectedWorkshop, currentDate, '').subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.monthSlots = response.slotsSemana;
-          this.setupPagination();
-        } else {
-          this.errorMessage = 'Error al consultar los huecos disponibles';
-        }
-      },
-      error: (error) => {
-        this.errorMessage = 'Error de conexión al servidor';
-      },
-      complete: () => {
-        this.loading = false;
-      }
-    });
+    this.dataAccess
+      .consultarSemana(this.selectedWorkshop, currentDate, '')
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.monthSlots = response.slotsSemana;
+            this.setupPagination();
+          } else {
+            this.errorMessage = 'Error al consultar los huecos disponibles';
+          }
+        },
+        error: (error) => {
+          this.errorMessage = 'Error de conexión al servidor';
+        },
+        complete: () => {
+          this.loading = false;
+        },
+      });
   }
 
   /**
@@ -152,11 +154,14 @@ export class MakeAppointmentComponent implements OnInit {
    */
   goToPage(page: number) {
     if (page < 1 || page > this.totalPages) return;
-    
+
     this.currentPage = page;
     const allDates = Object.keys(this.monthSlots).sort();
     const startIndex = (page - 1) * this.datesPerPage;
-    this.visibleDates = allDates.slice(startIndex, startIndex + this.datesPerPage);
+    this.visibleDates = allDates.slice(
+      startIndex,
+      startIndex + this.datesPerPage
+    );
   }
 
   /**
@@ -179,7 +184,9 @@ export class MakeAppointmentComponent implements OnInit {
    * @param hora Hora del horario
    */
   toggleSlotSelection(fecha: string, hora: string) {
-    const index = this.selectedSlots.findIndex(slot => slot.fecha === fecha && slot.hora === hora);
+    const index = this.selectedSlots.findIndex(
+      (slot) => slot.fecha === fecha && slot.hora === hora
+    );
     if (index > -1) {
       this.selectedSlots.splice(index, 1);
     } else {
@@ -194,7 +201,9 @@ export class MakeAppointmentComponent implements OnInit {
    * @returns true si el horario está seleccionado, false en caso contrario
    */
   isSelected(fecha: string, hora: string): boolean {
-    return this.selectedSlots.some(slot => slot.fecha === fecha && slot.hora === hora);
+    return this.selectedSlots.some(
+      (slot) => slot.fecha === fecha && slot.hora === hora
+    );
   }
 
   /**
@@ -210,16 +219,16 @@ export class MakeAppointmentComponent implements OnInit {
     this.errorMessage = '';
     let citasCreadas = 0;
     const totalCitas = this.selectedSlots.length;
-  
-    this.selectedSlots.forEach(slot => {
+
+    this.selectedSlots.forEach((slot) => {
       const cita = {
         Fecha: slot.fecha,
         HoraInicio: slot.hora,
         VehicleID: this.selectedVehicle,
         WorkshopID: this.selectedWorkshop,
-        Motivo: this.motivo
+        Motivo: this.motivo,
       };
-  
+
       this.dataAccess.crearCita(cita).subscribe({
         next: (response) => {
           if (response && response.success) {
@@ -231,18 +240,21 @@ export class MakeAppointmentComponent implements OnInit {
               this.errorMessage = 'Citas creadas correctamente';
             }
           } else {
-            this.errorMessage = 'No se pudo crear la cita: ' + (response?.message || '');
+            this.errorMessage =
+              'No se pudo crear la cita: ' + (response?.message || '');
           }
         },
         error: (error) => {
-          this.errorMessage = 'Error al crear la cita: ' + (error.error?.message || error.message || 'Error desconocido');
+          this.errorMessage =
+            'Error al crear la cita: ' +
+            (error.error?.message || error.message || 'Error desconocido');
         },
         complete: () => {
           this.loading = false;
-        }
+        },
       });
     });
-    this.isPopupVisible= false;
+    this.isPopupVisible = false;
   }
 
   /**
@@ -250,7 +262,8 @@ export class MakeAppointmentComponent implements OnInit {
    */
   makeAppointment() {
     if (this.selectedSlots.length === 0) {
-      this.errorMessage = 'Por favor, selecciona al menos un horario disponible.';
+      this.errorMessage =
+        'Por favor, selecciona al menos un horario disponible.';
       return;
     }
 
@@ -273,18 +286,29 @@ export class MakeAppointmentComponent implements OnInit {
    * @returns Nombre del día en español
    */
   getDayName(date: string): string {
-    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    const days = [
+      'Domingo',
+      'Lunes',
+      'Martes',
+      'Miércoles',
+      'Jueves',
+      'Viernes',
+      'Sábado',
+    ];
     const dayIndex = new Date(date).getDay();
     return days[dayIndex];
   }
   showPopup() {
-  this.isPopupVisible = true;
-}
-closePopup(event: any) {
-  if (event.target.classList.contains('popup-overlay') || event.target.classList.contains('close-popup')) {
-    this.isPopupVisible = false;
+    this.isPopupVisible = true;
   }
-}
+  closePopup(event: any) {
+    if (
+      event.target.classList.contains('popup-overlay') ||
+      event.target.classList.contains('close-popup')
+    ) {
+      this.isPopupVisible = false;
+    }
+  }
 
   /**
    * Formatea una fecha al formato español (dd/mm/yyyy)
@@ -295,7 +319,7 @@ closePopup(event: any) {
     return new Date(date).toLocaleDateString('es-ES', {
       day: '2-digit',
       month: '2-digit',
-      year: 'numeric'
+      year: 'numeric',
     });
   }
 

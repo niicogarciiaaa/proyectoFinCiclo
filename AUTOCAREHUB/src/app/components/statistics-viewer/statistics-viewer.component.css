@@ -27,7 +27,7 @@
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .progress-bar {
@@ -41,7 +41,7 @@
 
 .progress {
   height: 100%;
-  background: #4CAF50;
+  background: #4caf50;
   transition: width 0.3s ease;
 }
 
@@ -49,7 +49,7 @@
   background: white;
   padding: 20px;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
 }
 
@@ -58,7 +58,8 @@ table {
   border-collapse: collapse;
 }
 
-th, td {
+th,
+td {
   padding: 12px;
   text-align: left;
   border-bottom: 1px solid #eee;

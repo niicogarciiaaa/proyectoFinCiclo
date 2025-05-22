@@ -2,33 +2,32 @@ import { Component, OnInit } from '@angular/core';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import { MenuComponent } from "../menu/menu.component";
+import { MenuComponent } from '../menu/menu.component';
 
 @Component({
   selector: 'app-register-vehicle',
   standalone: true,
   imports: [FormsModule, CommonModule, MenuComponent],
   templateUrl: './register-vehicle.component.html',
-  styleUrls: ['./register-vehicle.component.css']
+  styleUrls: ['./register-vehicle.component.css'],
 })
 export class RegisterVehicleComponent implements OnInit {
-
   marca: string = '';
   modelo: string = '';
   anyo: string = '';
   matricula: string = '';
   mensajeError: string = '';
   mensajeExito: string = '';
-  vehiculos: any[] = [];  // Array para almacenar los vehículos del usuario
+  vehiculos: any[] = []; // Array para almacenar los vehículos del usuario
   vehiculoEnEdicion: any = null;
 
-  constructor(private dataAccessService: DataAccessService) { }
+  constructor(private dataAccessService: DataAccessService) {}
 
   /**
    * Inicializa el componente y carga los vehículos del usuario al inicio
    */
   ngOnInit(): void {
-    this.obtenerVehiculos();  // Llamada a la API para obtener los vehículos al iniciar el componente
+    this.obtenerVehiculos(); // Llamada a la API para obtener los vehículos al iniciar el componente
   }
 
   /**
@@ -39,39 +38,40 @@ export class RegisterVehicleComponent implements OnInit {
   crearVehiculo() {
     const anyoActual = new Date().getFullYear();
 
-  // Validación de matrícula sin espacios
-  if (this.matricula.includes(' ')) {
-    this.mensajeError = 'La matrícula no puede contener espacios en blanco.';
-    this.mensajeExito = '';
-    return;
-  }
+    // Validación de matrícula sin espacios
+    if (this.matricula.includes(' ')) {
+      this.mensajeError = 'La matrícula no puede contener espacios en blanco.';
+      this.mensajeExito = '';
+      return;
+    }
 
-  // Validación de año no superior al actual
-  const anyoNumero = parseInt(this.anyo, 10);
-  if (isNaN(anyoNumero) || anyoNumero > anyoActual) {
-    this.mensajeError = `El año del vehículo no puede ser mayor que ${anyoActual}.`;
-    this.mensajeExito = '';
-    return;
-  }
+    // Validación de año no superior al actual
+    const anyoNumero = parseInt(this.anyo, 10);
+    if (isNaN(anyoNumero) || anyoNumero > anyoActual) {
+      this.mensajeError = `El año del vehículo no puede ser mayor que ${anyoActual}.`;
+      this.mensajeExito = '';
+      return;
+    }
     const vehiculo = {
       marca: this.marca,
       modelo: this.modelo,
       anyo: this.anyo,
-      matricula: this.matricula
+      matricula: this.matricula,
     };
 
     this.dataAccessService.crearVehiculo(vehiculo).subscribe(
-      response => {
+      (response) => {
         if (response.success) {
           this.mensajeExito = 'Vehículo registrado con éxito';
           this.mensajeError = ''; // Limpiar mensaje de error
           this.obtenerVehiculos(); // Recargar la lista de vehículos
         } else {
           this.mensajeExito = ''; // Limpiar mensaje de éxito
-          this.mensajeError = 'Error al registrar el vehículo: ' + response.message;
+          this.mensajeError =
+            'Error al registrar el vehículo: ' + response.message;
         }
       },
-      error => {
+      (error) => {
         this.mensajeExito = ''; // Limpiar mensaje de éxito
         this.mensajeError = 'Hubo un error en la comunicación con el servidor';
         console.error('Error al registrar el vehículo:', error);
@@ -86,7 +86,7 @@ export class RegisterVehicleComponent implements OnInit {
    */
   obtenerVehiculos() {
     this.dataAccessService.obtenerVehiculos().subscribe(
-      response => {
+      (response) => {
         if (response) {
           console.log('Vehículos obtenidos:', response);
           this.vehiculos = response.vehicles; // Asignamos los vehículos a la propiedad vehiculos
@@ -94,7 +94,7 @@ export class RegisterVehicleComponent implements OnInit {
           this.mensajeError = 'No se pudieron cargar los vehículos.';
         }
       },
-      error => {
+      (error) => {
         this.mensajeError = 'Hubo un error al obtener los vehículos';
         console.error('Error al obtener los vehículos:', error);
       }
@@ -116,7 +116,8 @@ export class RegisterVehicleComponent implements OnInit {
             // Actualizar la lista de vehículos
             this.obtenerVehiculos();
           } else {
-            this.mensajeError = 'No se pudo eliminar el vehículo: ' + response.message;
+            this.mensajeError =
+              'No se pudo eliminar el vehículo: ' + response.message;
             this.mensajeExito = '';
           }
         },
@@ -124,7 +125,7 @@ export class RegisterVehicleComponent implements OnInit {
           console.error('Error al eliminar el vehículo:', error);
           this.mensajeError = 'Error al eliminar el vehículo';
           this.mensajeExito = '';
-        }
+        },
       });
     }
   }
@@ -150,27 +151,30 @@ export class RegisterVehicleComponent implements OnInit {
       marca: this.marca,
       modelo: this.modelo,
       anyo: this.anyo,
-      matricula: this.matricula
+      matricula: this.matricula,
     };
 
-    this.dataAccessService.editarVehiculo(this.vehiculoEnEdicion.VehicleID, vehiculo).subscribe({
-      next: (response) => {
-        if (response.success) {
-          this.mensajeExito = 'Vehículo actualizado correctamente';
-          this.mensajeError = '';
-          this.obtenerVehiculos();
-          this.cancelarEdicion();
-        } else {
-          this.mensajeError = 'Error al actualizar el vehículo: ' + response.message;
+    this.dataAccessService
+      .editarVehiculo(this.vehiculoEnEdicion.VehicleID, vehiculo)
+      .subscribe({
+        next: (response) => {
+          if (response.success) {
+            this.mensajeExito = 'Vehículo actualizado correctamente';
+            this.mensajeError = '';
+            this.obtenerVehiculos();
+            this.cancelarEdicion();
+          } else {
+            this.mensajeError =
+              'Error al actualizar el vehículo: ' + response.message;
+            this.mensajeExito = '';
+          }
+        },
+        error: (error) => {
+          console.error('Error al actualizar el vehículo:', error);
+          this.mensajeError = 'Error al actualizar el vehículo';
           this.mensajeExito = '';
-        }
-      },
-      error: (error) => {
-        console.error('Error al actualizar el vehículo:', error);
-        this.mensajeError = 'Error al actualizar el vehículo';
-        this.mensajeExito = '';
-      }
-    });
+        },
+      });
   }
 
   /**

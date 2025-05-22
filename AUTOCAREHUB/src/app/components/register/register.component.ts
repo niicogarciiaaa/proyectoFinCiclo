@@ -1,5 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  Validators,
+  ReactiveFormsModule,
+} from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { CommonModule } from '@angular/common';
@@ -24,7 +29,7 @@ interface RegisterResponse {
   standalone: true,
   imports: [ReactiveFormsModule, CommonModule, RouterModule, FormsModule],
   templateUrl: './register.component.html',
-  styleUrl: './register.component.css'
+  styleUrl: './register.component.css',
 })
 export class RegisterComponent {
   registerForm: FormGroup;
@@ -35,7 +40,7 @@ export class RegisterComponent {
   notificationTypes = [
     { value: 'SMS', label: 'SMS' },
     { value: 'Telegram', label: 'Telegram' },
-    { value: 'WhatsApp', label: 'WhatsApp' }
+    { value: 'WhatsApp', label: 'WhatsApp' },
   ];
 
   constructor(
@@ -45,19 +50,20 @@ export class RegisterComponent {
     public i18n: I18nService
   ) {
     this.selectedLang = this.i18n.currentLang || 'es';
-    this.registerForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      fullName: ['', [Validators.required, Validators.minLength(3)]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
-      notificationType: ['', [Validators.required]],
-      contactValue: ['', [Validators.required]]
-    }, {
-      validators: this.passwordMatchValidator
-    });
+    this.registerForm = this.fb.group(
+      {
+        email: ['', [Validators.required, Validators.email]],
+        fullName: ['', [Validators.required, Validators.minLength(3)]],
+        password: ['', [Validators.required, Validators.minLength(6)]],
+        confirmPassword: ['', [Validators.required]],
+        notificationType: ['', [Validators.required]],
+        contactValue: ['', [Validators.required]],
+      },
+      {
+        validators: this.passwordMatchValidator,
+      }
+    );
   }
-
- 
 
   /**
    * Cambia el idioma de la aplicación
@@ -88,28 +94,33 @@ export class RegisterComponent {
       this.loading = true;
       this.errorMessage = '';
 
-      const { email, fullName, password, notificationType, contactValue } = this.registerForm.value;
+      const { email, fullName, password, notificationType, contactValue } =
+        this.registerForm.value;
 
-      this.dataAccess.registerUser(email, fullName, password, notificationType, contactValue).subscribe({
-        next: (response: RegisterResponse) => {
-          if (response.success) {
-            this.router.navigate(['/login']);
-          } else {
-            this.errorMessage = response.message || this.i18n.t('errorRegistro');
-            if (response.errors?.length) {
-              this.errorMessage = response.errors.join(', ');
+      this.dataAccess
+        .registerUser(email, fullName, password, notificationType, contactValue)
+        .subscribe({
+          next: (response: RegisterResponse) => {
+            if (response.success) {
+              this.router.navigate(['/login']);
+            } else {
+              this.errorMessage =
+                response.message || this.i18n.t('errorRegistro');
+              if (response.errors?.length) {
+                this.errorMessage = response.errors.join(', ');
+              }
             }
-          }
-        },
-        error: (error) => {
-          console.error('Error en el registro:', error);
-          this.errorMessage = error.error?.message || this.i18n.t('errorConexion');
-          this.loading = false;
-        },
-        complete: () => {
-          this.loading = false;
-        }
-      });
+          },
+          error: (error) => {
+            console.error('Error en el registro:', error);
+            this.errorMessage =
+              error.error?.message || this.i18n.t('errorConexion');
+            this.loading = false;
+          },
+          complete: () => {
+            this.loading = false;
+          },
+        });
     } else {
       this.markFormGroupTouched(this.registerForm);
     }
@@ -120,7 +131,7 @@ export class RegisterComponent {
    * @param formGroup - Grupo de formulario cuyos campos se marcarán
    */
   private markFormGroupTouched(formGroup: FormGroup): void {
-    Object.values(formGroup.controls).forEach(control => {
+    Object.values(formGroup.controls).forEach((control) => {
       control.markAsTouched();
       if (control instanceof FormGroup) {
         this.markFormGroupTouched(control);
@@ -161,7 +172,10 @@ export class RegisterComponent {
       return this.i18n.t('minCaracteres', { min: minLength });
     }
 
-    if (fieldName === 'confirmPassword' && this.registerForm.hasError('passwordMismatch')) {
+    if (
+      fieldName === 'confirmPassword' &&
+      this.registerForm.hasError('passwordMismatch')
+    ) {
       return this.i18n.t('contrasenasNoCoinciden');
     }
 

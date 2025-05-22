@@ -74,7 +74,7 @@ h2 {
   padding: 15px;
   background-color: #f5f5f5;
   border-radius: 6px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .day-column h3 {
@@ -127,7 +127,7 @@ h2 {
 
 .slot:hover:not(.occupied) {
   transform: translateY(-2px);
-  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
 }
 
 .time {
@@ -180,7 +180,8 @@ h2 {
 }
 
 /* Form Elements */
-.vehicle-selection, .motivo-selection {
+.vehicle-selection,
+.motivo-selection {
   margin-bottom: 20px;
 }
 
@@ -190,7 +191,8 @@ label {
   font-weight: 500;
 }
 
-select, textarea {
+select,
+textarea {
   width: 100%;
   padding: 10px;
   border: 1px solid #ddd;
@@ -283,7 +285,7 @@ textarea {
   .week-slots {
     flex-direction: column;
   }
-  
+
   .day-column {
     margin-bottom: 15px;
   }

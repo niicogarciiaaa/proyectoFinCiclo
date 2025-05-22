@@ -8,9 +8,8 @@ describe('AppointmentsViewerComponent', () => {
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [AppointmentsViewerComponent]
-    })
-    .compileComponents();
+      imports: [AppointmentsViewerComponent],
+    }).compileComponents();
 
     fixture = TestBed.createComponent(AppointmentsViewerComponent);
     component = fixture.componentInstance;

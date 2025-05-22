@@ -11,10 +11,10 @@ import { I18nService } from '../../services/i18n.service';
   templateUrl: './menu.component.html',
   styleUrls: ['./menu.component.css'],
   standalone: true,
-  imports: [RouterLink,CommonModule]
+  imports: [RouterLink, CommonModule],
 })
 export class MenuComponent implements OnInit {
-  menuRoutes: { path: string, label: string }[] = [];
+  menuRoutes: { path: string; label: string }[] = [];
 
   constructor(public i18n: I18nService) {}
 
@@ -25,7 +25,7 @@ export class MenuComponent implements OnInit {
       const user = JSON.parse(currentUser);
       const role = user.role.toLowerCase(); // "usuario", "taller" o "administrador"
 
-      switch(role) {
+      switch (role) {
         case 'taller':
           this.menuRoutes = WORKSHOP_MENU_ROUTES;
           break;
