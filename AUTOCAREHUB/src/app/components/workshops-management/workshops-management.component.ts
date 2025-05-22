@@ -16,7 +16,7 @@ export class WorkshopsManagementComponent implements OnInit {
     workshopName: '',
     address: '',
     phone: '',
-    email: '',
+    Email: '',
     fullName: '',
     description: '',
     password: '',
@@ -35,6 +35,7 @@ export class WorkshopsManagementComponent implements OnInit {
       next: (response) => {
         if (response.success) {
           this.workshops = response.workshops;
+          console.log(this.workshops);
         } else {
           this.errorMessage =
             response.message || 'Error al cargar los talleres';

@@ -13,7 +13,7 @@ if ($conn->connect_error) {
 // 1. Insertar un usuario regular (cliente)
 $emailCliente = "cliente@autocare.com";
 $fullnameCliente = "Juan Pérez";
-$passwordCliente = password_hash("claveSegura123", PASSWORD_DEFAULT);
+$passwordCliente = password_hash("abc123", PASSWORD_DEFAULT);
 $roleCliente = "Usuario";
 
 $sqlUsuario = "INSERT INTO Users (Email, FullName, Password, Role) VALUES (?, ?, ?, ?)";
@@ -45,7 +45,7 @@ if ($stmt->execute()) {
 // 2. Insertar un usuario taller
 $emailTaller = "taller@autocare.com";
 $fullnameTaller = "Taller Mecánico AutoFix";
-$passwordTaller = password_hash("tallerSeguro456", PASSWORD_DEFAULT);
+$passwordTaller = password_hash("abc123", PASSWORD_DEFAULT);
 $roleTaller = "Taller";
 
 $sqlTaller = "INSERT INTO Users (Email, FullName, Password, Role) VALUES (?, ?, ?, ?)";
@@ -80,7 +80,7 @@ if ($stmt->execute()) {
 // 3. Insertar un administrador
 $emailAdmin = "admin@autocare.com";
 $fullnameAdmin = "Administrador Sistema";
-$passwordAdmin = password_hash("adminSuper789", PASSWORD_DEFAULT);
+$passwordAdmin = password_hash("abc123", PASSWORD_DEFAULT);
 $roleAdmin = "Administrador";
 
 $sqlAdmin = "INSERT INTO Users (Email, FullName, Password, Role) VALUES (?, ?, ?, ?)";

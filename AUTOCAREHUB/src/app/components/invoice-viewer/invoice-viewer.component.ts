@@ -130,6 +130,6 @@ export class InvoiceViewerComponent implements OnInit {
     );
 
     // Guardar PDF
-    doc.save(`Factura_${this.selectedInvoice.InvoiceID}.pdf`);
+    doc.save(`Factura_taller_${this.selectedInvoice.WorkshopName}_${this.selectedInvoice.InvoiceID}.pdf`);
   }
 }
