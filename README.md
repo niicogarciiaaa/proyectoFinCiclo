@@ -20,23 +20,28 @@ El orden es el siguiente:
 
 3. Finalmente, acceder a la aplicación en:
    > **`localhost/index.html`**
+   
+Ya nos cargará el inicio de sesión.
 
 Los correos y las contraseñas de los usuarios son las siguentes:
 
 1. Cuenta de taller
+
    Correo: "taller@autocare.com"
+
    Contraseña: "abc123"
 
 2. Cuenta de cliente
+
    Correo: "cliente@autocare.com"
 
-   
    Contraseña: "abc123"
 
 
 4. Cuenta de administrador
+
    Correo: "admin@autocare.com"
+
    Contraseña:"abc123"
 
-   
-Ya nos cargará el inicio de sesión.
+
