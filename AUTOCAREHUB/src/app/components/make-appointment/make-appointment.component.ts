@@ -47,7 +47,7 @@ export class MakeAppointmentComponent implements OnInit {
    * Inicializa el componente cargando los datos del mes actual, los vehículos y los talleres
    */
   ngOnInit(): void {
-    this.consultarMes();
+    // this.consultarMes(); // Eliminado para evitar llamada prematura
     this.cargarVehiculos();
     this.cargarTalleres();
   }
@@ -90,6 +90,7 @@ export class MakeAppointmentComponent implements OnInit {
           this.workshops = response.workshops || [];
           if (this.workshops.length > 0 && !this.selectedWorkshop) {
             this.selectedWorkshop = this.workshops[0].WorkshopID;
+            this.consultarMes(); // Ahora se llama aquí, tras seleccionar taller
           }
         } else {
           this.errorMessage = 'No se pudieron cargar los talleres';

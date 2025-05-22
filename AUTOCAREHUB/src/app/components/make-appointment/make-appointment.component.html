@@ -2,21 +2,36 @@
 <div class="appointment-container">
   <h2>Reservar Cita</h2>
 
-  <div *ngIf="loading" class="loading">
-    Cargando horarios disponibles...
-  </div>
+  <div *ngIf="loading" class="loading">Cargando horarios disponibles...</div>
 
-  <div *ngIf="errorMessage" class="error-message">
+  <div
+    *ngIf="errorMessage && errorMessage !== 'Citas creadas correctamente'"
+    class="error-message"
+  >
+    {{ errorMessage }}
+  </div>
+  <div
+    *ngIf="errorMessage === 'Citas creadas correctamente'"
+    class="success-message"
+  >
     {{ errorMessage }}
   </div>
 
   <!-- Pagination Controls -->
   <div class="pagination-controls" *ngIf="!loading && totalPages > 1">
-    <button [disabled]="currentPage === 1" (click)="prevPage()" class="page-button">
+    <button
+      [disabled]="currentPage === 1"
+      (click)="prevPage()"
+      class="page-button"
+    >
       &laquo; Anterior
     </button>
     <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
-    <button [disabled]="currentPage === totalPages" (click)="nextPage()" class="page-button">
+    <button
+      [disabled]="currentPage === totalPages"
+      (click)="nextPage()"
+      class="page-button"
+    >
       Siguiente &raquo;
     </button>
   </div>
@@ -27,12 +42,17 @@
       <h3>{{ getDayName(dateKey) }}</h3>
       <p class="date">{{ formatDate(dateKey) }}</p>
       <div class="time-slots">
-        <div *ngFor="let slot of monthSlots[dateKey]"
-             class="slot"
-             [class.occupied]="slot.estado === 'Ocupada'"
-             [class.available]="slot.estado === 'Disponible'"
-             [class.selected]="isSelected(dateKey, slot.hora)"
-             (click)="slot.estado === 'Disponible' && toggleSlotSelection(dateKey, slot.hora)">
+        <div
+          *ngFor="let slot of monthSlots[dateKey]"
+          class="slot"
+          [class.occupied]="slot.estado === 'Ocupada'"
+          [class.available]="slot.estado === 'Disponible'"
+          [class.selected]="isSelected(dateKey, slot.hora)"
+          (click)="
+            slot.estado === 'Disponible' &&
+              toggleSlotSelection(dateKey, slot.hora)
+          "
+        >
           <span class="time">{{ slot.hora }}</span>
           <span class="status">{{ slot.estado }}</span>
         </div>
@@ -43,7 +63,12 @@
   <!-- Selección de Taller -->
   <div class="workshop-selection">
     <label for="workshop">Selecciona un Taller:</label>
-    <select id="workshop" [(ngModel)]="selectedWorkshop" name="workshop" (change)="onWorkshopChange()">
+    <select
+      id="workshop"
+      [(ngModel)]="selectedWorkshop"
+      name="workshop"
+      (change)="onWorkshopChange()"
+    >
       <option value="0" disabled>Selecciona un taller</option>
       <option *ngFor="let workshop of workshops" [value]="workshop.WorkshopID">
         {{ workshop.Name }}
@@ -57,16 +82,29 @@
     <ul>
       <li *ngFor="let slot of selectedSlots">
         {{ formatDate(slot.fecha) }} - {{ slot.hora }}
-        <button class="remove-slot" (click)="toggleSlotSelection(slot.fecha, slot.hora)">✕</button>
+        <button
+          class="remove-slot"
+          (click)="toggleSlotSelection(slot.fecha, slot.hora)"
+        >
+          ✕
+        </button>
       </li>
     </ul>
-    <button class="confirm-button" (click)="showPopup()" *ngIf="selectedSlots.length > 0">
+    <button
+      class="confirm-button"
+      (click)="showPopup()"
+      *ngIf="selectedSlots.length > 0"
+    >
       Continuar con la reserva
     </button>
   </div>
 
   <!-- Popup Form -->
-  <div class="popup-overlay" *ngIf="isPopupVisible" (click)="closePopup($event)">
+  <div
+    class="popup-overlay"
+    *ngIf="isPopupVisible"
+    (click)="closePopup($event)"
+  >
     <div class="popup-content">
       <button class="close-popup" (click)="closePopup($event)">✕</button>
       <h3>Detalles de la Cita</h3>
@@ -88,12 +126,19 @@
       <!-- Appointment Reason -->
       <div class="motivo-selection">
         <label for="motivo">Motivo de la Cita:</label>
-        <textarea id="motivo" [(ngModel)]="motivo" name="motivo" placeholder="Escribe el motivo de la cita"></textarea>
+        <textarea
+          id="motivo"
+          [(ngModel)]="motivo"
+          name="motivo"
+          placeholder="Escribe el motivo de la cita"
+        ></textarea>
       </div>
 
       <!-- Action Buttons -->
       <div class="actions">
-        <button (click)="makeAppointment()" [disabled]="loading">Confirmar Cita</button>
+        <button (click)="makeAppointment()" [disabled]="loading">
+          Confirmar Cita
+        </button>
       </div>
     </div>
   </div>
