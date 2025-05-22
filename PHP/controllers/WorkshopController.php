@@ -41,8 +41,9 @@ class WorkshopController {
             $userId = $this->conn->insert_id;
 
             // Crear el registro del taller
+            $description = isset($data['description']) ? $data['description'] : '';
             $stmt = $this->conn->prepare("INSERT INTO Workshops (UserID, Name, Address, Phone, Description) VALUES (?, ?, ?, ?, ?)");
-            $stmt->bind_param("issss", $userId, $data['workshopName'], $data['address'], $data['phone'], $data['description'] ?? '');
+            $stmt->bind_param("issss", $userId, $data['workshopName'], $data['address'], $data['phone'], $description);
             
             if (!$stmt->execute()) {
                 // Rollback - eliminar usuario creado si falla la creación del taller

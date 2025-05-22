@@ -14,7 +14,11 @@
     <h3>Crear Nuevo Taller</h3>
     <div class="form-group">
       <label>Nombre</label>
-      <input type="text" class="form-control" [(ngModel)]="newWorkshop.Name" />
+      <input
+        type="text"
+        class="form-control"
+        [(ngModel)]="newWorkshop.workshopName"
+      />
     </div>
 
     <div class="form-group">
@@ -22,13 +26,13 @@
       <input
         type="text"
         class="form-control"
-        [(ngModel)]="newWorkshop.Address"
+        [(ngModel)]="newWorkshop.address"
       />
     </div>
 
     <div class="form-group">
       <label>Teléfono</label>
-      <input type="tel" class="form-control" [(ngModel)]="newWorkshop.Phone" />
+      <input type="tel" class="form-control" [(ngModel)]="newWorkshop.phone" />
     </div>
 
     <div class="form-group">
@@ -36,7 +40,7 @@
       <input
         type="email"
         class="form-control"
-        [(ngModel)]="newWorkshop.Email"
+        [(ngModel)]="newWorkshop.email"
       />
     </div>
 
@@ -45,7 +49,7 @@
       <input
         type="text"
         class="form-control"
-        [(ngModel)]="newWorkshop.FullName"
+        [(ngModel)]="newWorkshop.fullName"
       />
     </div>
 
@@ -53,8 +57,17 @@
       <label>Descripción</label>
       <textarea
         class="form-control"
-        [(ngModel)]="newWorkshop.Description"
+        [(ngModel)]="newWorkshop.description"
       ></textarea>
+    </div>
+
+    <div class="form-group">
+      <label>Contraseña</label>
+      <input
+        type="password"
+        class="form-control"
+        [(ngModel)]="newWorkshop.password"
+      />
     </div>
 
     <button class="btn btn-primary" (click)="createWorkshop()">

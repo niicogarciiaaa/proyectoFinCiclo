@@ -12,13 +12,14 @@ import { DataAccessService, Workshop } from '../../services/dataAccess.service';
 })
 export class WorkshopsManagementComponent implements OnInit {
   workshops: Workshop[] = [];
-  newWorkshop: Workshop = {
-    Name: '',
-    Address: '',
-    Phone: '',
-    Email: '',
-    FullName: '',
-    Description: '',
+  newWorkshop: any = {
+    workshopName: '',
+    address: '',
+    phone: '',
+    email: '',
+    fullName: '',
+    description: '',
+    password: '',
   };
   errorMessage: string = '';
   successMessage: string = '';
@@ -47,10 +48,12 @@ export class WorkshopsManagementComponent implements OnInit {
 
   createWorkshop(): void {
     if (
-      !this.newWorkshop.Name ||
-      !this.newWorkshop.Address ||
-      !this.newWorkshop.Phone ||
-      !this.newWorkshop.Email
+      !this.newWorkshop.workshopName ||
+      !this.newWorkshop.address ||
+      !this.newWorkshop.phone ||
+      !this.newWorkshop.email ||
+      !this.newWorkshop.fullName ||
+      !this.newWorkshop.password
     ) {
       this.errorMessage = 'Por favor, completa todos los campos requeridos';
       return;
@@ -74,12 +77,13 @@ export class WorkshopsManagementComponent implements OnInit {
 
   private resetForm(): void {
     this.newWorkshop = {
-      Name: '',
-      Address: '',
-      Phone: '',
-      Email: '',
-      FullName: '',
-      Description: '',
+      workshopName: '',
+      address: '',
+      phone: '',
+      email: '',
+      fullName: '',
+      description: '',
+      password: '',
     };
   }
 }
