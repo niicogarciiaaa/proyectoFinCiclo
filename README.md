@@ -29,10 +29,14 @@ Los correos y las contraseñas de los usuarios son las siguentes:
 
 2. Cuenta de cliente
    Correo: "cliente@autocare.com"
+
+   
    Contraseña: "abc123"
 
 
-3. Cuenta de administrador
+4. Cuenta de administrador
    Correo: "admin@autocare.com"
    Contraseña:"abc123"
+
+   
 Ya nos cargará el inicio de sesión.
