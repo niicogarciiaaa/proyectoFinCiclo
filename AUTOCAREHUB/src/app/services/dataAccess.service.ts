@@ -69,7 +69,6 @@ export interface InvoiceResponse {
   invoices: Invoice[];
 }
 
-// Añadir después de las interfaces existentes
 export interface Chat {
   ChatID: number;
   UserID: number;

@@ -47,7 +47,6 @@ export class MakeAppointmentComponent implements OnInit {
    * Inicializa el componente cargando los datos del mes actual, los vehículos y los talleres
    */
   ngOnInit(): void {
-    // this.consultarMes(); // Eliminado para evitar llamada prematura
     this.cargarVehiculos();
     this.cargarTalleres();
   }

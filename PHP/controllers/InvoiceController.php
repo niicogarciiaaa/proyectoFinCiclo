@@ -24,7 +24,7 @@ class InvoiceController {
                     "Faltan datos requeridos o son inválidos");
             }
             
-            // Actualizar los nombres de los campos según la base de datos
+           
             $this->model->AppointmentID = $data['appointment_id'];
             $this->model->Date = $data['date'] ?? date('Y-m-d');
             $this->model->Estado = $data['estado'] ?? 'Pendiente';

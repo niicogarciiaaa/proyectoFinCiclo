@@ -144,8 +144,6 @@ class AppointmentModel {
         return "Taller no encontrado";
     }
 
-    public function getConnection() {
-        return $this->conn;  // Cambiado de $this->db a $this->conn
-    }
+    
 }
 ?>

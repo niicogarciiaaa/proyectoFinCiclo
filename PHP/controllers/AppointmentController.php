@@ -39,50 +39,49 @@ class AppointmentController {
     }
 
     public function crear($data) {
-    try {
-        // Validar campos requeridos
-        $camposRequeridos = ['Fecha', 'Hora', 'VehicleID', 'WorkshopID'];
-        foreach ($camposRequeridos as $campo) {
-            if (!isset($data[$campo])) {
-                return $this->sendResponse(400, false, "Falta el campo: $campo");
+        try {
+            // Validar campos requeridos
+            $camposRequeridos = ['Fecha', 'Hora', 'VehicleID', 'WorkshopID'];
+            foreach ($camposRequeridos as $campo) {
+                if (!isset($data[$campo])) {
+                    return $this->sendResponse(400, false, "Falta el campo: $campo");
+                }
             }
+
+            // Establecer descripción por defecto si no se proporciona
+            $data['Descripcion'] = $data['Descripcion'] ?? '';
+
+            // Validar fecha y hora
+            if (!$this->validarFechaHora($data['Fecha'], $data['Hora'])) {
+                return $this->sendResponse(400, false, "Formato de fecha u hora inválido");
+            }
+
+            $startDateTime = $data['Fecha'] . ' ' . $data['Hora'] . ':00';
+            $endDateTime = date('Y-m-d H:i:s', strtotime($startDateTime . ' +1 hour'));
+
+            // Verificar disponibilidad
+            if (!$this->model->checkSlotAvailability($data['WorkshopID'], $startDateTime)) {
+                return $this->sendResponse(409, false, "Horario no disponible");
+            }
+
+            // Crear la cita
+            $this->model->UserID = $this->userId;
+            $this->model->VehicleID = $data['VehicleID'];
+            $this->model->WorkshopID = $data['WorkshopID'];
+            $this->model->StartDateTime = $startDateTime;
+            $this->model->EndDateTime = $endDateTime;
+            $this->model->Descripcion = $data['Descripcion'];
+            $this->model->Status = $data['Status'] ?? 'Pendiente';
+
+            if ($this->model->create()) {
+                return $this->sendResponse(200, true, "Cita creada correctamente");
+            } else {
+                return $this->sendResponse(500, false, "Error al crear la cita");
+            }
+        } catch (Exception $e) {
+            return $this->sendResponse(500, false, "Error: " . $e->getMessage());
         }
-
-        // Establecer descripción por defecto si no se proporciona
-        $data['Descripcion'] = $data['Descripcion'] ?? '';
-
-        // Validar fecha y hora
-        if (!$this->validarFechaHora($data['Fecha'], $data['Hora'])) {
-            return $this->sendResponse(400, false, "Formato de fecha u hora inválido");
-        }
-
-        // Resto del código...
-        $startDateTime = $data['Fecha'] . ' ' . $data['Hora'] . ':00';
-        $endDateTime = date('Y-m-d H:i:s', strtotime($startDateTime . ' +1 hour'));
-
-        // Verificar disponibilidad
-        if (!$this->model->checkSlotAvailability($data['WorkshopID'], $startDateTime)) {
-            return $this->sendResponse(409, false, "Horario no disponible");
-        }
-
-        // Crear la cita
-        $this->model->UserID = $this->userId;
-        $this->model->VehicleID = $data['VehicleID'];
-        $this->model->WorkshopID = $data['WorkshopID'];
-        $this->model->StartDateTime = $startDateTime;
-        $this->model->EndDateTime = $endDateTime;
-        $this->model->Descripcion = $data['Descripcion'];
-        $this->model->Status = $data['Status'] ?? 'Pendiente';
-
-        if ($this->model->create()) {
-            return $this->sendResponse(200, true, "Cita creada correctamente");
-        } else {
-            return $this->sendResponse(500, false, "Error al crear la cita");
-        }
-    } catch (Exception $e) {
-        return $this->sendResponse(500, false, "Error: " . $e->getMessage());
     }
-}
 
     public function verCitasTaller() {
         try {
@@ -125,7 +124,7 @@ class AppointmentController {
 
         foreach ($period as $fechaObj) {
             if ($fechaObj->format('N') >= 6) continue;
-            
+
             $fechaStr = $fechaObj->format('Y-m-d');
             $slots = [];
             for ($h = 9; $h < 18; $h++) {
