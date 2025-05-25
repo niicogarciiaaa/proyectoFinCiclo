@@ -4,7 +4,7 @@ Este es el repositorio que tengo para el proyecto de final de  ciclo.
 
 ## Visualización del proyecto
 
-Lo primero de todo que debemos de realizar es instalar XAMPP, para que corra tanto los ficheros de PHP, como tener la web compilada
+Lo primero de todo que debemos de realizar es instalar XAMPP, para tener  tanto los ficheros de PHP, como tener la web compilada, la versión de xammp utilizada es la 8.2.12
 
 Lo que tendremos que hacer, es copiar la carpeta que tenemos en el repositorio que se llama COMPILADO, que es una carpeta que tenemos con todo lo necesario de la parte de front,después de eso tenemos también que copiar la carpeta de PHP, para poder tener el back.
 
