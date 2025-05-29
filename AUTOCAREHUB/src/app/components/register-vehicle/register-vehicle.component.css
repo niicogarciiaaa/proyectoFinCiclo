@@ -44,7 +44,7 @@
 
 .register-vehicle form button {
   padding: 10px;
-  background-color: #4caf50;
+  background-color: #fb8322;
   color: white;
   border: none;
   border-radius: 4px;
@@ -52,7 +52,7 @@
 }
 
 .register-vehicle form button:hover {
-  background-color: #45a049;
+  background-color: #e06d0e;
 }
 
 /* Nuevos estilos para centrar inputs del formulario */
