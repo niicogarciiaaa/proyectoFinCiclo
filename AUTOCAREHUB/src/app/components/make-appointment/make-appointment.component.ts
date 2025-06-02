@@ -195,6 +195,20 @@ export class MakeAppointmentComponent implements OnInit {
   }
 
   /**
+   * Verifica si una fecha y hora específicas ya han pasado
+   * @param fecha Fecha del horario
+   * @param hora Hora del horario
+   * @returns true si la fecha y hora ya han pasado, false en caso contrario
+   */
+  isPastDateTime(fecha: string, hora: string): boolean {
+    const now = new Date();
+    const [horaStr, minutosStr] = hora.split(':');
+    const slotDateTime = new Date(fecha);
+    slotDateTime.setHours(parseInt(horaStr), parseInt(minutosStr), 0);
+    return slotDateTime < now;
+  }
+
+  /**
    * Verifica si un horario específico está seleccionado
    * @param fecha Fecha del horario
    * @param hora Hora del horario

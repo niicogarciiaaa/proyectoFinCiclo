@@ -45,16 +45,23 @@
         <div
           *ngFor="let slot of monthSlots[dateKey]"
           class="slot"
-          [class.occupied]="slot.estado === 'Ocupada'"
-          [class.available]="slot.estado === 'Disponible'"
+          [class.occupied]="
+            slot.estado === 'Ocupada' || isPastDateTime(dateKey, slot.hora)
+          "
+          [class.available]="
+            slot.estado === 'Disponible' && !isPastDateTime(dateKey, slot.hora)
+          "
           [class.selected]="isSelected(dateKey, slot.hora)"
           (click)="
             slot.estado === 'Disponible' &&
+              !isPastDateTime(dateKey, slot.hora) &&
               toggleSlotSelection(dateKey, slot.hora)
           "
         >
           <span class="time">{{ slot.hora }}</span>
-          <span class="status">{{ slot.estado }}</span>
+          <span class="status">{{
+            isPastDateTime(dateKey, slot.hora) ? "Pasada" : slot.estado
+          }}</span>
         </div>
       </div>
     </div>
