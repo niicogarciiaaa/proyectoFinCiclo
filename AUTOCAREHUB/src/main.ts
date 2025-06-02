@@ -8,6 +8,6 @@ import { routes } from './app/app.routes';
 bootstrapApplication(AppComponent, {
   providers: [
     importProvidersFrom(HttpClientModule),
-    provideRouter(routes), // si usas enrutamiento
+    provideRouter(routes),
   ]
 });

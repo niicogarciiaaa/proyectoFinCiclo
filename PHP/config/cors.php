@@ -1,10 +1,15 @@
 <?php
+require_once __DIR__ . '/Logger.php';
+
 function configureCors() {
     $allowedOrigins = ['http://localhost', 'http://localhost:4200'];
     $origin = $_SERVER['HTTP_ORIGIN'] ?? '';
 
     if (in_array($origin, $allowedOrigins)) {
         header("Access-Control-Allow-Origin: $origin");
+        Logger::info("CORS acceso permitido para origen: " . $origin);
+    } else {
+        Logger::warning("Intento de acceso CORS bloqueado para origen: " . $origin);
     }
 
     header("Access-Control-Allow-Credentials: true");
