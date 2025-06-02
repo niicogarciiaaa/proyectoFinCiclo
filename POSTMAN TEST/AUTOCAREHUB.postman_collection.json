@@ -1,0 +1,508 @@
+{
+	"info": {
+		"_postman_id": "9bd4b1fd-bb67-4502-9cab-456a9c227f7c",
+		"name": "AUTOCAREHUB",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "43175200"
+	},
+	"item": [
+		{
+			"name": "REGISTER/LOGIN",
+			"item": [
+				{
+					"name": "REGISTER",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"usuario@ejemplo.com\",\r\n    \"fullName\": \"Nombre Completo\",\r\n    \"password\": \"contraseña123\",\r\n    \"notificationType\": \"WhatsApp\",    // Debe ser: \"SMS\", \"Telegram\" o \"WhatsApp\"\r\n    \"contactValue\": \"+34612345678\"     // Número de teléfono o usuario según el tipo\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/register.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"register.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LOGIN CUENTA CLIENTE",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"cliente@autocare.com\",\r\n    \"password\": \"abc123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/login.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"login.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LOGIN CUENTA TALLER",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"taller@autocare.com\",\r\n    \"password\": \"abc123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/login.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"login.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LOGIN CUENTA ADMIN",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\": \"admin@autocare.com\",\r\n    \"password\": \"abc123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/login.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"login.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "VEHICLES",
+			"item": [
+				{
+					"name": "Crear Nuevo Vehículo",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accion\": \"crear\",\r\n    \"marca\": \"Toyota\",\r\n    \"modelo\": \"Corolla\",\r\n    \"anyo\": \"2020\",\r\n    \"matricula\": \"1234ABC\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/Vehicles.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"Vehicles.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "LISTAR VEHICULOS",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accion\": \"listar\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/Vehicles.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"Vehicles.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "VER DETALLE VEHICULO",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accion\": \"detalle\",\r\n    \"vehiculoID\": 1\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/Vehicles.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"Vehicles.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "EDITAR VEHICULOS",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "\r\n{\r\n    \"accion\": \"editar\",\r\n    \"vehiculoID\": 1,\r\n    \"marca\": \"Toyota\",\r\n    \"modelo\": \"Camry\",\r\n    \"anyo\": \"2021\",\r\n    \"matricula\": \"5678XYZ\"\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/Vehicles.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"Vehicles.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "ELIMINAR VEHICULO",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accion\": \"eliminar\",\r\n    \"vehiculoID\": 1\r\n}"
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/Vehicles.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"Vehicles.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "TALLERES",
+			"item": [
+				{
+					"name": "OBTENER TALLERES",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/PHP/routes/workshops.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"workshops.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "DAR DE ALTA TALLER NUEVO",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"workshopName\": \"Taller Mecánico Express\",\r\n    \"address\": \"Calle Principal 123\",\r\n    \"phone\": \"123456789\",\r\n    \"description\": \"Taller especializado en reparaciones rápidas\",\r\n    \"email\":\"tallerexpress@autocare.com\",\r\n    \"fullName\": \"Taller Express S.L\",\r\n    \"password\": \"abc123\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/admin_workshops.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"admin_workshops.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "OBTENER TODOS LOS TALLERES PARA ADMIN",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/PHP/routes/admin_workshops.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"admin_workshops.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "CITAS",
+			"item": [
+				{
+					"name": "CONSULTAR CITAS DISPONIBLES",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accion\": \"consultar_semana\",\r\n    \"fecha\": \"2025-06-02\",\r\n    \"WorkshopID\":\"1\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/appointments.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"appointments.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CREAR NUEVA CITA",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accion\": \"crear\",\r\n    \"Fecha\": \"2025-06-02\",\r\n    \"Hora\": \"10:00\",\r\n    \"VehicleID\": 1,\r\n    \"WorkshopID\": 1,\r\n    \"Descripcion\": \"Mantenimiento rutinario\",\r\n    \"Status\": \"Pendiente\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/appointments.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"appointments.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "CONSULTAR CITAS DE TALLER",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"accion\": \"ver_citas_taller\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/appointments.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"appointments.php"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "facturas",
+			"item": [
+				{
+					"name": "Obtener todas las facturas",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://localhost/PHP/routes/Invoices.php",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"Invoices.php"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Ver facturas en modo estadística",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "http://localhost/PHP/routes/Invoices.php?action=estadisticas",
+							"protocol": "http",
+							"host": [
+								"localhost"
+							],
+							"path": [
+								"PHP",
+								"routes",
+								"Invoices.php"
+							],
+							"query": [
+								{
+									"key": "action",
+									"value": "estadisticas"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "buscar factura",
+					"request": {
+						"method": "GET",
+						"header": []
+					},
+					"response": []
+				}
+			]
+		}
+	]
+}
