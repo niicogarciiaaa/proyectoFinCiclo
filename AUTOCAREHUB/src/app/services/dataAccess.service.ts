@@ -41,7 +41,7 @@ export interface Invoice {
   TotalAmount: number;
   Estado: string;
   UserName?: string; // Solo disponible para modo taller
-  Marca?: string; 
+  Marca?: string;
   Modelo?: string;
   Anyo: string;
   items: InvoiceItem[];
@@ -153,7 +153,7 @@ export class DataAccessService {
    * @param contactValue - Valor de contacto según el tipo de notificación
    * @returns Observable con la respuesta del registro
    */
-  registerUser(email: string, fullName: string, password: string, 
+  registerUser(email: string, fullName: string, password: string,
     notificationType: string, contactValue: string): Observable<RegisterResponse> {
     return this.http.post<RegisterResponse>(
       `${this.apiUrl}/register.php`,
@@ -255,7 +255,7 @@ export class DataAccessService {
    * @param cita - Objeto con los datos de la cita
    * @returns Observable con la respuesta de la creación
    */
-  crearCita(cita: { Fecha: string, HoraInicio: string, VehicleID: number, 
+  crearCita(cita: { Fecha: string, HoraInicio: string, VehicleID: number,
     WorkshopID: number, Motivo: string }): Observable<any> {
     const body = {
       accion: 'crear',
@@ -292,10 +292,10 @@ export class DataAccessService {
    * @param vehiculo - Objeto con los datos del vehículo
    * @returns Observable con la respuesta de la creación
    */
-  crearVehiculo(vehiculo: { marca: string, modelo: string, anyo: string, 
+  crearVehiculo(vehiculo: { marca: string, modelo: string, anyo: string,
     matricula: string }): Observable<any> {
     const body = {
-      accion: 'crear', 
+      accion: 'crear',
       marca: vehiculo.marca,
       modelo: vehiculo.modelo,
       anyo: vehiculo.anyo,
@@ -349,9 +349,9 @@ export class DataAccessService {
     return this.http.post<{ success: boolean; message: string }>(
       `${this.apiUrl}/Vehicles.php`, // Añadimos la ruta correcta
       body,
-      { 
+      {
         headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
-        withCredentials: true 
+        withCredentials: true
       }
     );
   }
@@ -428,7 +428,7 @@ export class DataAccessService {
   buscarFacturas(params: InvoiceSearchParams): Observable<InvoiceResponse> {
     let queryParams = new URLSearchParams();
     queryParams.append('action', 'buscar');
-    
+
     if (params.startDate) queryParams.append('start_date', params.startDate);
     if (params.endDate) queryParams.append('end_date', params.endDate);
     if (params.estado) queryParams.append('estado', params.estado);
@@ -454,7 +454,7 @@ export class DataAccessService {
       .toISOString().split('T')[0];
     const lastDay = new Date(today.getFullYear(), today.getMonth() + 1, 0)
       .toISOString().split('T')[0];
-    
+
     return this.obtenerEstadisticasFacturacion(firstDay, lastDay);
   }
 
