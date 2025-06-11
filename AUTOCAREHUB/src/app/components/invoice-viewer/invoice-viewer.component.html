@@ -8,6 +8,7 @@
     <thead>
       <tr>
         <th>Fecha</th>
+        <th>Taller</th>
         <th>Total</th>
         <th>Estado</th>
         <th>Acciones</th>
@@ -16,6 +17,7 @@
     <tbody>
       <tr *ngFor="let invoice of invoices">
         <td>{{ invoice.Date }}</td>
+        <td>{{ invoice.WorkshopName }}</td>
         <td>{{ invoice.TotalAmount }} €</td>
         <td>{{ invoice.Estado }}</td>
         <td>
