@@ -748,9 +748,9 @@ if(!class_exists('FPDF')) {
         }
 
         protected function _putfonts() {
-            foreach($this->fonts as $font) {
+            foreach($this->fonts as $k => $font) {
                 $this->_newobj();
-                $font['n'] = $this->n;
+                $this->fonts[$k]['n'] = $this->n;
                 $this->_put('<<');
                 $this->_put('/Type /Font');
                 $this->_put('/BaseFont /'.$font['name']);
