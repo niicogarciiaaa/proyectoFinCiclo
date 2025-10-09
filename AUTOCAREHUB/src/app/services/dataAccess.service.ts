@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 interface LoginResponse {
   success: boolean;
@@ -106,7 +107,7 @@ export interface Workshop {
   providedIn: 'root'
 })
 export class DataAccessService {
-  private apiUrl = 'http://localhost/PHP/routes';
+  private apiUrl = environment.apiUrl; // Usar configuración de entorno
   private httpOptions = {
     headers: new HttpHeaders({
       'Content-Type': 'application/json'
@@ -489,7 +490,19 @@ export class DataAccessService {
     ).pipe(
       catchError(error => {
         console.error('Error al obtener chats:', error);
-        return throwError(() => new Error('Error al obtener los chats'));
+        
+        // Manejo específico de errores CORS y de red
+        if (error.status === 0) {
+          console.error('Error de CORS o conectividad:', error);
+          return throwError(() => new Error('Error de conexión al servidor. Verifique su conexión a internet.'));
+        }
+        
+        if (error.status === 403) {
+          console.error('Error 403 - Acceso prohibido:', error);
+          return throwError(() => new Error('Acceso prohibido al servidor.'));
+        }
+        
+        return throwError(() => new Error('Error al obtener los chats: ' + (error.message || 'Error desconocido')));
       })
     );
   }

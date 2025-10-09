@@ -51,7 +51,7 @@ export class InvoiceViewerComponent implements OnInit {
     const doc = new jsPDF();
 
     // Agregar imagen de fondo
-    const imgUrl = 'img/LogoNaranjaAplicacionDecolorado.png';
+    const imgUrl = 'assets/img/LogoNaranjaAplicacionDecolorado.png';
     doc.addImage(imgUrl, 'JPEG', 0, 0, 210, 297); // A4 completo
 
     doc.setFont('helvetica', 'normal');
