@@ -1,0 +1,76 @@
+<app-menu></app-menu>
+
+<div class="agenda-week">
+  <h2>Agenda semanal</h2>
+
+  <div class="week-nav">
+    <button class="nav-btn" (click)="semanaAnterior()">&laquo; Semana anterior</button>
+    <button class="nav-btn today" (click)="hoy()">Hoy</button>
+    <span class="week-range">{{ rangoSemana }}</span>
+    <button class="nav-btn" (click)="semanaSiguiente()">Semana siguiente &raquo;</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Cargando agenda...</div>
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="mensaje" class="ok-message">{{ mensaje }}</div>
+
+  <div class="legend">
+    <span class="dot st-pendiente"></span> Pendiente
+    <span class="dot st-confirmada"></span> Confirmada
+    <span class="dot st-finalizada"></span> Finalizada
+    <span class="dot st-cancelada"></span> Cancelada
+  </div>
+
+  <div class="week-grid" *ngIf="!loading">
+    <div class="day-col" *ngFor="let dia of semana; let i = index" [class.today-col]="esHoy(dia.fecha)">
+      <div class="day-head">
+        <span class="dname">{{ dayNames[i] }}</span>
+        <span class="dnum">{{ dia.fecha | date: 'd MMM' }}</span>
+      </div>
+
+      <div class="day-body">
+        <div *ngIf="dia.citas.length === 0" class="no-citas">—</div>
+
+        <div
+          *ngFor="let c of dia.citas"
+          class="cita-card"
+          [ngClass]="statusClass(c.Status)"
+          [title]="c.Description"
+        >
+          <div class="cita-hora">{{ hora(c.StartDateTime) }} - {{ hora(c.EndDateTime) }}</div>
+          <div class="cita-serv">{{ c.Service }}</div>
+          <div class="cita-veh">{{ c.Vehiculo }}</div>
+          <div class="cita-user">{{ c.UserName }}</div>
+          <span class="cita-badge">{{ c.Status }}</span>
+          <span class="cita-badge facturada" *ngIf="estaFacturada(c)">Facturada</span>
+
+          <div class="cita-acciones" *ngIf="c.Status !== 'Finalizada' && c.Status !== 'Cancelada'">
+            <button
+              *ngIf="c.Status === 'Pendiente'"
+              class="acc confirmar"
+              (click)="cambiarEstado(c, 'Confirmada')"
+            >Confirmar</button>
+            <button
+              *ngIf="c.Status === 'Confirmada'"
+              class="acc finalizar"
+              (click)="cambiarEstado(c, 'Finalizada')"
+            >Finalizar</button>
+            <button
+              class="acc cancelar"
+              (click)="cambiarEstado(c, 'Cancelada')"
+            >Cancelar</button>
+          </div>
+
+          <div class="cita-acciones" *ngIf="c.Status === 'Finalizada'">
+            <button
+              *ngIf="!estaFacturada(c)"
+              class="acc facturar"
+              (click)="facturar(c)"
+            >🧾 Facturar</button>
+            <span *ngIf="estaFacturada(c)" class="ya-facturada">✓ Facturada</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

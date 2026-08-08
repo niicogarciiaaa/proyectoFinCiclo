@@ -257,20 +257,22 @@ export class DataAccessService {
    * @returns Observable con la respuesta de la creación
    */
   crearCita(cita: { Fecha: string, HoraInicio: string, VehicleID: number,
-    WorkshopID: number, Motivo: string }): Observable<any> {
+    WorkshopID: number, Motivo: string, ServiceID?: number | null }): Observable<any> {
+    // Llamada NUEVA de la Agenda Inteligente (no usa el 'crear' original).
     const body = {
-      accion: 'crear',
+      accion: 'crear_cita',
       Fecha: cita.Fecha,
       Hora: cita.HoraInicio,
       VehicleID: cita.VehicleID,
       WorkshopID: cita.WorkshopID,
+      ServiceID: cita.ServiceID ?? null,
       Descripcion: cita.Motivo,
       Estado: 'Pendiente'
     };
 
     console.log('Enviando datos de cita:', body);
 
-    return this.http.post<any>(`${this.apiUrl}/appointments.php`, body, {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`, body, {
       headers: new HttpHeaders({ 'Content-Type': 'application/json' }),
       withCredentials: true
     }).pipe(
@@ -467,6 +469,196 @@ export class DataAccessService {
       catchError(error => {
         console.error('Error al obtener talleres:', error);
         return throwError(() => new Error('Error al obtener la lista de talleres'));
+      })
+    );
+  }
+
+  // ============================================================
+  //  AGENDA INTELIGENTE
+  // ============================================================
+
+  /**
+   * (Taller) Obtiene el horario semanal y el catálogo de servicios del
+   * taller del usuario autenticado.
+   */
+  obtenerConfigAgenda(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'obtener_config' }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener la configuración de la agenda:', error);
+        return throwError(() => new Error('Error al obtener la configuración de la agenda'));
+      })
+    );
+  }
+
+  /**
+   * (Taller) Guarda el horario semanal completo.
+   * @param schedule - array de 7 días con sus horas, descanso, capacidad y rejilla
+   */
+  guardarConfigAgenda(schedule: any[]): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'guardar_config', schedule }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al guardar la configuración de la agenda:', error);
+        return throwError(() => new Error('Error al guardar la configuración de la agenda'));
+      })
+    );
+  }
+
+  /** (Taller) Crea un servicio del catálogo. */
+  crearServicio(servicio: { Name: string, DurationMinutes: number,
+    Price?: number | null, IsActive?: boolean }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'crear_servicio', ...servicio }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al crear el servicio:', error);
+        return throwError(() => new Error('Error al crear el servicio'));
+      })
+    );
+  }
+
+  /** (Taller) Actualiza un servicio existente. */
+  actualizarServicio(servicio: { ServiceID: number, Name: string,
+    DurationMinutes: number, Price?: number | null, IsActive?: boolean }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'actualizar_servicio', ...servicio }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al actualizar el servicio:', error);
+        return throwError(() => new Error('Error al actualizar el servicio'));
+      })
+    );
+  }
+
+  /** (Taller) Elimina un servicio del catálogo. */
+  eliminarServicio(serviceId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'eliminar_servicio', ServiceID: serviceId }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al eliminar el servicio:', error);
+        return throwError(() => new Error('Error al eliminar el servicio'));
+      })
+    );
+  }
+
+  /** (Usuario) Lista los servicios activos de un taller concreto. */
+  listarServicios(workshopId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'listar_servicios', WorkshopID: workshopId }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al listar los servicios:', error);
+        return throwError(() => new Error('Error al listar los servicios'));
+      })
+    );
+  }
+
+  /** (Taller) Cambia el estado de una cita de su taller. */
+  cambiarEstadoCita(appointmentId: number, status: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'cambiar_estado', AppointmentID: appointmentId, Status: status }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al cambiar el estado de la cita:', error);
+        return throwError(() => new Error('Error al cambiar el estado de la cita'));
+      })
+    );
+  }
+
+  /** (Usuario) Obtiene las citas del cliente autenticado. */
+  obtenerMisCitas(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'mis_citas' }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener mis citas:', error);
+        return throwError(() => new Error('Error al obtener mis citas'));
+      })
+    );
+  }
+
+  /** (Usuario) Cancela una cita propia. */
+  cancelarCita(appointmentId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'cancelar', AppointmentID: appointmentId }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al cancelar la cita:', error);
+        return throwError(() => new Error('Error al cancelar la cita'));
+      })
+    );
+  }
+
+  // ============================================================
+  //  VERIFACTU (RD 1007/2023) — llamadas nuevas
+  // ============================================================
+
+  /** (Taller) Obtiene los datos fiscales del emisor (NIF, razón social). */
+  obtenerEmisorVerifactu(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/verifactu.php`,
+      { accion: 'obtener_emisor' }, this.httpOptions
+    ).pipe(catchError(e => { console.error(e); return throwError(() => e); }));
+  }
+
+  /** (Taller) Guarda los datos fiscales del emisor. */
+  guardarEmisorVerifactu(NIF: string, RazonSocial: string): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/verifactu.php`,
+      { accion: 'guardar_emisor', NIF, RazonSocial }, this.httpOptions
+    ).pipe(catchError(e => { console.error(e); return throwError(() => e); }));
+  }
+
+  /** (Taller) Genera (o recupera) el registro VeriFactu de una factura. */
+  generarVerifactu(invoiceId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/verifactu.php`,
+      { accion: 'generar', InvoiceID: invoiceId }, this.httpOptions
+    ).pipe(catchError(e => { console.error(e); return throwError(() => e); }));
+  }
+
+  /** Obtiene el registro VeriFactu de una factura (para el PDF/QR). */
+  obtenerVerifactu(invoiceId: number): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/verifactu.php`,
+      { accion: 'obtener', InvoiceID: invoiceId }, this.httpOptions
+    ).pipe(catchError(e => { console.error(e); return throwError(() => e); }));
+  }
+
+  /** (Taller) Verifica la integridad de la cadena de huellas. */
+  verificarCadenaVerifactu(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/verifactu.php`,
+      { accion: 'verificar_cadena' }, this.httpOptions
+    ).pipe(catchError(e => { console.error(e); return throwError(() => e); }));
+  }
+
+  /**
+   * (Taller) Citas del taller incluyendo el servicio (llamada nueva de la
+   * Agenda Inteligente, para el calendario y el generador de facturas).
+   */
+  obtenerCitasTallerAgenda(): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'citas_taller' }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al obtener las citas del taller (agenda):', error);
+        return throwError(() => new Error('Error al obtener las citas del taller'));
+      })
+    );
+  }
+
+  /**
+   * (Usuario) Calcula la disponibilidad real de un taller para un servicio
+   * (o duración) en un rango de fechas.
+   */
+  consultarDisponibilidad(params: { WorkshopID: number, ServiceID?: number | null,
+    DurationMinutes?: number, FechaInicio?: string, FechaFin?: string }): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/schedule.php`,
+      { accion: 'disponibilidad', ...params }, this.httpOptions
+    ).pipe(
+      catchError(error => {
+        console.error('Error al consultar la disponibilidad:', error);
+        return throwError(() => new Error('Error al consultar la disponibilidad'));
       })
     );
   }

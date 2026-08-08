@@ -1,0 +1,13 @@
+
+/* Resumen de la cita seleccionada en el generador de facturas */
+.cita-resumen {
+  margin-top: 8px;
+  padding: 8px 10px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-size: 0.9em;
+  color: #444;
+}
+.cita-resumen .badge {
+  margin-right: 6px;
+}

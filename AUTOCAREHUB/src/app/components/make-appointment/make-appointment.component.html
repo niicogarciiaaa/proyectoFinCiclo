@@ -2,6 +2,44 @@
 <div class="appointment-container">
   <h2>Reservar Cita</h2>
 
+  <!-- Selección de Taller y Servicio -->
+  <div class="selectors">
+    <div class="workshop-selection">
+      <label for="workshop">Taller:</label>
+      <select
+        id="workshop"
+        [(ngModel)]="selectedWorkshop"
+        name="workshop"
+        (change)="onWorkshopChange()"
+      >
+        <option [ngValue]="0" disabled>Selecciona un taller</option>
+        <option *ngFor="let workshop of workshops" [ngValue]="workshop.WorkshopID">
+          {{ workshop.Name }}
+        </option>
+      </select>
+    </div>
+
+    <div class="service-selection">
+      <label for="service">Servicio:</label>
+      <select
+        id="service"
+        [(ngModel)]="selectedService"
+        name="service"
+        (change)="onServiceChange()"
+        [disabled]="loadingServices"
+      >
+        <option [ngValue]="0">Cita general (1 h)</option>
+        <option *ngFor="let s of services" [ngValue]="s.ServiceID">
+          {{ s.Name }} ({{ s.DurationMinutes }} min){{ s.Price != null ? ' · ' + (s.Price | number:'1.2-2') + ' €' : '' }}
+        </option>
+      </select>
+    </div>
+
+    <div class="duration-info">
+      Duración estimada: <strong>{{ duration }} min</strong>
+    </div>
+  </div>
+
   <div *ngIf="loading" class="loading">Cargando horarios disponibles...</div>
 
   <div
@@ -17,26 +55,26 @@
     {{ errorMessage }}
   </div>
 
-  <!-- Pagination Controls -->
+  <!-- Sin disponibilidad -->
+  <div
+    *ngIf="!loading && visibleDates.length === 0 && !errorMessage"
+    class="empty-availability"
+  >
+    No hay huecos disponibles para este taller en los próximos días.
+  </div>
+
+  <!-- Controles de paginación -->
   <div class="pagination-controls" *ngIf="!loading && totalPages > 1">
-    <button
-      [disabled]="currentPage === 1"
-      (click)="prevPage()"
-      class="page-button"
-    >
+    <button [disabled]="currentPage === 1" (click)="prevPage()" class="page-button">
       &laquo; Anterior
     </button>
     <span class="page-info">Página {{ currentPage }} de {{ totalPages }}</span>
-    <button
-      [disabled]="currentPage === totalPages"
-      (click)="nextPage()"
-      class="page-button"
-    >
+    <button [disabled]="currentPage === totalPages" (click)="nextPage()" class="page-button">
       Siguiente &raquo;
     </button>
   </div>
 
-  <!-- Calendar View -->
+  <!-- Calendario -->
   <div class="week-slots" *ngIf="!loading">
     <div class="day-column" *ngFor="let dateKey of visibleDates">
       <h3>{{ getDayName(dateKey) }}</h3>
@@ -45,83 +83,50 @@
         <div
           *ngFor="let slot of monthSlots[dateKey]"
           class="slot"
-          [class.occupied]="
-            slot.estado === 'Ocupada' || isPastDateTime(dateKey, slot.hora)
-          "
-          [class.available]="
-            slot.estado === 'Disponible' && !isPastDateTime(dateKey, slot.hora)
-          "
+          [class.occupied]="slot.estado === 'Ocupada' || slot.estado === 'Pasada'"
+          [class.available]="slot.estado === 'Disponible'"
           [class.selected]="isSelected(dateKey, slot.hora)"
-          (click)="
-            slot.estado === 'Disponible' &&
-              !isPastDateTime(dateKey, slot.hora) &&
-              toggleSlotSelection(dateKey, slot.hora)
-          "
+          (click)="slot.estado === 'Disponible' && toggleSlotSelection(dateKey, slot.hora)"
         >
           <span class="time">{{ slot.hora }}</span>
-          <span class="status">{{
-            isPastDateTime(dateKey, slot.hora) ? "Pasada" : slot.estado
-          }}</span>
+          <span class="status">
+            {{ slot.estado === 'Disponible' ? slot.estado : (slot.estado === 'Pasada' ? 'Pasada' : 'Completo') }}
+          </span>
+          <span class="capacity" *ngIf="slot.estado === 'Disponible' && slot.restantes > 0">
+            {{ slot.restantes }} libre{{ slot.restantes === 1 ? '' : 's' }}
+          </span>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Selección de Taller -->
-  <div class="workshop-selection">
-    <label for="workshop">Selecciona un Taller:</label>
-    <select
-      id="workshop"
-      [(ngModel)]="selectedWorkshop"
-      name="workshop"
-      (change)="onWorkshopChange()"
-    >
-      <option value="0" disabled>Selecciona un taller</option>
-      <option *ngFor="let workshop of workshops" [value]="workshop.WorkshopID">
-        {{ workshop.Name }}
-      </option>
-    </select>
-  </div>
-
-  <!-- Selected Appointments -->
+  <!-- Citas seleccionadas -->
   <div *ngIf="selectedSlots.length > 0" class="selected-slots">
     <h3>Citas Seleccionadas</h3>
     <ul>
       <li *ngFor="let slot of selectedSlots">
         {{ formatDate(slot.fecha) }} - {{ slot.hora }}
-        <button
-          class="remove-slot"
-          (click)="toggleSlotSelection(slot.fecha, slot.hora)"
-        >
+        <button class="remove-slot" (click)="toggleSlotSelection(slot.fecha, slot.hora)">
           ✕
         </button>
       </li>
     </ul>
-    <button
-      class="confirm-button"
-      (click)="showPopup()"
-      *ngIf="selectedSlots.length > 0"
-    >
+    <button class="confirm-button" (click)="showPopup()">
       Continuar con la reserva
     </button>
   </div>
 
-  <!-- Popup Form -->
-  <div
-    class="popup-overlay"
-    *ngIf="isPopupVisible"
-    (click)="closePopup($event)"
-  >
+  <!-- Popup -->
+  <div class="popup-overlay" *ngIf="isPopupVisible" (click)="closePopup($event)">
     <div class="popup-content">
       <button class="close-popup" (click)="closePopup($event)">✕</button>
       <h3>Detalles de la Cita</h3>
 
-      <!-- Vehicle Selection -->
       <div class="vehicle-selection">
         <label for="vehicle">Selecciona un Vehículo:</label>
         <select id="vehicle" [(ngModel)]="selectedVehicle" name="vehicle">
-          <option value="0" disabled>Selecciona un vehículo</option>
-          <option *ngFor="let vehicle of vehicles" [value]="vehicle.VehicleID">
+          <option [ngValue]="0" disabled>Selecciona un vehículo</option>
+          <option *ngFor="let vehicle of vehicles" [ngValue]="vehicle.VehicleID">
             {{ vehicle.marca }} {{ vehicle.modelo }}
           </option>
         </select>
@@ -130,7 +135,6 @@
         </div>
       </div>
 
-      <!-- Appointment Reason -->
       <div class="motivo-selection">
         <label for="motivo">Motivo de la Cita:</label>
         <textarea
@@ -141,7 +145,6 @@
         ></textarea>
       </div>
 
-      <!-- Action Buttons -->
       <div class="actions">
         <button (click)="makeAppointment()" [disabled]="loading">
           Confirmar Cita

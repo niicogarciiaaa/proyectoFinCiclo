@@ -1,0 +1,42 @@
+<app-menu></app-menu>
+
+<div class="my-appointments">
+  <h2>Mis Citas</h2>
+
+  <div class="filtros">
+    <button [class.active]="filtro === 'proximas'" (click)="filtro = 'proximas'">Próximas</button>
+    <button [class.active]="filtro === 'todas'" (click)="filtro = 'todas'">Todas</button>
+  </div>
+
+  <div *ngIf="loading" class="loading">Cargando tus citas...</div>
+  <div *ngIf="error" class="error-message">{{ error }}</div>
+  <div *ngIf="mensaje" class="ok-message">{{ mensaje }}</div>
+
+  <div *ngIf="!loading && citasFiltradas.length === 0" class="empty">
+    No tienes citas {{ filtro === 'proximas' ? 'próximas' : '' }}.
+  </div>
+
+  <div class="cita-list">
+    <div class="cita-item" *ngFor="let c of citasFiltradas" [ngClass]="statusClass(c.Status)">
+      <div class="cita-main">
+        <div class="cita-fecha">{{ formatFechaHora(c.StartDateTime) }} - {{ hora(c.EndDateTime) }}</div>
+        <div class="cita-servicio">{{ c.Service }}</div>
+        <div class="cita-detalle">
+          <span>🚗 {{ c.Vehiculo }}</span>
+          <span>🔧 {{ c.WorkshopName }}</span>
+          <span *ngIf="c.WorkshopPhone">📞 {{ c.WorkshopPhone }}</span>
+        </div>
+        <div class="cita-desc" *ngIf="c.Description">"{{ c.Description }}"</div>
+      </div>
+      <div class="cita-side">
+        <span class="estado-badge">{{ c.Status }}</span>
+        <span class="estado-badge facturada" *ngIf="c.InvoiceID">Facturada</span>
+        <button
+          class="cancelar-btn"
+          *ngIf="sePuedeCancelar(c)"
+          (click)="cancelar(c)"
+        >Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>

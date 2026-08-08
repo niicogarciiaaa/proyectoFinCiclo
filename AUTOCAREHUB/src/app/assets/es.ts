@@ -55,11 +55,14 @@ export const ES_TEXTS = {
   // Textos del menú
   menu: {
     makeAppointment: 'Pedir Citas',
+    myAppointments: 'Mis Citas',
     registerVehicle: 'Registrar vehículo',
     invoiceViewer: 'Ver facturas',
     chat: 'Chats',
     invoiceGenerator: 'Generar Factura',
     viewAppointments: 'Ver citas',
+    agendaSemanal: 'Agenda Semanal',
+    agendaConfig: 'Agenda Inteligente',
     statistics: 'Estadísticas',
     workshopsManagement: 'Gestión de Talleres'
   },

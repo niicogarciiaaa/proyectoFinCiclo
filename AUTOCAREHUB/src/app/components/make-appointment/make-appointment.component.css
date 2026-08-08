@@ -315,3 +315,58 @@ textarea {
     padding: 6px;
   }
 }
+
+/* ===== Agenda inteligente: selectores y disponibilidad ===== */
+.selectors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: flex-end;
+  justify-content: center;
+  margin-bottom: 20px;
+  padding: 14px;
+  background: #f8f9fb;
+  border: 1px solid #eef0f4;
+  border-radius: 8px;
+}
+.selectors label {
+  display: block;
+  font-size: 0.82em;
+  color: #555;
+  margin-bottom: 4px;
+  font-weight: bold;
+}
+.selectors select {
+  padding: 8px 10px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 0.95em;
+  min-width: 200px;
+}
+.duration-info {
+  font-size: 0.95em;
+  color: #1976d2;
+  padding-bottom: 8px;
+}
+
+.empty-availability {
+  text-align: center;
+  padding: 24px;
+  color: #999;
+  font-style: italic;
+  background: #fafafa;
+  border-radius: 6px;
+  margin-bottom: 20px;
+}
+
+/* La etiqueta de capacidad restante dentro de cada hueco */
+.slot {
+  flex-wrap: wrap;
+  gap: 2px 8px;
+}
+.capacity {
+  width: 100%;
+  font-size: 0.72em;
+  color: #2e7d32;
+  text-align: right;
+}

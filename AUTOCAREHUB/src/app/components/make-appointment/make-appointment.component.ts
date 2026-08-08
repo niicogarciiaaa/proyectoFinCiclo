@@ -4,11 +4,21 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenuComponent } from '../menu/menu.component';
 
-interface WeekSlots {
-  [key: string]: {
-    hora: string;
-    estado: string;
-  }[];
+interface Slot {
+  hora: string;
+  estado: string;
+  restantes: number;
+}
+
+interface Availability {
+  [date: string]: Slot[];
+}
+
+interface Service {
+  ServiceID: number;
+  Name: string;
+  DurationMinutes: number;
+  Price: number | null;
 }
 
 @Component({
@@ -20,22 +30,25 @@ interface WeekSlots {
 })
 export class MakeAppointmentComponent implements OnInit {
   selectedLang: string = 'es';
-  appointmentForm: any;
   errorMessage: string = '';
   vehiclesErrorMessage: string = '';
-  monthSlots: WeekSlots = {};
+  monthSlots: Availability = {};
   loading: boolean = false;
   loadingVehicles: boolean = false;
   loadingWorkshops: boolean = false;
+  loadingServices: boolean = false;
   selectedSlots: { fecha: string; hora: string }[] = [];
   selectedVehicle: number = 0;
   selectedWorkshop: number = 0;
+  selectedService: number = 0; // 0 = sin servicio concreto (duración por defecto)
   motivo: string = '';
   vehicles: any[] = [];
   workshops: any[] = [];
+  services: Service[] = [];
+  duration: number = 60;
   isPopupVisible = false;
 
-  // Pagination properties
+  // Paginación de fechas
   visibleDates: string[] = [];
   currentPage: number = 1;
   datesPerPage: number = 5;
@@ -43,21 +56,14 @@ export class MakeAppointmentComponent implements OnInit {
 
   constructor(private dataAccess: DataAccessService) {}
 
-  /**
-   * Inicializa el componente cargando los datos del mes actual, los vehículos y los talleres
-   */
   ngOnInit(): void {
     this.cargarVehiculos();
     this.cargarTalleres();
   }
 
-  /**
-   * Carga los vehículos del usuario de la sesion
-   */
   cargarVehiculos() {
     this.loadingVehicles = true;
     this.vehiclesErrorMessage = '';
-
     this.dataAccess.obtenerVehiculos().subscribe({
       next: (response) => {
         if (response && response.success) {
@@ -69,7 +75,7 @@ export class MakeAppointmentComponent implements OnInit {
           this.vehiclesErrorMessage = 'No se pudieron cargar los vehículos';
         }
       },
-      error: (error) => {
+      error: () => {
         this.vehiclesErrorMessage = 'Error de conexión al cargar vehículos';
       },
       complete: () => {
@@ -78,9 +84,6 @@ export class MakeAppointmentComponent implements OnInit {
     });
   }
 
-  /**
-   * Carga los talleres disponibles
-   */
   cargarTalleres() {
     this.loadingWorkshops = true;
     this.dataAccess.obtenerTalleres().subscribe({
@@ -89,13 +92,13 @@ export class MakeAppointmentComponent implements OnInit {
           this.workshops = response.workshops || [];
           if (this.workshops.length > 0 && !this.selectedWorkshop) {
             this.selectedWorkshop = this.workshops[0].WorkshopID;
-            this.consultarMes(); // Ahora se llama aquí, tras seleccionar taller
+            this.onWorkshopChange();
           }
         } else {
           this.errorMessage = 'No se pudieron cargar los talleres';
         }
       },
-      error: (error) => {
+      error: () => {
         this.errorMessage = 'Error de conexión al cargar talleres';
       },
       complete: () => {
@@ -104,10 +107,27 @@ export class MakeAppointmentComponent implements OnInit {
     });
   }
 
-  /**
-   * Consulta en la base de datos el estado de las citas de este mes, en función del día actual y el taller seleccionado
-   */
-  consultarMes() {
+  /** Carga los servicios activos del taller seleccionado. */
+  cargarServicios() {
+    if (!this.selectedWorkshop) return;
+    this.loadingServices = true;
+    this.services = [];
+    this.selectedService = 0;
+    this.dataAccess.listarServicios(this.selectedWorkshop).subscribe({
+      next: (res) => {
+        if (res && res.success) {
+          this.services = res.services || [];
+        }
+      },
+      error: () => {},
+      complete: () => {
+        this.loadingServices = false;
+      },
+    });
+  }
+
+  /** Consulta la disponibilidad real según taller y servicio elegido. */
+  consultarDisponibilidad() {
     if (!this.selectedWorkshop) {
       this.errorMessage = 'Por favor, selecciona un taller.';
       return;
@@ -115,74 +135,54 @@ export class MakeAppointmentComponent implements OnInit {
 
     this.loading = true;
     this.errorMessage = '';
+    this.selectedSlots = [];
 
-    const today = new Date();
-    const currentDate = today.toISOString().split('T')[0];
+    const params: any = { WorkshopID: this.selectedWorkshop };
+    if (this.selectedService) {
+      params.ServiceID = this.selectedService;
+    }
 
-    this.dataAccess
-      .consultarSemana(this.selectedWorkshop, currentDate, '')
-      .subscribe({
-        next: (response) => {
-          if (response.success) {
-            this.monthSlots = response.slotsSemana;
-            this.setupPagination();
-          } else {
-            this.errorMessage = 'Error al consultar los huecos disponibles';
-          }
-        },
-        error: (error) => {
-          this.errorMessage = 'Error de conexión al servidor';
-        },
-        complete: () => {
-          this.loading = false;
-        },
-      });
+    this.dataAccess.consultarDisponibilidad(params).subscribe({
+      next: (response) => {
+        if (response.success) {
+          this.monthSlots = response.availability || {};
+          this.duration = response.duration || 60;
+          this.setupPagination();
+        } else {
+          this.errorMessage = response.message || 'Error al consultar la disponibilidad';
+        }
+      },
+      error: () => {
+        this.errorMessage = 'Error de conexión al servidor';
+      },
+      complete: () => {
+        this.loading = false;
+      },
+    });
   }
 
-  /**
-   * Configura la paginación inicial basada en las fechas disponibles
-   */
   setupPagination() {
     const allDates = Object.keys(this.monthSlots).sort();
-    this.totalPages = Math.ceil(allDates.length / this.datesPerPage);
+    this.totalPages = Math.max(1, Math.ceil(allDates.length / this.datesPerPage));
     this.goToPage(1);
   }
 
-  /**
-   * Navega a una página específica de la paginación
-   * @param page Número de página a la que se desea navegar
-   */
   goToPage(page: number) {
     if (page < 1 || page > this.totalPages) return;
-
     this.currentPage = page;
     const allDates = Object.keys(this.monthSlots).sort();
     const startIndex = (page - 1) * this.datesPerPage;
-    this.visibleDates = allDates.slice(
-      startIndex,
-      startIndex + this.datesPerPage
-    );
+    this.visibleDates = allDates.slice(startIndex, startIndex + this.datesPerPage);
   }
 
-  /**
-   * Navega a la página anterior
-   */
   prevPage() {
     this.goToPage(this.currentPage - 1);
   }
 
-  /**
-   * Navega a la página siguiente
-   */
   nextPage() {
     this.goToPage(this.currentPage + 1);
   }
 
-  /**
-   * Alterna la selección de un horario específico
-   * @param fecha Fecha del horario
-   * @param hora Hora del horario
-   */
   toggleSlotSelection(fecha: string, hora: string) {
     const index = this.selectedSlots.findIndex(
       (slot) => slot.fecha === fecha && slot.hora === hora
@@ -194,35 +194,12 @@ export class MakeAppointmentComponent implements OnInit {
     }
   }
 
-  /**
-   * Verifica si una fecha y hora específicas ya han pasado
-   * @param fecha Fecha del horario
-   * @param hora Hora del horario
-   * @returns true si la fecha y hora ya han pasado, false en caso contrario
-   */
-  isPastDateTime(fecha: string, hora: string): boolean {
-    const now = new Date();
-    const [horaStr, minutosStr] = hora.split(':');
-    const slotDateTime = new Date(fecha);
-    slotDateTime.setHours(parseInt(horaStr), parseInt(minutosStr), 0);
-    return slotDateTime < now;
-  }
-
-  /**
-   * Verifica si un horario específico está seleccionado
-   * @param fecha Fecha del horario
-   * @param hora Hora del horario
-   * @returns true si el horario está seleccionado, false en caso contrario
-   */
   isSelected(fecha: string, hora: string): boolean {
     return this.selectedSlots.some(
       (slot) => slot.fecha === fecha && slot.hora === hora
     );
   }
 
-  /**
-   * Crea las citas seleccionadas en el sistema
-   */
   crearCitas() {
     if (!this.selectedWorkshop) {
       this.errorMessage = 'Por favor, selecciona un taller.';
@@ -231,7 +208,8 @@ export class MakeAppointmentComponent implements OnInit {
 
     this.loading = true;
     this.errorMessage = '';
-    let citasCreadas = 0;
+    let citasProcesadas = 0;
+    let citasOk = 0;
     const totalCitas = this.selectedSlots.length;
 
     this.selectedSlots.forEach((slot) => {
@@ -241,80 +219,68 @@ export class MakeAppointmentComponent implements OnInit {
         VehicleID: this.selectedVehicle,
         WorkshopID: this.selectedWorkshop,
         Motivo: this.motivo,
+        ServiceID: this.selectedService || null,
       };
 
       this.dataAccess.crearCita(cita).subscribe({
         next: (response) => {
+          citasProcesadas++;
           if (response && response.success) {
-            citasCreadas++;
-            if (citasCreadas === totalCitas) {
-              this.consultarMes();
-              this.selectedSlots = [];
-              this.motivo = '';
-              this.errorMessage = 'Citas creadas correctamente';
-            }
-          } else {
-            this.errorMessage =
-              'No se pudo crear la cita: ' + (response?.message || '');
+            citasOk++;
+          } else if (response) {
+            this.errorMessage = 'No se pudo crear alguna cita: ' + (response.message || '');
           }
+          this.finalizarCreacion(citasProcesadas, totalCitas, citasOk);
         },
         error: (error) => {
+          citasProcesadas++;
           this.errorMessage =
             'Error al crear la cita: ' +
             (error.error?.message || error.message || 'Error desconocido');
-        },
-        complete: () => {
-          this.loading = false;
+          this.finalizarCreacion(citasProcesadas, totalCitas, citasOk);
         },
       });
     });
     this.isPopupVisible = false;
   }
 
-  /**
-   * Valida y procesa la creación de una nueva cita
-   */
+  /** Cuando se han procesado todas las citas, refresca y muestra el resultado. */
+  private finalizarCreacion(procesadas: number, total: number, ok: number) {
+    if (procesadas < total) return;
+    this.loading = false;
+    this.selectedSlots = [];
+    this.motivo = '';
+    if (ok === total) {
+      this.errorMessage = 'Citas creadas correctamente';
+    }
+    this.consultarDisponibilidad();
+  }
+
   makeAppointment() {
     if (this.selectedSlots.length === 0) {
-      this.errorMessage =
-        'Por favor, selecciona al menos un horario disponible.';
+      this.errorMessage = 'Por favor, selecciona al menos un horario disponible.';
       return;
     }
-
     if (!this.selectedVehicle) {
       this.errorMessage = 'Por favor, selecciona un vehículo.';
       return;
     }
-
     if (!this.motivo) {
       this.errorMessage = 'Por favor, ingresa el motivo de la cita.';
       return;
     }
-
     this.crearCitas();
   }
 
-  /**
-   * Obtiene el nombre del día de la semana en español
-   * @param date Fecha en formato string
-   * @returns Nombre del día en español
-   */
   getDayName(date: string): string {
-    const days = [
-      'Domingo',
-      'Lunes',
-      'Martes',
-      'Miércoles',
-      'Jueves',
-      'Viernes',
-      'Sábado',
-    ];
-    const dayIndex = new Date(date).getDay();
-    return days[dayIndex];
+    const days = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+    return days[new Date(date).getDay()];
   }
+
   showPopup() {
     this.isPopupVisible = true;
   }
+
   closePopup(event: any) {
     if (
       event.target.classList.contains('popup-overlay') ||
@@ -324,11 +290,6 @@ export class MakeAppointmentComponent implements OnInit {
     }
   }
 
-  /**
-   * Formatea una fecha al formato español (dd/mm/yyyy)
-   * @param date Fecha en formato string
-   * @returns Fecha formateada en formato español
-   */
   formatDate(date: string): string {
     return new Date(date).toLocaleDateString('es-ES', {
       day: '2-digit',
@@ -337,12 +298,16 @@ export class MakeAppointmentComponent implements OnInit {
     });
   }
 
-  /**
-   * Actualiza los horarios disponibles al cambiar el taller seleccionado
-   */
+  /** Al cambiar de taller: recargar servicios y disponibilidad. */
   onWorkshopChange() {
     if (this.selectedWorkshop) {
-      this.consultarMes();
+      this.cargarServicios();
+      this.consultarDisponibilidad();
     }
+  }
+
+  /** Al cambiar de servicio: recalcular disponibilidad (la duración cambia). */
+  onServiceChange() {
+    this.consultarDisponibilidad();
   }
 }

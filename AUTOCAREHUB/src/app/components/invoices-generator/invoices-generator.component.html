@@ -4,6 +4,11 @@
     <div class="col-12">
       <h2>Generador de Facturas</h2>
 
+      <!-- Aviso de borrador precargado desde una cita finalizada -->
+      <div *ngIf="prefillNotice" class="alert alert-info mt-3">
+        🧾 {{ prefillNotice }}
+      </div>
+
       <!-- Mensajes de error y éxito -->
       <div *ngIf="errorMessage" class="alert alert-danger mt-3">
         {{ errorMessage }}
@@ -31,18 +36,27 @@
         <div class="card-body">
           <form (submit)="crearFactura()">
             <div class="mb-3">
-              <label for="appointment_id" class="form-label"
-                >ID de la Cita</label
-              >
-              <input
-                type="number"
-                class="form-control"
+              <label for="appointment_id" class="form-label">Cita a facturar</label>
+              <select
+                class="form-select"
                 id="appointment_id"
                 [(ngModel)]="appointment_id"
                 name="appointment_id"
                 required
-                min="1"
-              />
+              >
+                <option [ngValue]="null" disabled>Selecciona una cita...</option>
+                <option *ngFor="let c of citasTaller" [ngValue]="c.AppointmentID">
+                  {{ formatCita(c) }}
+                </option>
+              </select>
+
+              <!-- Resumen de la cita elegida -->
+              <div class="cita-resumen" *ngIf="citaSeleccionada">
+                <span class="badge bg-secondary">{{ citaSeleccionada.Status }}</span>
+                <strong>{{ citaSeleccionada.Vehiculo }}</strong>
+                · {{ citaSeleccionada.UserName }}
+                <span *ngIf="citaSeleccionada.Service">· {{ citaSeleccionada.Service }}</span>
+              </div>
             </div>
 
             <div class="mb-3">
@@ -127,6 +141,26 @@
               </div>
               <div class="card-body">
                 <div class="row">
+                  <div class="col-md-12 mb-2" *ngIf="services.length > 0">
+                    <label for="servicePicker" class="form-label">
+                      Desde el catálogo de servicios
+                    </label>
+                    <select
+                      class="form-select"
+                      id="servicePicker"
+                      [(ngModel)]="selectedServiceId"
+                      name="servicePicker"
+                      (ngModelChange)="onServiceSelected()"
+                    >
+                      <option value="manual">✏️ Escribir manualmente</option>
+                      <option *ngFor="let s of services" [ngValue]="s.ServiceID">
+                        {{ s.Name }}{{ s.Price != null ? ' — ' + (s.Price | currency:'EUR') : '' }}
+                      </option>
+                    </select>
+                    <small class="text-muted">
+                      Elige un servicio para autocompletar descripción y precio.
+                    </small>
+                  </div>
                   <div class="col-md-12 mb-2">
                     <label for="description" class="form-label"
                       >Descripción</label
@@ -251,6 +285,7 @@
                   <th>Total</th>
                   <th>Estado</th>
                   <th *ngIf="isTaller">Cliente</th>
+                  <th>PDF</th>
                 </tr>
               </thead>
               <tbody>
@@ -269,6 +304,16 @@
                     >
                   </td>
                   <td *ngIf="isTaller">{{ factura.UserName }}</td>
+                  <td>
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-success"
+                      (click)="descargarPDF(factura)"
+                      title="Descargar PDF"
+                    >
+                      <i class="bi bi-file-earmark-pdf"></i> PDF
+                    </button>
+                  </td>
                 </tr>
               </tbody>
             </table>

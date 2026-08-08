@@ -1,0 +1,171 @@
+<app-menu></app-menu>
+
+<div class="agenda-config">
+  <h2>Configuración de la Agenda</h2>
+
+  <div *ngIf="message" class="toast" [class.error]="isError" [class.ok]="!isError">
+    {{ message }}
+  </div>
+
+  <div *ngIf="loading" class="loading">Cargando configuración...</div>
+
+  <!-- ============ HORARIO SEMANAL ============ -->
+  <section class="card" *ngIf="!loading">
+    <div class="card-header">
+      <h3>Horario semanal</h3>
+      <p class="hint">
+        Define cuándo abre tu taller, el descanso, cuántos coches puedes atender
+        a la vez (capacidad) y cada cuánto se ofrecen huecos.
+      </p>
+    </div>
+
+    <div class="day-row header-row">
+      <span>Día</span>
+      <span>Abierto</span>
+      <span>Apertura</span>
+      <span>Cierre</span>
+      <span>Descanso</span>
+      <span>Capacidad</span>
+      <span>Rejilla</span>
+      <span></span>
+    </div>
+
+    <div class="day-row" *ngFor="let day of schedule" [class.closed]="!day.IsOpen">
+      <span class="day-name">{{ dayNames[day.DayOfWeek - 1] }}</span>
+
+      <label class="switch">
+        <input type="checkbox" [(ngModel)]="day.IsOpen" />
+        <span class="slider"></span>
+      </label>
+
+      <input type="time" [(ngModel)]="day.OpenTime" [disabled]="!day.IsOpen" />
+      <input type="time" [(ngModel)]="day.CloseTime" [disabled]="!day.IsOpen" />
+
+      <span class="break">
+        <input type="time" [(ngModel)]="day.BreakStart" [disabled]="!day.IsOpen" />
+        <small>a</small>
+        <input type="time" [(ngModel)]="day.BreakEnd" [disabled]="!day.IsOpen" />
+      </span>
+
+      <input type="number" min="1" [(ngModel)]="day.Capacity" [disabled]="!day.IsOpen" class="num" />
+
+      <select [(ngModel)]="day.SlotMinutes" [disabled]="!day.IsOpen">
+        <option *ngFor="let s of slotOptions" [ngValue]="s">{{ s }} min</option>
+      </select>
+
+      <button class="link-btn" (click)="copiarALaSemana(day)" title="Copiar este horario a todos los días">
+        ⧉ A toda la semana
+      </button>
+    </div>
+
+    <div class="actions">
+      <button class="primary" (click)="guardarHorario()" [disabled]="savingSchedule">
+        {{ savingSchedule ? 'Guardando...' : 'Guardar horario' }}
+      </button>
+    </div>
+  </section>
+
+  <!-- ============ CATÁLOGO DE SERVICIOS ============ -->
+  <section class="card" *ngIf="!loading">
+    <div class="card-header">
+      <h3>Servicios</h3>
+      <p class="hint">
+        Cada servicio tiene una duración estimada que se usa para calcular los
+        huecos reales que ve el cliente al reservar.
+      </p>
+    </div>
+
+    <table class="services-table" *ngIf="services.length > 0">
+      <thead>
+        <tr>
+          <th>Nombre</th>
+          <th>Duración</th>
+          <th>Precio</th>
+          <th>Estado</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let s of services" [class.inactive]="!s.IsActive">
+          <td>{{ s.Name }}</td>
+          <td>{{ s.DurationMinutes }} min</td>
+          <td>{{ s.Price != null ? (s.Price | number:'1.2-2') + ' €' : '—' }}</td>
+          <td>
+            <span class="badge" [class.on]="s.IsActive" [class.off]="!s.IsActive">
+              {{ s.IsActive ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="row-actions">
+            <button class="link-btn" (click)="editarServicio(s)">Editar</button>
+            <button class="link-btn danger" (click)="eliminarServicio(s)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p *ngIf="services.length === 0" class="empty">
+      Aún no has creado ningún servicio.
+    </p>
+
+    <!-- Formulario de servicio -->
+    <div class="service-form">
+      <h4>{{ editingService ? 'Editar servicio' : 'Nuevo servicio' }}</h4>
+      <div class="form-grid">
+        <label>
+          Nombre
+          <input type="text" [(ngModel)]="serviceForm.Name" placeholder="Ej. Cambio de aceite" />
+        </label>
+        <label>
+          Duración (min)
+          <input type="number" min="5" step="5" [(ngModel)]="serviceForm.DurationMinutes" />
+        </label>
+        <label>
+          Precio (€)
+          <input type="number" min="0" step="0.01" [(ngModel)]="serviceForm.Price" placeholder="Opcional" />
+        </label>
+        <label class="check">
+          <input type="checkbox" [(ngModel)]="serviceForm.IsActive" />
+          Activo
+        </label>
+      </div>
+      <div class="actions">
+        <button class="primary" (click)="guardarServicio()">
+          {{ editingService ? 'Guardar cambios' : 'Añadir servicio' }}
+        </button>
+        <button class="secondary" *ngIf="editingService" (click)="cancelarEdicion()">
+          Cancelar
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ VERIFACTU ============ -->
+  <section class="card" *ngIf="!loading">
+    <div class="card-header">
+      <h3>VeriFactu (AEAT)</h3>
+      <p class="hint">
+        Datos fiscales del emisor para los registros VeriFactu (RD 1007/2023). Al
+        descargar una factura se genera su huella encadenada y el QR de verificación.
+      </p>
+    </div>
+
+    <div class="form-grid">
+      <label>
+        NIF / CIF
+        <input type="text" [(ngModel)]="emisor.NIF" placeholder="Ej. B12345678" />
+      </label>
+      <label style="grid-column: span 2;">
+        Razón social
+        <input type="text" [(ngModel)]="emisor.RazonSocial" placeholder="Ej. AutoFix Centro SL" />
+      </label>
+      <div class="actions" style="margin-top:0;">
+        <button class="primary" (click)="guardarEmisor()">Guardar datos fiscales</button>
+      </div>
+    </div>
+
+    <div class="actions" style="justify-content: space-between; align-items: center;">
+      <span *ngIf="cadenaInfo" class="cadena-info">{{ cadenaInfo }}</span>
+      <button class="secondary" (click)="verificarCadena()">Verificar integridad de la cadena</button>
+    </div>
+  </section>
+</div>

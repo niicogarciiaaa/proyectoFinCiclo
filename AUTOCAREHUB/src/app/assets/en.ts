@@ -53,11 +53,14 @@ export const EN_TEXTS = {
   },
   menu: {
     makeAppointment: 'Make Appointment',
+    myAppointments: 'My Appointments',
     registerVehicle: 'Register Vehicle',
     invoiceViewer: 'View Invoices',
     chat: 'Chats',
     invoiceGenerator: 'Generate Invoice',
     viewAppointments: 'View Appointments',
+    agendaSemanal: 'Weekly Agenda',
+    agendaConfig: 'Smart Agenda',
     statistics: 'Statistics',
     workshopsManagement: 'Workshops Management'
   },
