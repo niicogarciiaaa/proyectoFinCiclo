@@ -370,3 +370,28 @@ textarea {
   color: #2e7d32;
   text-align: right;
 }
+
+/* Opiniones recientes del taller (mejora oct-2026) */
+.opiniones {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 0 0 14px;
+}
+.opinion {
+  flex: 1 1 220px;
+  background: #fffdf5;
+  border: 1px solid #f0e6c0;
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 0.85em;
+}
+.opinion .autor {
+  color: #777;
+  margin-left: 6px;
+}
+.opinion p {
+  margin: 4px 0 0;
+  color: #555;
+  font-style: italic;
+}

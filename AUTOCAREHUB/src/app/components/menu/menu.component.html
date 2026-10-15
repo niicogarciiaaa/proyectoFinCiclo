@@ -1,7 +1,49 @@
-<nav class="navbar">
-  <ul class="menu">
+<a class="skip-link" href="#contenido-principal">{{ i18n.t('menu.skipToContent') }}</a>
+
+<nav class="navbar" [attr.aria-label]="i18n.t('menu.mainNav')">
+  <a routerLink="/home" class="brand" [attr.aria-label]="i18n.t('menu.home')">
+    <i class="bi bi-car-front-fill" aria-hidden="true"></i> AutoCareHub
+  </a>
+
+  <button
+    class="hamburger"
+    type="button"
+    (click)="menuAbierto = !menuAbierto"
+    [attr.aria-expanded]="menuAbierto"
+    aria-controls="menu-principal"
+  >
+    <i class="bi" [class.bi-list]="!menuAbierto" [class.bi-x-lg]="menuAbierto" aria-hidden="true"></i>
+    <span class="visually-hidden-text">{{ i18n.t('menu.toggleMenu') }}</span>
+  </button>
+
+  <ul class="menu" id="menu-principal" [class.open]="menuAbierto">
     <li *ngFor="let route of menuRoutes">
-      <a [routerLink]="route.path">{{ i18n.t(route.label) }}</a>
+      <a
+        [routerLink]="route.path"
+        routerLinkActive="active"
+        ariaCurrentWhenActive="page"
+        (click)="menuAbierto = false"
+      >{{ i18n.t(route.label) }}</a>
     </li>
   </ul>
+
+  <div class="menu-tools" [class.open]="menuAbierto">
+    <span class="user" *ngIf="userName" [title]="userName">
+      <i class="bi bi-person-circle" aria-hidden="true"></i> {{ userName }}
+    </span>
+    <button
+      type="button"
+      class="tool-btn"
+      (click)="theme.alternar()"
+      [attr.aria-pressed]="theme.esOscuro"
+      [title]="theme.esOscuro ? i18n.t('menu.lightMode') : i18n.t('menu.darkMode')"
+    >
+      <i class="bi" [class.bi-moon-stars]="!theme.esOscuro" [class.bi-sun]="theme.esOscuro" aria-hidden="true"></i>
+      <span class="visually-hidden-text">{{ theme.esOscuro ? i18n.t('menu.lightMode') : i18n.t('menu.darkMode') }}</span>
+    </button>
+    <button type="button" class="tool-btn logout" (click)="cerrarSesion()">
+      <i class="bi bi-box-arrow-right" aria-hidden="true"></i> {{ i18n.t('menu.logout') }}
+    </button>
+  </div>
 </nav>
+<span id="contenido-principal" tabindex="-1"></span>

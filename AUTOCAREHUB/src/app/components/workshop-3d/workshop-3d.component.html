@@ -1,0 +1,286 @@
+<app-menu></app-menu>
+
+<main class="taller3d">
+  <!-- ================= BARRA SUPERIOR ================= -->
+  <div class="barra">
+    <h2><i class="bi bi-box" aria-hidden="true"></i> Taller en 3D</h2>
+
+    <div class="modo" role="group" aria-label="Modo">
+      <button type="button" [class.activo]="!editando" (click)="editando && descartarEdicion()">
+        <i class="bi bi-eye" aria-hidden="true"></i> Ver taller
+      </button>
+      <button type="button" [class.activo]="editando" (click)="!editando && entrarEdicion()">
+        <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar distribución
+      </button>
+    </div>
+
+    <label class="fecha" *ngIf="!editando">
+      Día
+      <input type="date" [(ngModel)]="fecha" (change)="cambiarFecha()" />
+    </label>
+
+    <div class="camara">
+      <button type="button" (click)="vistaInicial()" title="Vista inicial"><i class="bi bi-house" aria-hidden="true"></i><span class="visually-hidden-text">Vista inicial</span></button>
+      <button type="button" (click)="vistaPlanta()" title="Vista de planta"><i class="bi bi-grid" aria-hidden="true"></i><span class="visually-hidden-text">Vista de planta</span></button>
+    </div>
+  </div>
+
+  <div class="aviso ok" *ngIf="aviso" role="status">{{ aviso }}</div>
+  <div class="aviso err" *ngIf="error" role="alert">{{ error }}</div>
+
+  <div class="contenido">
+    <!-- ================= VISOR 3D ================= -->
+    <div class="visor-wrap">
+      <div class="visor" #visor aria-label="Vista 3D del taller" role="img"></div>
+      <div class="cargando" *ngIf="cargando">Cargando taller...</div>
+      <div class="ayuda">
+        <ng-container *ngIf="!editando">
+          <i class="bi bi-mouse" aria-hidden="true"></i> Arrastra para girar · rueda para acercar · clic derecho para desplazar · <strong>pulsa un coche</strong> para ver su ficha
+        </ng-container>
+        <ng-container *ngIf="editando">
+          <i class="bi bi-arrows-move" aria-hidden="true"></i> <strong>Arrastra un puesto</strong> para moverlo · pulsa uno para editarlo
+        </ng-container>
+      </div>
+      <div class="leyenda" *ngIf="!editando">
+        <span><i class="dot st-pendiente"></i>Pendiente</span>
+        <span><i class="dot st-confirmada"></i>Confirmada</span>
+        <span><i class="dot st-finalizada"></i>Finalizada</span>
+      </div>
+    </div>
+
+    <!-- ================= PANEL LATERAL ================= -->
+    <aside class="panel">
+
+      <!-- ---------- FICHA DEL COCHE ---------- -->
+      <section *ngIf="!editando && cocheSel" class="ficha" aria-label="Ficha del coche">
+        <div class="ficha-cab">
+          <button type="button" class="volver" (click)="cerrarFicha()"><i class="bi bi-arrow-left" aria-hidden="true"></i> Volver</button>
+        </div>
+
+        <div *ngIf="cargandoFicha" class="vacio">Cargando ficha...</div>
+
+        <ng-container *ngIf="ficha && !cargandoFicha">
+          <div class="matricula"><span class="eu">E</span>{{ ficha.detalle.Matricula | uppercase }}</div>
+          <h3>{{ ficha.detalle.Marca }} {{ ficha.detalle.Modelo }} <small>({{ ficha.detalle.Anyo }})</small></h3>
+
+          <dl class="datos">
+            <dt>Cliente</dt><dd>{{ ficha.detalle.UserName }}<br /><small>{{ ficha.detalle.UserEmail }}</small></dd>
+            <dt>Servicio</dt><dd>{{ ficha.detalle.Service }}</dd>
+            <dt>Horario</dt><dd>{{ fechaCorta(ficha.detalle.StartDateTime) }} · {{ hora(ficha.detalle.StartDateTime) }}–{{ hora(ficha.detalle.EndDateTime) }}</dd>
+            <dt>Estado</dt>
+            <dd>
+              <span class="badge-estado" [ngClass]="claseEstado(ficha.detalle.Status)">{{ ficha.detalle.Status }}</span>
+              <span class="badge-estado facturada" *ngIf="ficha.detalle.InvoiceID">Factura #{{ ficha.detalle.InvoiceID }}</span>
+            </dd>
+            <ng-container *ngIf="ficha.detalle.Description && ficha.detalle.Description !== ficha.detalle.Service">
+              <dt>Motivo</dt><dd><em>“{{ ficha.detalle.Description }}”</em></dd>
+            </ng-container>
+          </dl>
+
+          <!-- Acciones de la cita -->
+          <div class="acciones">
+            <button type="button" class="btn-a azul" *ngIf="ficha.detalle.Status === 'Pendiente'" (click)="cambiarEstado('Confirmada')">
+              <i class="bi bi-check2" aria-hidden="true"></i> Confirmar
+            </button>
+            <button type="button" class="btn-a verde" *ngIf="ficha.detalle.Status === 'Confirmada'" (click)="cambiarEstado('Finalizada')">
+              <i class="bi bi-flag" aria-hidden="true"></i> Finalizar
+            </button>
+            <button type="button" class="btn-a marron" *ngIf="ficha.detalle.Status === 'Finalizada' && !ficha.detalle.InvoiceID" (click)="facturar()">
+              <i class="bi bi-receipt" aria-hidden="true"></i> Facturar
+            </button>
+          </div>
+
+          <!-- En el taller -->
+          <div class="bloque" *ngIf="cocheColocado as coche">
+            <h4>En el taller</h4>
+            <label class="fila">
+              Puesto
+              <select [ngModel]="coche.BayKey" (ngModelChange)="moverA($event)">
+                <option *ngFor="let p of puestosLibres(coche.AppointmentID)" [value]="p.key">{{ p.etiqueta }} · {{ nombreTipo(p.tipo) }}</option>
+              </select>
+            </label>
+            <button type="button" class="btn-a naranja ancho" *ngIf="esElevable" (click)="alternarElevador()">
+              <i class="bi" [class.bi-arrow-up-circle]="!coche.Lifted" [class.bi-arrow-down-circle]="coche.Lifted" aria-hidden="true"></i>
+              {{ coche.Lifted ? 'Bajar elevador' : 'Subir elevador' }}
+            </button>
+            <div class="fila">
+              <span>Color</span>
+              <div class="colores">
+                <button
+                  type="button"
+                  *ngFor="let c of coloresCoche"
+                  class="muestra no-invert"
+                  [style.background]="c"
+                  [class.sel]="coche.CarColor === c"
+                  [attr.aria-label]="'Color ' + c"
+                  (click)="cambiarColor(c)"
+                ></button>
+                <input class="no-invert" type="color" [ngModel]="coche.CarColor" (change)="cambiarColor($any($event.target).value)" aria-label="Color personalizado" />
+              </div>
+            </div>
+            <button type="button" class="btn-a gris ancho" (click)="sacarDelTaller()">
+              <i class="bi bi-box-arrow-right" aria-hidden="true"></i> Sacar del taller
+            </button>
+          </div>
+
+          <!-- Notas -->
+          <div class="bloque">
+            <h4><i class="bi bi-journal-text" aria-hidden="true"></i> Notas del vehículo</h4>
+            <textarea
+              rows="3"
+              maxlength="2000"
+              [(ngModel)]="nuevaNota"
+              placeholder="Ej. Pastillas delanteras al 30 %, avisar en la próxima revisión"
+              aria-label="Nueva nota"
+              (keydown.control.enter)="guardarNota()"
+            ></textarea>
+            <button type="button" class="btn-a azul ancho" [disabled]="!nuevaNota.trim()" (click)="guardarNota()">
+              <i class="bi bi-plus-lg" aria-hidden="true"></i> Añadir nota
+            </button>
+            <p class="vacio" *ngIf="ficha.notas.length === 0">Sin notas todavía.</p>
+            <ul class="notas">
+              <li *ngFor="let n of ficha.notas">
+                <div class="nota-cab">
+                  <small>{{ fechaCorta(n.CreatedAt) }} · {{ hora(n.CreatedAt) }}</small>
+                  <button type="button" class="borrar" (click)="borrarNota(n.NoteID)" aria-label="Borrar nota"><i class="bi bi-trash" aria-hidden="true"></i></button>
+                </div>
+                <p>{{ n.Note }}</p>
+              </li>
+            </ul>
+          </div>
+
+          <!-- Visitas anteriores -->
+          <div class="bloque" *ngIf="ficha.visitas.length > 0">
+            <h4><i class="bi bi-clock-history" aria-hidden="true"></i> Visitas anteriores</h4>
+            <ul class="visitas">
+              <li *ngFor="let v of ficha.visitas">
+                <span>{{ fechaCorta(v.StartDateTime) }}</span>
+                <span>{{ v.Service }}</span>
+                <span class="badge-estado" [ngClass]="claseEstado(v.Status)">{{ v.Status }}</span>
+              </li>
+            </ul>
+          </div>
+        </ng-container>
+      </section>
+
+      <!-- ---------- LISTAS (sin coche seleccionado) ---------- -->
+      <ng-container *ngIf="!editando && !cocheSel">
+        <section class="bloque">
+          <h4><i class="bi bi-hourglass-split" aria-hidden="true"></i> Por colocar ({{ pendientes.length }})</h4>
+          <p class="vacio" *ngIf="pendientes.length === 0">No hay más coches con cita este día.</p>
+          <div class="tarjeta" *ngFor="let c of pendientes">
+            <div class="tarjeta-cab">
+              <strong>{{ c.Matricula | uppercase }}</strong>
+              <span class="badge-estado" [ngClass]="claseEstado(c.Status)">{{ c.Status }}</span>
+            </div>
+            <div class="sub">{{ c.Marca }} {{ c.Modelo }} · {{ hora(c.StartDateTime) }} · {{ c.Service }}</div>
+            <div class="meter">
+              <select [(ngModel)]="puestoDestino[c.AppointmentID]" aria-label="Puesto de destino">
+                <option [ngValue]="undefined">Primer puesto libre</option>
+                <option *ngFor="let p of puestosLibres()" [ngValue]="p.key">{{ p.etiqueta }}</option>
+              </select>
+              <button type="button" class="btn-a azul" (click)="meterEnTaller(c)">
+                <i class="bi bi-box-arrow-in-right" aria-hidden="true"></i> Meter
+              </button>
+            </div>
+          </div>
+        </section>
+
+        <section class="bloque">
+          <h4><i class="bi bi-car-front" aria-hidden="true"></i> En el taller ({{ coches.length }})</h4>
+          <p class="vacio" *ngIf="coches.length === 0">El taller está vacío.</p>
+          <button type="button" class="tarjeta clicable" *ngFor="let c of coches" (click)="abrirDesdeLista(c.AppointmentID)">
+            <div class="tarjeta-cab">
+              <strong><i class="dot no-invert" [style.background]="c.CarColor"></i>{{ c.Matricula | uppercase }}</strong>
+              <span class="badge-estado" [ngClass]="claseEstado(c.Status)">{{ c.Status }}</span>
+            </div>
+            <div class="sub">{{ c.Marca }} {{ c.Modelo }} · {{ nombrePuesto(c.BayKey) }}{{ c.Lifted ? ' · elevado' : '' }}</div>
+          </button>
+        </section>
+      </ng-container>
+
+      <!-- ---------- EDITOR DE DISTRIBUCIÓN ---------- -->
+      <ng-container *ngIf="editando && layoutEdit">
+        <section class="bloque" *ngIf="puestoEditado as p">
+          <h4><i class="bi bi-sliders" aria-hidden="true"></i> Puesto seleccionado</h4>
+          <label class="fila">Nombre <input type="text" maxlength="30" [(ngModel)]="p.etiqueta" (change)="aplicarEdicion()" /></label>
+          <label class="fila">
+            Tipo
+            <select [(ngModel)]="p.tipo" (ngModelChange)="aplicarEdicion()">
+              <option *ngFor="let t of tipos" [ngValue]="t.valor">{{ t.nombre }}</option>
+            </select>
+          </label>
+          <div class="fila">
+            <span>Giro</span>
+            <div class="giro">
+              <button type="button" (click)="girar(-90)" aria-label="Girar -90 grados"><i class="bi bi-arrow-counterclockwise" aria-hidden="true"></i></button>
+              <input type="range" min="0" max="345" step="15" [(ngModel)]="p.rot" (input)="aplicarEdicion()" aria-label="Ángulo" />
+              <button type="button" (click)="girar(90)" aria-label="Girar 90 grados"><i class="bi bi-arrow-clockwise" aria-hidden="true"></i></button>
+              <small>{{ p.rot }}°</small>
+            </div>
+          </div>
+          <div class="fila dos">
+            <label>X (m) <input type="number" step="0.25" [(ngModel)]="p.x" (change)="aplicarEdicion()" /></label>
+            <label>Z (m) <input type="number" step="0.25" [(ngModel)]="p.z" (change)="aplicarEdicion()" /></label>
+          </div>
+          <div class="fila">
+            <span>Color propio</span>
+            <div class="colores">
+              <input class="no-invert" type="color" [ngModel]="p.color || layoutEdit.colorElevadores" (change)="p.color = $any($event.target).value; aplicarEdicion()" aria-label="Color del puesto" />
+              <button type="button" class="enlace" *ngIf="p.color" (click)="quitarColorPuesto()">Usar el general</button>
+            </div>
+          </div>
+          <div class="acciones">
+            <button type="button" class="btn-a gris" (click)="duplicarPuesto()"><i class="bi bi-copy" aria-hidden="true"></i> Duplicar</button>
+            <button type="button" class="btn-a rojo" (click)="borrarPuesto()"><i class="bi bi-trash" aria-hidden="true"></i> Borrar</button>
+            <button type="button" class="btn-a gris" (click)="puestoSel = null; aplicarEdicion()">Cerrar</button>
+          </div>
+        </section>
+
+        <section class="bloque">
+          <h4><i class="bi bi-plus-square" aria-hidden="true"></i> Añadir puesto</h4>
+          <div class="tipos">
+            <button type="button" *ngFor="let t of tipos" (click)="anadirPuesto(t.valor)">
+              <i class="bi {{ t.icono }}" aria-hidden="true"></i> {{ t.nombre }}
+            </button>
+          </div>
+        </section>
+
+        <section class="bloque">
+          <h4><i class="bi bi-building" aria-hidden="true"></i> Nave</h4>
+          <label class="fila">Cartel <input type="text" maxlength="40" [(ngModel)]="layoutEdit.nombre" (change)="aplicarEdicion()" /></label>
+          <div class="fila dos">
+            <label>Ancho (m) <input type="number" min="10" max="80" [(ngModel)]="layoutEdit.ancho" (change)="aplicarEdicion(true)" /></label>
+            <label>Fondo (m) <input type="number" min="8" max="60" [(ngModel)]="layoutEdit.fondo" (change)="aplicarEdicion(true)" /></label>
+          </div>
+          <div class="paleta">
+            <label>Suelo <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorSuelo" (change)="aplicarEdicion()" /></label>
+            <label>Paredes <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorParedes" (change)="aplicarEdicion()" /></label>
+            <label>Elevadores <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorElevadores" (change)="aplicarEdicion()" /></label>
+            <label>Líneas <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorLineas" (change)="aplicarEdicion()" /></label>
+          </div>
+        </section>
+
+        <section class="bloque">
+          <h4><i class="bi bi-list-ul" aria-hidden="true"></i> Puestos ({{ layoutEdit.puestos.length }})</h4>
+          <button
+            type="button"
+            class="tarjeta clicable"
+            *ngFor="let p of layoutEdit.puestos"
+            [class.sel]="p.key === puestoSel"
+            (click)="puestoSel = p.key; aplicarEdicion()"
+          >
+            <strong>{{ p.etiqueta || '(sin nombre)' }}</strong>
+            <span class="sub">{{ nombreTipo(p.tipo) }}</span>
+          </button>
+        </section>
+
+        <div class="guardar">
+          <button type="button" class="btn-a verde" (click)="guardarEdicion()"><i class="bi bi-save" aria-hidden="true"></i> Guardar</button>
+          <button type="button" class="btn-a gris" (click)="descartarEdicion()">Descartar</button>
+          <button type="button" class="enlace" (click)="restablecer()">Restablecer por defecto</button>
+        </div>
+      </ng-container>
+    </aside>
+  </div>
+</main>

@@ -29,6 +29,15 @@ export const authGuard: CanActivateFn = () => {
 };
 
 /**
+ * Para las pantallas públicas (login / registro): si ya hay sesión,
+ * lleva directamente a /home en lugar de volver a pedir credenciales.
+ */
+export const guestGuard: CanActivateFn = () => {
+  const router = inject(Router);
+  return getCurrentUser() ? router.createUrlTree(['/home']) : true;
+};
+
+/**
  * Restringe una ruta a los roles indicados.
  * - Sin sesión → /login.
  * - Rol no permitido → /home (su propia zona).

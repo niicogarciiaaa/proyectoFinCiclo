@@ -3,8 +3,11 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../controllers/VerifactuController.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/Logger.php';
+require_once __DIR__ . '/../config/security.php';
 
 configureCors();
+applySecurityHeaders();
+requireJsonRequest();
 
 session_start();
 
@@ -33,7 +36,7 @@ try {
     );
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $input = json_decode(file_get_contents("php://input"), true);
+        $input = readJsonBody();
 
         if (!isset($input['accion'])) {
             throw new Exception("Falta el parámetro 'accion'");

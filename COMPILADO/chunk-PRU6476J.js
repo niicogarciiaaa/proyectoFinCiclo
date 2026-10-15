@@ -1,0 +1,2 @@
+function u(o,r,s){let i=n=>{let e=n==null?"":String(n);return typeof n=="number"&&(e=e.replace(".",",")),/^[=+\-@]/.test(e)&&typeof n!="number"&&(e="'"+e),/[";\n\r]/.test(e)?'"'+e.replace(/"/g,'""')+'"':e},d=[r,...s].map(n=>n.map(i).join(";")),a=new Blob(["\uFEFF"+d.join(`\r
+`)],{type:"text/csv;charset=utf-8"}),c=URL.createObjectURL(a),t=document.createElement("a");t.href=c,t.download=o.replace(/[^\w.\-]+/g,"_"),document.body.appendChild(t),t.click(),document.body.removeChild(t),URL.revokeObjectURL(c)}export{u as a};

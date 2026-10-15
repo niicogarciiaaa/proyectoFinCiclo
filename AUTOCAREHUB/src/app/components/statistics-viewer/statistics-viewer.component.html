@@ -1,18 +1,23 @@
 <app-menu></app-menu>
 
-<div class="statistics-container">
+<main class="statistics-container">
   <div class="date-selector">
     <label>
       Desde:
-      <input type="date" [(ngModel)]="startDate" (change)="onDateChange()">
+      <input type="date" [(ngModel)]="startDate" [max]="endDate" (change)="onDateChange()">
     </label>
     <label>
       Hasta:
-      <input type="date" [(ngModel)]="endDate" (change)="onDateChange()">
+      <input type="date" [(ngModel)]="endDate" [min]="startDate" (change)="onDateChange()">
     </label>
+    <div class="quick" role="group" aria-label="Rangos rápidos">
+      <button type="button" (click)="rangoRapido('mes')">Último mes</button>
+      <button type="button" (click)="rangoRapido('trimestre')">Trimestre</button>
+      <button type="button" (click)="rangoRapido('anio')">Último año</button>
+    </div>
   </div>
 
-  <div *ngIf="error" class="error-message">
+  <div *ngIf="error" class="error-message" role="alert">
     {{ error }}
   </div>
 
@@ -37,21 +42,134 @@
       <h3>Estado Facturas</h3>
       <p>Pendientes: {{ stats.pendientes }}</p>
       <p>Pagadas: {{ stats.pagadas }}</p>
-      <div class="progress-bar">
+      <div class="progress-bar" role="img" [attr.aria-label]="getPendingPercentage().toFixed(0) + ' % pendientes'">
         <div class="progress" [style.width.%]="getPendingPercentage()"></div>
       </div>
     </div>
   </div>
 
+  <!-- ================= DASHBOARD AMPLIADO ================= -->
+  <ng-container *ngIf="panel">
+    <div class="stats-grid">
+      <div class="stat-card">
+        <h3>Clientes atendidos</h3>
+        <p>{{ panel.indicadores.Clientes }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Ticket medio</h3>
+        <p>{{ formatCurrency(panel.indicadores.TicketMedio) }}</p>
+      </div>
+      <div class="stat-card">
+        <h3>Pendiente de cobro</h3>
+        <p class="warn">{{ formatCurrency(panel.indicadores.PendienteCobro) }}</p>
+      </div>
+      <div class="stat-card" *ngIf="resenas">
+        <h3>Valoración media</h3>
+        <p *ngIf="resenas.Media !== null">★ {{ resenas.Media | number: '1.1-1' }} <small>({{ resenas.Total }})</small></p>
+        <p *ngIf="resenas.Media === null"><small>Sin reseñas todavía</small></p>
+      </div>
+    </div>
+
+    <section class="panel-card">
+      <div class="panel-head">
+        <h3>Ingresos por periodo</h3>
+        <div class="panel-tools">
+          <label for="agrupacion" class="visually-hidden-text">Agrupar por</label>
+          <select id="agrupacion" [(ngModel)]="agrupacion" (change)="cargarPanel()">
+            <option value="dia">Por día</option>
+            <option value="semana">Por semana</option>
+            <option value="mes">Por mes</option>
+          </select>
+          <button type="button" class="export" (click)="exportarIngresosCsv()" [disabled]="panel.ingresos.length === 0">
+            <i class="bi bi-download" aria-hidden="true"></i> CSV
+          </button>
+        </div>
+      </div>
+
+      <p *ngIf="panel.ingresos.length === 0" class="empty">No hay facturas en este periodo.</p>
+
+      <div class="bar-chart" *ngIf="panel.ingresos.length > 0" role="img" aria-label="Gráfico de ingresos por periodo">
+        <div class="bar-col" *ngFor="let p of panel.ingresos" [title]="p.Periodo + ': ' + formatCurrency(p.Total) + ' (' + p.Facturas + ' facturas)'">
+          <span class="bar-val">{{ p.Total | number: '1.0-0' }} €</span>
+          <div class="bar-track">
+            <div class="bar total" [style.height.%]="alturaBarra(p.Total)">
+              <div class="bar cobrado" [style.height.%]="p.Total > 0 ? (p.Cobrado / p.Total) * 100 : 0"></div>
+            </div>
+          </div>
+          <span class="bar-lbl">{{ etiquetaPeriodo(p.Periodo) }}</span>
+        </div>
+      </div>
+      <div class="legend" *ngIf="panel.ingresos.length > 0">
+        <span><i class="sw total"></i> Facturado</span>
+        <span><i class="sw cobrado"></i> Cobrado</span>
+      </div>
+    </section>
+
+    <div class="two-cols">
+      <section class="panel-card">
+        <h3>Servicios más demandados</h3>
+        <p *ngIf="panel.servicios.length === 0" class="empty">Sin citas en este periodo.</p>
+        <div class="hbar" *ngFor="let s of panel.servicios">
+          <div class="hbar-head">
+            <span>{{ s.Servicio }}</span>
+            <span>{{ s.Citas }} cita{{ s.Citas === 1 ? '' : 's' }} · {{ formatCurrency(s.Facturado) }}</span>
+          </div>
+          <div class="hbar-track"><div class="hbar-fill" [style.width.%]="anchoServicio(s.Citas)"></div></div>
+        </div>
+      </section>
+
+      <section class="panel-card">
+        <h3>Citas por estado <small>({{ totalCitasPanel }})</small></h3>
+        <div class="hbar" *ngFor="let e of estadosCita">
+          <div class="hbar-head">
+            <span>{{ e }}</span>
+            <span>{{ panel.estados[e] || 0 }} · {{ porcentajeEstado(e) | number: '1.0-0' }} %</span>
+          </div>
+          <div class="hbar-track">
+            <div class="hbar-fill" [ngClass]="'st-' + e.toLowerCase()" [style.width.%]="porcentajeEstado(e)"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </ng-container>
+
+  <!-- ================= RESEÑAS ================= -->
+  <section class="panel-card" *ngIf="resenas && resenas.Total > 0">
+    <h3>Opiniones de los clientes</h3>
+    <div class="two-cols">
+      <div>
+        <div class="hbar" *ngFor="let n of estrellas">
+          <div class="hbar-head">
+            <span>{{ n }} ★</span>
+            <span>{{ resenas.Reparto[n] || 0 }}</span>
+          </div>
+          <div class="hbar-track"><div class="hbar-fill stars-fill" [style.width.%]="porcentajeEstrellas(n)"></div></div>
+        </div>
+      </div>
+      <ul class="reviews">
+        <li *ngFor="let r of ultimasResenas">
+          <span class="stars" [attr.aria-label]="r.Rating + ' de 5 estrellas'">{{ '★★★★★'.slice(0, r.Rating) }}<span class="off">{{ '★★★★★'.slice(r.Rating) }}</span></span>
+          <strong>{{ r.UserName }}</strong> <small>· {{ r.Service }} · {{ formatDate(r.CreatedAt) }}</small>
+          <p *ngIf="r.Comment">“{{ r.Comment }}”</p>
+        </li>
+      </ul>
+    </div>
+  </section>
+
   <div *ngIf="invoices.length > 0" class="invoices-table">
-    <h3>Facturas del Período</h3>
+    <div class="panel-head">
+      <h3>Facturas del Período</h3>
+      <button type="button" class="export" (click)="exportarFacturasCsv()">
+        <i class="bi bi-download" aria-hidden="true"></i> Exportar CSV
+      </button>
+    </div>
     <table>
       <thead>
         <tr>
-          <th>Fecha</th>
-          <th>Importe</th>
-          <th>Estado</th>
-          <th>Cliente/Taller</th>
+          <th scope="col">Fecha</th>
+          <th scope="col">Importe</th>
+          <th scope="col">Estado</th>
+          <th scope="col">Cliente/Taller</th>
         </tr>
       </thead>
       <tbody>
@@ -64,4 +182,4 @@
       </tbody>
     </table>
   </div>
-</div>
+</main>

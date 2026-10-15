@@ -56,6 +56,11 @@
               (click)="cambiarEstado(c, 'Finalizada')"
             >Finalizar</button>
             <button
+              class="acc reprogramar"
+              (click)="citaAReprogramar = c"
+              title="Mover la cita a otro hueco"
+            >Mover</button>
+            <button
               class="acc cancelar"
               (click)="cambiarEstado(c, 'Cancelada')"
             >Cancelar</button>
@@ -74,3 +79,10 @@
     </div>
   </div>
 </div>
+
+<app-reschedule-dialog
+  *ngIf="citaAReprogramar"
+  [cita]="citaAReprogramar"
+  (reprogramada)="onReprogramada($event)"
+  (cerrar)="citaAReprogramar = null"
+></app-reschedule-dialog>

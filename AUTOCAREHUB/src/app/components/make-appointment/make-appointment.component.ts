@@ -48,6 +48,11 @@ export class MakeAppointmentComponent implements OnInit {
   duration: number = 60;
   isPopupVisible = false;
 
+  // Valoraciones de los talleres (media y nº de reseñas) y últimas opiniones.
+  valoraciones: { [workshopId: number]: { Media: number; Total: number } } = {};
+  opiniones: { Rating: number; Comment: string; UserName: string; CreatedAt: string; Service: string }[] = [];
+  readonly estrellas = [1, 2, 3, 4, 5];
+
   // Paginación de fechas
   visibleDates: string[] = [];
   currentPage: number = 1;
@@ -59,6 +64,34 @@ export class MakeAppointmentComponent implements OnInit {
   ngOnInit(): void {
     this.cargarVehiculos();
     this.cargarTalleres();
+    this.cargarValoraciones();
+  }
+
+  cargarValoraciones() {
+    this.dataAccess.obtenerResumenResenas().subscribe({
+      next: (res) => {
+        this.valoraciones = {};
+        for (const v of (res && res.resumen) || []) {
+          this.valoraciones[v.WorkshopID] = { Media: v.Media, Total: v.Total };
+        }
+      },
+      error: () => {},
+    });
+  }
+
+  cargarOpiniones() {
+    this.opiniones = [];
+    if (!this.selectedWorkshop) return;
+    this.dataAccess.obtenerResenasTaller(this.selectedWorkshop).subscribe({
+      next: (res) => (this.opiniones = ((res && res.reviews) || []).slice(0, 3)),
+      error: () => {},
+    });
+  }
+
+  /** Texto de valoración para el selector de talleres. */
+  etiquetaValoracion(workshopId: number): string {
+    const v = this.valoraciones[workshopId];
+    return v ? ` · ★ ${v.Media.toFixed(1)} (${v.Total})` : '';
   }
 
   cargarVehiculos() {
@@ -303,6 +336,7 @@ export class MakeAppointmentComponent implements OnInit {
     if (this.selectedWorkshop) {
       this.cargarServicios();
       this.consultarDisponibilidad();
+      this.cargarOpiniones();
     }
   }
 

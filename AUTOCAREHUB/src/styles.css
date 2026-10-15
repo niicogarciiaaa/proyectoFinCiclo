@@ -1,1 +1,118 @@
-/* You can add global styles to this file, and also import other style files */
+/* Estilos globales de AutoCareHub (se cargan después de Bootstrap). */
+
+/* ============================================================
+   MODO OSCURO
+   Los componentes usan colores fijos pensados para fondo claro, así que
+   el modo oscuro se consigue invirtiendo la luminosidad de toda la página
+   (manteniendo el tono con hue-rotate). Las imágenes, el QR y los mapas se
+   vuelven a invertir para que se vean con sus colores reales.
+   ============================================================ */
+html {
+  background: #fff;
+}
+
+html[data-theme='dark'] {
+  filter: invert(0.9) hue-rotate(180deg);
+}
+
+html[data-theme='dark'] img,
+html[data-theme='dark'] video,
+html[data-theme='dark'] canvas,
+html[data-theme='dark'] iframe,
+html[data-theme='dark'] .no-invert {
+  filter: invert(1) hue-rotate(180deg);
+}
+
+/* ============================================================
+   ACCESIBILIDAD
+   ============================================================ */
+
+/* Foco siempre visible al navegar con teclado. */
+:focus-visible {
+  outline: 3px solid #fb8c00;
+  outline-offset: 2px;
+}
+
+/* Enlace para saltar directamente al contenido. */
+.skip-link {
+  position: absolute;
+  left: 8px;
+  top: -48px;
+  z-index: 1000;
+  background: #1976d2;
+  color: #fff;
+  padding: 8px 14px;
+  border-radius: 4px;
+  text-decoration: none;
+  transition: top 0.15s;
+}
+.skip-link:focus {
+  top: 8px;
+}
+
+/* Texto solo para lectores de pantalla. */
+.visually-hidden-text {
+  position: absolute !important;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Respetar a quien prefiere menos animación. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ============================================================
+   COMPONENTES COMPARTIDOS DE LAS MEJORAS
+   ============================================================ */
+
+/* Estrellas de valoración */
+.stars {
+  color: #f9a825;
+  letter-spacing: 1px;
+  white-space: nowrap;
+}
+.stars .off {
+  color: #ccc;
+}
+
+/* Diálogo modal sencillo */
+.ach-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1050;
+  padding: 16px;
+}
+.ach-modal {
+  background: #fff;
+  border-radius: 10px;
+  padding: 20px;
+  width: 100%;
+  max-width: 560px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.25);
+}
+.ach-modal h3 {
+  margin-top: 0;
+  font-size: 1.2em;
+}
+.ach-modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 16px;
+}

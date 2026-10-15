@@ -1,4 +1,7 @@
 export const EN_TEXTS = {
+  mostrarContrasena: 'Show password',
+  ocultarContrasena: 'Hide password',
+  sesionCaducada: 'Your session has expired. Please sign in again.',
   accederFacturas: 'Access Invoices',
   pedirCita: 'Book an Appointment',
   iniciarSesion: 'Sign In',
@@ -49,7 +52,13 @@ export const EN_TEXTS = {
   },
   home: {
     welcome: "Welcome to AutocareHub!",
-    subtitle: "The easy way to take care of your car"
+    subtitle: "The easy way to take care of your car",
+    nextAppointments: "Your upcoming appointments",
+    noAppointments: "You have no upcoming appointments.",
+    bookNow: "Book an appointment",
+    seeAll: "See all my appointments",
+    today: "Today's appointments",
+    pendingConfirm: "Awaiting confirmation"
   },
   menu: {
     makeAppointment: 'Make Appointment',
@@ -62,7 +71,16 @@ export const EN_TEXTS = {
     agendaSemanal: 'Weekly Agenda',
     agendaConfig: 'Smart Agenda',
     statistics: 'Statistics',
-    workshopsManagement: 'Workshops Management'
+    workshopsManagement: 'Workshops Management',
+    vehicleHistory: 'Vehicle history',
+    taller3d: '3D Workshop',
+    home: 'Home',
+    mainNav: 'Main navigation',
+    skipToContent: 'Skip to content',
+    toggleMenu: 'Open or close the menu',
+    darkMode: 'Enable dark mode',
+    lightMode: 'Enable light mode',
+    logout: 'Log out'
   },
   workshops: {
     management: {
