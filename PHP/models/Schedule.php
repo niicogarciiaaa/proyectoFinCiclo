@@ -1,4 +1,6 @@
 <?php
+require_once __DIR__ . '/../config/SchemaUpgrade.php';
+
 /**
  * Modelo de la Agenda Inteligente.
  * Gestiona el horario semanal configurable de cada taller, su catálogo de
@@ -10,6 +12,8 @@ class ScheduleModel {
 
     public function __construct($db) {
         $this->conn = $db;
+        // Tablas de las mejoras (cierres y reseñas) que usan algunas consultas.
+        SchemaUpgrade::ensure($db);
     }
 
     // ---------------------------------------------------------------
@@ -290,10 +294,13 @@ class ScheduleModel {
     public function getUserAppointments($userId) {
         $query = "SELECT
                     a.AppointmentID, a.StartDateTime, a.EndDateTime, a.Service, a.Status, a.Description,
+                    a.WorkshopID, a.VehicleID, a.ServiceID,
                     CONCAT(v.Marca, ' ', v.Modelo) AS Vehiculo,
                     w.Name AS WorkshopName, w.Address AS WorkshopAddress, w.Phone AS WorkshopPhone,
                     (SELECT i.InvoiceID FROM Invoices i WHERE i.AppointmentID = a.AppointmentID
-                     ORDER BY i.InvoiceID DESC LIMIT 1) AS InvoiceID
+                     ORDER BY i.InvoiceID DESC LIMIT 1) AS InvoiceID,
+                    (SELECT r.Rating FROM WorkshopReviews r WHERE r.AppointmentID = a.AppointmentID
+                     LIMIT 1) AS ReviewRating
                   FROM Appointments a
                   JOIN Vehicles v ON a.VehicleID = v.VehicleID
                   JOIN Workshops w ON a.WorkshopID = w.WorkshopID
@@ -308,7 +315,7 @@ class ScheduleModel {
     /** Citas de un taller incluyendo el servicio (para la agenda y el generador de facturas). */
     public function getWorkshopAppointmentsWithService($workshopId) {
         $query = "SELECT
-                    a.AppointmentID, a.StartDateTime, a.EndDateTime,
+                    a.AppointmentID, a.StartDateTime, a.EndDateTime, a.WorkshopID,
                     CONCAT(v.Marca, ' ', v.Modelo) AS Vehiculo,
                     a.ServiceID, a.Service, a.Description, a.Status,
                     u.FullName AS UserName,
@@ -323,6 +330,158 @@ class ScheduleModel {
         $stmt->bind_param("i", $workshopId);
         $stmt->execute();
         return $stmt->get_result();
+    }
+
+    // ---------------------------------------------------------------
+    //  DÍAS FESTIVOS / CIERRES PUNTUALES
+    // ---------------------------------------------------------------
+
+    /** Lista los cierres de un taller (opcionalmente desde una fecha). */
+    public function getClosures($workshopId, $fromDate = null) {
+        $query = "SELECT ClosureID, ClosureDate, Reason FROM WorkshopClosures WHERE WorkshopID = ?";
+        if ($fromDate !== null) {
+            $query .= " AND ClosureDate >= ?";
+        }
+        $query .= " ORDER BY ClosureDate";
+        $stmt = $this->conn->prepare($query);
+        if ($fromDate !== null) {
+            $stmt->bind_param("is", $workshopId, $fromDate);
+        } else {
+            $stmt->bind_param("i", $workshopId);
+        }
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $row['ClosureID'] = (int)$row['ClosureID'];
+            $rows[] = $row;
+        }
+        return $rows;
+    }
+
+    /** Devuelve un mapa fecha => motivo con los cierres de un rango. */
+    public function getClosureDatesInRange($workshopId, $startDate, $endDate) {
+        $stmt = $this->conn->prepare(
+            "SELECT ClosureDate, Reason FROM WorkshopClosures
+             WHERE WorkshopID = ? AND ClosureDate BETWEEN ? AND ?"
+        );
+        $stmt->bind_param("iss", $workshopId, $startDate, $endDate);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $dates = [];
+        while ($row = $result->fetch_assoc()) {
+            $dates[$row['ClosureDate']] = $row['Reason'] ?? '';
+        }
+        return $dates;
+    }
+
+    /** Indica si el taller tiene un cierre puntual en esa fecha. */
+    public function isClosedOn($workshopId, $date) {
+        return count($this->getClosureDatesInRange($workshopId, $date, $date)) > 0;
+    }
+
+    /** Inserta un día de cierre (o actualiza su motivo si ya existía). */
+    public function addClosure($workshopId, $date, $reason) {
+        $reason = htmlspecialchars(strip_tags((string)$reason));
+        $stmt = $this->conn->prepare(
+            "INSERT INTO WorkshopClosures (WorkshopID, ClosureDate, Reason) VALUES (?, ?, ?)
+             ON DUPLICATE KEY UPDATE Reason = VALUES(Reason)"
+        );
+        $stmt->bind_param("iss", $workshopId, $date, $reason);
+        return $stmt->execute();
+    }
+
+    public function deleteClosure($closureId, $workshopId) {
+        $stmt = $this->conn->prepare("DELETE FROM WorkshopClosures WHERE ClosureID = ? AND WorkshopID = ?");
+        $stmt->bind_param("ii", $closureId, $workshopId);
+        $stmt->execute();
+        return $stmt->affected_rows > 0;
+    }
+
+    /** Número de citas activas (Pendiente/Confirmada) de un taller en una fecha. */
+    public function countActiveAppointmentsOn($workshopId, $date) {
+        $stmt = $this->conn->prepare(
+            "SELECT COUNT(*) AS total FROM Appointments
+             WHERE WorkshopID = ? AND DATE(StartDateTime) = ?
+               AND Status IN ('Pendiente', 'Confirmada')"
+        );
+        $stmt->bind_param("is", $workshopId, $date);
+        $stmt->execute();
+        return (int)$stmt->get_result()->fetch_assoc()['total'];
+    }
+
+    // ---------------------------------------------------------------
+    //  REPROGRAMACIÓN E HISTORIAL
+    // ---------------------------------------------------------------
+
+    /** Datos de una cita necesarios para reprogramarla. */
+    public function getAppointmentForReschedule($appointmentId) {
+        $stmt = $this->conn->prepare(
+            "SELECT AppointmentID, UserID, WorkshopID, ServiceID, Status, StartDateTime, EndDateTime
+             FROM Appointments WHERE AppointmentID = ?"
+        );
+        $stmt->bind_param("i", $appointmentId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc() ?: null;
+    }
+
+    /** Como countOverlapping, pero ignorando la cita que se está moviendo. */
+    public function countOverlappingExcluding($workshopId, $startDateTime, $endDateTime, $excludeId) {
+        $query = "SELECT COUNT(*) AS total
+                  FROM Appointments
+                  WHERE WorkshopID = ?
+                    AND AppointmentID <> ?
+                    AND Status <> 'Cancelada'
+                    AND StartDateTime < ?
+                    AND EndDateTime > ?";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("iiss", $workshopId, $excludeId, $endDateTime, $startDateTime);
+        $stmt->execute();
+        return (int)$stmt->get_result()->fetch_assoc()['total'];
+    }
+
+    /** Cambia inicio, fin y estado de una cita. */
+    public function updateAppointmentTimes($appointmentId, $start, $end, $status) {
+        $stmt = $this->conn->prepare(
+            "UPDATE Appointments SET StartDateTime = ?, EndDateTime = ?, Status = ? WHERE AppointmentID = ?"
+        );
+        $stmt->bind_param("sssi", $start, $end, $status, $appointmentId);
+        return $stmt->execute();
+    }
+
+    /** Datos de un vehículo si pertenece al usuario (o null). */
+    public function getUserVehicle($vehicleId, $userId) {
+        $stmt = $this->conn->prepare(
+            "SELECT VehicleID, Marca, Modelo, Anyo, Matricula FROM Vehicles WHERE VehicleID = ? AND UserID = ?"
+        );
+        $stmt->bind_param("ii", $vehicleId, $userId);
+        $stmt->execute();
+        return $stmt->get_result()->fetch_assoc() ?: null;
+    }
+
+    /** Historial de mantenimiento de un vehículo: citas con su taller y factura. */
+    public function getVehicleHistory($vehicleId) {
+        $query = "SELECT
+                    a.AppointmentID, a.StartDateTime, a.EndDateTime, a.Service, a.Status, a.Description,
+                    w.Name AS WorkshopName,
+                    i.InvoiceID, i.Date AS InvoiceDate, i.TotalAmount, i.Estado AS InvoiceStatus
+                  FROM Appointments a
+                  JOIN Workshops w ON a.WorkshopID = w.WorkshopID
+                  LEFT JOIN Invoices i ON i.InvoiceID = (
+                      SELECT MAX(i2.InvoiceID) FROM Invoices i2 WHERE i2.AppointmentID = a.AppointmentID
+                  )
+                  WHERE a.VehicleID = ?
+                  ORDER BY a.StartDateTime DESC";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bind_param("i", $vehicleId);
+        $stmt->execute();
+        $result = $stmt->get_result();
+        $rows = [];
+        while ($row = $result->fetch_assoc()) {
+            $row['TotalAmount'] = $row['TotalAmount'] !== null ? (float)$row['TotalAmount'] : null;
+            $rows[] = $row;
+        }
+        return $rows;
     }
 
     // ---------------------------------------------------------------

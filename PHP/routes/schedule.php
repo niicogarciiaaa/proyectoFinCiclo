@@ -3,8 +3,11 @@ require_once __DIR__ . '/../config/cors.php';
 require_once __DIR__ . '/../controllers/ScheduleController.php';
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/Logger.php';
+require_once __DIR__ . '/../config/security.php';
 
 configureCors();
+applySecurityHeaders();
+requireJsonRequest();
 
 session_start();
 
@@ -35,7 +38,7 @@ try {
     );
 
     if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-        $input = json_decode(file_get_contents("php://input"), true);
+        $input = readJsonBody();
 
         if (!isset($input['accion'])) {
             Logger::warning("Intento de POST sin acción especificada en schedule.php");
@@ -84,6 +87,21 @@ try {
                 break;
             case 'citas_taller':
                 $controller->citasTaller();
+                break;
+            case 'listar_cierres':
+                $controller->listarCierres($input);
+                break;
+            case 'crear_cierre':
+                $controller->crearCierre($input);
+                break;
+            case 'eliminar_cierre':
+                $controller->eliminarCierre($input);
+                break;
+            case 'reprogramar':
+                $controller->reprogramar($input);
+                break;
+            case 'historial_vehiculo':
+                $controller->historialVehiculo($input);
                 break;
             default:
                 Logger::warning("Acción inválida en schedule.php", ['accion' => $input['accion']]);

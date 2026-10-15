@@ -1,16 +1,30 @@
 <app-menu></app-menu>
 
-<div class="my-appointments">
+<main class="my-appointments">
   <h2>Mis Citas</h2>
 
-  <div class="filtros">
-    <button [class.active]="filtro === 'proximas'" (click)="filtro = 'proximas'">Próximas</button>
-    <button [class.active]="filtro === 'todas'" (click)="filtro = 'todas'">Todas</button>
+  <!-- Recordatorio de citas próximas (48 h) -->
+  <section class="recordatorio" *ngIf="recordatorios.length > 0" aria-label="Recordatorio de citas próximas">
+    <i class="bi bi-bell-fill" aria-hidden="true"></i>
+    <div>
+      <strong>Tienes {{ recordatorios.length }} cita{{ recordatorios.length === 1 ? '' : 's' }} en las próximas 48 horas:</strong>
+      <ul>
+        <li *ngFor="let r of recordatorios">
+          {{ cuando(r.StartDateTime) }} a las {{ hora(r.StartDateTime) }} · {{ r.Service }} en {{ r.WorkshopName }}
+          <span *ngIf="r.WorkshopAddress">({{ r.WorkshopAddress }})</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <div class="filtros" role="group" aria-label="Filtrar citas">
+    <button [class.active]="filtro === 'proximas'" [attr.aria-pressed]="filtro === 'proximas'" (click)="filtro = 'proximas'">Próximas</button>
+    <button [class.active]="filtro === 'todas'" [attr.aria-pressed]="filtro === 'todas'" (click)="filtro = 'todas'">Todas</button>
   </div>
 
   <div *ngIf="loading" class="loading">Cargando tus citas...</div>
-  <div *ngIf="error" class="error-message">{{ error }}</div>
-  <div *ngIf="mensaje" class="ok-message">{{ mensaje }}</div>
+  <div *ngIf="error" class="error-message" role="alert">{{ error }}</div>
+  <div *ngIf="mensaje" class="ok-message" role="status">{{ mensaje }}</div>
 
   <div *ngIf="!loading && citasFiltradas.length === 0" class="empty">
     No tienes citas {{ filtro === 'proximas' ? 'próximas' : '' }}.
@@ -22,21 +36,75 @@
         <div class="cita-fecha">{{ formatFechaHora(c.StartDateTime) }} - {{ hora(c.EndDateTime) }}</div>
         <div class="cita-servicio">{{ c.Service }}</div>
         <div class="cita-detalle">
-          <span>🚗 {{ c.Vehiculo }}</span>
-          <span>🔧 {{ c.WorkshopName }}</span>
-          <span *ngIf="c.WorkshopPhone">📞 {{ c.WorkshopPhone }}</span>
+          <span><i class="bi bi-car-front" aria-hidden="true"></i> {{ c.Vehiculo }}</span>
+          <span><i class="bi bi-tools" aria-hidden="true"></i> {{ c.WorkshopName }}</span>
+          <span *ngIf="c.WorkshopPhone"><i class="bi bi-telephone" aria-hidden="true"></i> {{ c.WorkshopPhone }}</span>
         </div>
         <div class="cita-desc" *ngIf="c.Description">"{{ c.Description }}"</div>
+        <div class="cita-review" *ngIf="c.ReviewRating">
+          Tu valoración:
+          <span class="stars" [attr.aria-label]="c.ReviewRating + ' de 5 estrellas'">
+            <span *ngFor="let s of estrellas" [class.off]="s > c.ReviewRating!">★</span>
+          </span>
+        </div>
       </div>
       <div class="cita-side">
         <span class="estado-badge">{{ c.Status }}</span>
         <span class="estado-badge facturada" *ngIf="c.InvoiceID">Facturada</span>
-        <button
-          class="cancelar-btn"
-          *ngIf="sePuedeCancelar(c)"
-          (click)="cancelar(c)"
-        >Cancelar</button>
+        <div class="botones">
+          <button class="reprogramar-btn" *ngIf="sePuedeReprogramar(c)" (click)="citaAReprogramar = c">Reprogramar</button>
+          <button class="cancelar-btn" *ngIf="sePuedeCancelar(c)" (click)="cancelar(c)">Cancelar</button>
+          <button class="valorar-btn" *ngIf="sePuedeValorar(c)" (click)="abrirValoracion(c)">★ Valorar</button>
+        </div>
       </div>
+    </div>
+  </div>
+</main>
+
+<!-- Diálogo: reprogramar -->
+<app-reschedule-dialog
+  *ngIf="citaAReprogramar"
+  [cita]="citaAReprogramar"
+  (reprogramada)="onReprogramada($event)"
+  (cerrar)="citaAReprogramar = null"
+></app-reschedule-dialog>
+
+<!-- Diálogo: valorar -->
+<div class="ach-modal-overlay" *ngIf="citaAValorar" (click)="$event.target === $event.currentTarget && (citaAValorar = null)">
+  <div class="ach-modal" role="dialog" aria-modal="true" aria-labelledby="valorar-titulo">
+    <h3 id="valorar-titulo">Valora a {{ citaAValorar.WorkshopName }}</h3>
+    <p class="text-muted small">{{ citaAValorar.Service }} · {{ formatFechaHora(citaAValorar.StartDateTime) }}</p>
+
+    <div class="star-picker" role="radiogroup" aria-label="Puntuación">
+      <button
+        type="button"
+        *ngFor="let s of estrellas"
+        role="radio"
+        [attr.aria-checked]="valoracion === s"
+        [attr.aria-label]="s + ' estrella' + (s === 1 ? '' : 's')"
+        [class.on]="s <= valoracion"
+        (click)="valoracion = s"
+      >★</button>
+    </div>
+
+    <label for="comentario" class="form-label mt-2">Comentario (opcional)</label>
+    <textarea
+      id="comentario"
+      class="form-control"
+      rows="3"
+      maxlength="1000"
+      [(ngModel)]="comentario"
+      placeholder="¿Qué tal fue el servicio?"
+    ></textarea>
+
+    <div class="ach-modal-actions">
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="citaAValorar = null">Cancelar</button>
+      <button
+        type="button"
+        class="btn btn-warning btn-sm"
+        [disabled]="valoracion < 1 || enviandoValoracion"
+        (click)="enviarValoracion()"
+      >{{ enviandoValoracion ? 'Enviando...' : 'Enviar valoración' }}</button>
     </div>
   </div>
 </div>

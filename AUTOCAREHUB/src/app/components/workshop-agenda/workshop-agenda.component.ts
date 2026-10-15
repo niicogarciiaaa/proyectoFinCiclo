@@ -3,9 +3,11 @@ import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { MenuComponent } from '../menu/menu.component';
+import { RescheduleDialogComponent } from '../reschedule-dialog/reschedule-dialog.component';
 
 interface Cita {
   AppointmentID: number;
+  WorkshopID: number;
   Vehiculo: string;
   ServiceID: number | null;
   Service: string;
@@ -31,7 +33,7 @@ interface DiaAgenda {
 @Component({
   selector: 'app-workshop-agenda',
   standalone: true,
-  imports: [CommonModule, MenuComponent],
+  imports: [CommonModule, MenuComponent, RescheduleDialogComponent],
   templateUrl: './workshop-agenda.component.html',
   styleUrl: './workshop-agenda.component.css',
 })
@@ -43,6 +45,8 @@ export class WorkshopAgendaComponent implements OnInit {
   loading = false;
   error = '';
   mensaje = '';
+  /** Cita que se está reprogramando (abre el diálogo). */
+  citaAReprogramar: Cita | null = null;
 
   constructor(private dataAccess: DataAccessService, private router: Router) {}
 
@@ -138,6 +142,21 @@ export class WorkshopAgendaComponent implements OnInit {
       },
       error: () => (this.error = 'Error al cambiar el estado de la cita'),
     });
+  }
+
+  /** Tras mover una cita, actualiza sus horas y redibuja la semana. */
+  onReprogramada(res: { StartDateTime: string; EndDateTime: string; Status: string }): void {
+    if (this.citaAReprogramar && res?.StartDateTime && res?.EndDateTime) {
+      this.citaAReprogramar.StartDateTime = res.StartDateTime;
+      this.citaAReprogramar.EndDateTime = res.EndDateTime;
+      this.citaAReprogramar.Status = res.Status || this.citaAReprogramar.Status;
+      this.construirSemana();
+    } else {
+      this.cargarCitas(); // respuesta incompleta: recargar desde el servidor
+    }
+    this.citaAReprogramar = null;
+    this.mensaje = 'Cita reprogramada correctamente';
+    setTimeout(() => (this.mensaje = ''), 3000);
   }
 
   statusClass(status: string): string {

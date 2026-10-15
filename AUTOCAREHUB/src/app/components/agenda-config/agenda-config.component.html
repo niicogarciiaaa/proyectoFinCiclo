@@ -139,6 +139,57 @@
     </div>
   </section>
 
+  <!-- ============ DÍAS FESTIVOS / CIERRES ============ -->
+  <section class="card" *ngIf="!loading">
+    <div class="card-header">
+      <h3>Días festivos y cierres</h3>
+      <p class="hint">
+        Bloquea fechas concretas (festivos, vacaciones, inventario...). Esos días no
+        se ofrecerán huecos a los clientes aunque el horario semanal diga que abres.
+      </p>
+    </div>
+
+    <div class="form-grid">
+      <label>
+        Desde
+        <input type="date" [min]="hoyStr" [(ngModel)]="cierreForm.inicio" />
+      </label>
+      <label>
+        Hasta (opcional)
+        <input type="date" [min]="cierreForm.inicio || hoyStr" [(ngModel)]="cierreForm.fin" />
+      </label>
+      <label>
+        Motivo
+        <input type="text" maxlength="255" [(ngModel)]="cierreForm.motivo" placeholder="Ej. Festivo local" />
+      </label>
+      <div class="actions" style="margin-top:0;">
+        <button class="primary" (click)="guardarCierre()" [disabled]="guardandoCierre">
+          {{ guardandoCierre ? 'Guardando...' : 'Añadir cierre' }}
+        </button>
+      </div>
+    </div>
+
+    <table class="services-table" *ngIf="cierres.length > 0">
+      <thead>
+        <tr>
+          <th>Fecha</th>
+          <th>Motivo</th>
+          <th></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let c of cierres">
+          <td style="text-transform: capitalize;">{{ formatFecha(c.ClosureDate) }}</td>
+          <td>{{ c.Reason || '—' }}</td>
+          <td class="row-actions">
+            <button class="link-btn danger" (click)="eliminarCierre(c)">Eliminar</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+    <p *ngIf="cierres.length === 0" class="empty">No hay cierres programados.</p>
+  </section>
+
   <!-- ============ VERIFACTU ============ -->
   <section class="card" *ngIf="!loading">
     <div class="card-header">

@@ -5,3 +5,78 @@ img {
     width: 200px;
     height: auto;
 }
+/* Resumen personal (mejora oct-2026) */
+.resumen {
+  max-width: 820px;
+  margin: 24px auto;
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 10px;
+  padding: 16px 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.resumen h3 {
+  font-size: 1.1em;
+  margin-bottom: 10px;
+}
+.vacio {
+  color: #777;
+  margin: 0;
+}
+.lista {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.lista li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+.cuando {
+  font-weight: bold;
+  text-transform: capitalize;
+}
+.estado {
+  margin-left: auto;
+  font-size: 0.78em;
+  font-weight: bold;
+  padding: 2px 10px;
+  border-radius: 12px;
+  background: #fff3e0;
+  color: #e65100;
+}
+.estado.confirmada {
+  background: #e3f2fd;
+  color: #1565c0;
+}
+.ver-todas {
+  display: inline-block;
+  margin-top: 8px;
+}
+.kpis {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+.kpi {
+  flex: 1;
+  text-align: center;
+  border: 1px solid #e3e3e3;
+  border-radius: 8px;
+  padding: 12px;
+  text-decoration: none;
+  color: #444;
+}
+.kpi .num {
+  display: block;
+  font-size: 1.8em;
+  font-weight: bold;
+  color: #1976d2;
+}
+.kpi.alerta .num {
+  color: #e65100;
+}

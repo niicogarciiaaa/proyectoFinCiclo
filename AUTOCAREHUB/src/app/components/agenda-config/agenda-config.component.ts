@@ -16,6 +16,12 @@ interface ScheduleDay {
   SlotMinutes: number;
 }
 
+interface Cierre {
+  ClosureID: number;
+  ClosureDate: string;
+  Reason: string | null;
+}
+
 interface Service {
   ServiceID: number;
   WorkshopID: number;
@@ -62,11 +68,74 @@ export class AgendaConfigComponent implements OnInit {
   emisor: { NIF: string; RazonSocial: string } = { NIF: '', RazonSocial: '' };
   cadenaInfo: string = '';
 
+  // Días festivos / cierres puntuales.
+  cierres: Cierre[] = [];
+  cierreForm = { inicio: '', fin: '', motivo: '' };
+  guardandoCierre = false;
+  readonly hoyStr = new Date().toLocaleDateString('sv-SE'); // YYYY-MM-DD local
+
   constructor(private dataAccess: DataAccessService, public i18n: I18nService) {}
 
   ngOnInit(): void {
     this.cargarConfig();
     this.cargarEmisor();
+    this.cargarCierres();
+  }
+
+  // ---------------- Días de cierre ----------------
+
+  cargarCierres(): void {
+    this.dataAccess.listarCierres().subscribe({
+      next: (res) => (this.cierres = (res && res.cierres) || []),
+      error: () => {},
+    });
+  }
+
+  guardarCierre(): void {
+    const { inicio, fin, motivo } = this.cierreForm;
+    if (!inicio) {
+      this.mostrarMensaje('Indica al menos la fecha del cierre', true);
+      return;
+    }
+    if (fin && fin < inicio) {
+      this.mostrarMensaje('La fecha final no puede ser anterior a la inicial', true);
+      return;
+    }
+    this.guardandoCierre = true;
+    this.dataAccess.crearCierre(inicio, fin || null, motivo.trim()).subscribe({
+      next: (res) => {
+        this.guardandoCierre = false;
+        if (res?.success) {
+          this.cierres = res.cierres || [];
+          this.cierreForm = { inicio: '', fin: '', motivo: '' };
+        }
+        // Mensaje más largo si hay citas afectadas.
+        this.message = res?.message || 'Cierre guardado';
+        this.isError = !res?.success || res?.citasAfectadas > 0;
+        setTimeout(() => (this.message = ''), res?.citasAfectadas > 0 ? 8000 : 4000);
+      },
+      error: (e) => {
+        this.guardandoCierre = false;
+        this.mostrarMensaje(e.message || 'Error al guardar el cierre', true);
+      },
+    });
+  }
+
+  eliminarCierre(c: Cierre): void {
+    if (!confirm(`¿Eliminar el cierre del ${this.formatFecha(c.ClosureDate)}?`)) return;
+    this.dataAccess.eliminarCierre(c.ClosureID).subscribe({
+      next: (res) => {
+        this.mostrarMensaje(res?.message || 'Cierre eliminado', !res?.success);
+        if (res?.success) this.cierres = this.cierres.filter((x) => x.ClosureID !== c.ClosureID);
+      },
+      error: (e) => this.mostrarMensaje(e.message || 'Error al eliminar el cierre', true),
+    });
+  }
+
+  formatFecha(fecha: string): string {
+    return new Date(fecha + 'T00:00:00').toLocaleDateString('es-ES', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+    });
   }
 
   // ---------------- VeriFactu ----------------

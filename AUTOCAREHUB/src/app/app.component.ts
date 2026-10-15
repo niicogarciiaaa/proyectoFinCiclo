@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { MenuComponent } from './components/menu/menu.component';
+import { ThemeService } from './services/theme.service';
 
 @Component({
   selector: 'app-root',
@@ -11,4 +11,7 @@ import { MenuComponent } from './components/menu/menu.component';
 })
 export class AppComponent {
   title = 'AUTOCAREHUB';
+
+  // Se inyecta aquí para aplicar el tema (claro/oscuro) nada más arrancar.
+  constructor(_theme: ThemeService) {}
 }

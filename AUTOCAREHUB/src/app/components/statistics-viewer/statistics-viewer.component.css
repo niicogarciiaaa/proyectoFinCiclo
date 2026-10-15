@@ -76,3 +76,183 @@ td {
   padding: 20px;
   color: #666;
 }
+
+/* ================= Dashboard ampliado (mejora oct-2026) ================= */
+.date-selector {
+  flex-wrap: wrap;
+}
+.quick {
+  display: flex;
+  gap: 6px;
+}
+.quick button,
+.export {
+  background: #fff;
+  border: 1px solid #1976d2;
+  color: #1976d2;
+  border-radius: 16px;
+  padding: 3px 12px;
+  font-size: 0.85em;
+  cursor: pointer;
+}
+.quick button:hover,
+.export:hover:not(:disabled) {
+  background: #e3f2fd;
+}
+.export:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+.warn {
+  color: #e65100;
+}
+.panel-card {
+  background: white;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 20px;
+}
+.panel-card h3,
+.invoices-table h3 {
+  font-size: 1.1em;
+  margin: 0 0 12px;
+}
+.panel-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.panel-head h3 {
+  margin: 0;
+}
+.panel-tools {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+.empty {
+  color: #888;
+  font-style: italic;
+}
+
+/* Gráfico de barras vertical */
+.bar-chart {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  height: 230px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+.bar-col {
+  flex: 1 0 44px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+.bar-track {
+  flex: 1;
+  width: 70%;
+  display: flex;
+  align-items: flex-end;
+}
+.bar.total {
+  width: 100%;
+  background: #90caf9;
+  border-radius: 4px 4px 0 0;
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}
+.bar.cobrado {
+  width: 100%;
+  background: #1976d2;
+}
+.bar-val {
+  font-size: 0.7em;
+  color: #555;
+  white-space: nowrap;
+}
+.bar-lbl {
+  font-size: 0.72em;
+  color: #666;
+  margin-top: 4px;
+  white-space: nowrap;
+  text-transform: capitalize;
+}
+.legend {
+  display: flex;
+  gap: 16px;
+  font-size: 0.82em;
+  color: #555;
+  margin-top: 8px;
+}
+.sw {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  vertical-align: middle;
+  margin-right: 4px;
+}
+.sw.total { background: #90caf9; }
+.sw.cobrado { background: #1976d2; }
+
+/* Barras horizontales */
+.two-cols {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+}
+.two-cols > .panel-card {
+  margin-bottom: 0;
+}
+.two-cols + * {
+  margin-top: 20px;
+}
+.hbar {
+  margin-bottom: 10px;
+}
+.hbar-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: 0.85em;
+  color: #444;
+}
+.hbar-track {
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+}
+.hbar-fill {
+  height: 100%;
+  background: #fb8c00;
+}
+.hbar-fill.st-pendiente { background: #fb8c00; }
+.hbar-fill.st-confirmada { background: #1976d2; }
+.hbar-fill.st-finalizada { background: #43a047; }
+.hbar-fill.st-cancelada { background: #e53935; }
+.hbar-fill.stars-fill { background: #f9a825; }
+
+.reviews {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 0.88em;
+}
+.reviews li {
+  border-bottom: 1px solid #eee;
+  padding: 6px 0;
+}
+.reviews p {
+  margin: 2px 0 0;
+  color: #555;
+  font-style: italic;
+}

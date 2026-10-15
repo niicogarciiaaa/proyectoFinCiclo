@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { Observable, of, throwError } from 'rxjs';
+import { catchError, finalize, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 interface LoginResponse {
@@ -659,6 +659,124 @@ export class DataAccessService {
       catchError(error => {
         console.error('Error al consultar la disponibilidad:', error);
         return throwError(() => new Error('Error al consultar la disponibilidad'));
+      })
+    );
+  }
+
+  // ============================================================
+  //  MEJORAS OCT-2026 — llamadas nuevas (no tocan la API original)
+  // ============================================================
+
+  /** POST genérico a un endpoint nuevo con { accion, ...datos }. */
+  private postAccion<T = any>(endpoint: string, accion: string, datos: object = {}): Observable<T> {
+    return this.http.post<T>(`${this.apiUrl}/${endpoint}`, { accion, ...datos }, this.httpOptions).pipe(
+      catchError(error => {
+        console.error(`Error en ${endpoint} (${accion}):`, error);
+        // Se propaga el mensaje del backend si lo hay.
+        return throwError(() => new Error(error?.error?.message || `Error en la acción ${accion}`));
+      })
+    );
+  }
+
+  /** (Taller) Lista los días de cierre / festivos (desde hoy, o todos). */
+  listarCierres(todos = false): Observable<any> {
+    return this.postAccion('schedule.php', 'listar_cierres', { Todos: todos });
+  }
+
+  /** (Taller) Añade un día o un rango de días de cierre. */
+  crearCierre(fechaInicio: string, fechaFin: string | null, motivo: string): Observable<any> {
+    return this.postAccion('schedule.php', 'crear_cierre', {
+      FechaInicio: fechaInicio, FechaFin: fechaFin || fechaInicio, Motivo: motivo,
+    });
+  }
+
+  /** (Taller) Elimina un día de cierre. */
+  eliminarCierre(closureId: number): Observable<any> {
+    return this.postAccion('schedule.php', 'eliminar_cierre', { ClosureID: closureId });
+  }
+
+  /** (Cliente o taller) Mueve una cita a otra fecha y hora. */
+  reprogramarCita(appointmentId: number, fecha: string, hora: string): Observable<any> {
+    return this.postAccion('schedule.php', 'reprogramar', { AppointmentID: appointmentId, Fecha: fecha, Hora: hora });
+  }
+
+  /** (Cliente) Historial de mantenimiento de un vehículo propio. */
+  obtenerHistorialVehiculo(vehicleId: number): Observable<any> {
+    return this.postAccion('schedule.php', 'historial_vehiculo', { VehicleID: vehicleId });
+  }
+
+  /** (Cliente) Valora una cita finalizada. */
+  crearResena(appointmentId: number, rating: number, comment: string): Observable<any> {
+    return this.postAccion('reviews.php', 'crear', { AppointmentID: appointmentId, Rating: rating, Comment: comment });
+  }
+
+  /** Media y nº de reseñas de cada taller. */
+  obtenerResumenResenas(): Observable<any> {
+    return this.postAccion('reviews.php', 'resumen_talleres');
+  }
+
+  /** Reseñas de un taller (sin WorkshopID, el taller obtiene las suyas). */
+  obtenerResenasTaller(workshopId?: number): Observable<any> {
+    return this.postAccion('reviews.php', 'listar_taller', workshopId ? { WorkshopID: workshopId } : {});
+  }
+
+  /** (Taller) Dashboard de estadísticas ampliado. */
+  obtenerEstadisticasAmpliadas(fechaInicio: string, fechaFin: string,
+    agrupacion: 'dia' | 'semana' | 'mes'): Observable<any> {
+    return this.postAccion('stats.php', 'resumen', {
+      FechaInicio: fechaInicio, FechaFin: fechaFin, Agrupacion: agrupacion,
+    });
+  }
+
+  // ---------- Taller en 3D (garage.php) ----------
+
+  /** (Taller) Distribución, coches colocados y coches pendientes de una fecha. */
+  obtenerTaller3D(fecha?: string): Observable<any> {
+    return this.postAccion('garage.php', 'obtener', fecha ? { Fecha: fecha } : {});
+  }
+
+  guardarDistribucionTaller(layout: any): Observable<any> {
+    return this.postAccion('garage.php', 'guardar_layout', { layout });
+  }
+
+  restablecerDistribucionTaller(): Observable<any> {
+    return this.postAccion('garage.php', 'restablecer_layout');
+  }
+
+  /** Coloca un coche (cita) en un puesto, o lo mueve a otro. */
+  asignarPuesto(appointmentId: number, bayKey: string): Observable<any> {
+    return this.postAccion('garage.php', 'asignar', { AppointmentID: appointmentId, BayKey: bayKey });
+  }
+
+  /** Cambia el color del coche y/o sube o baja el elevador. */
+  actualizarCocheTaller(appointmentId: number, cambios: { CarColor?: string; Lifted?: boolean }): Observable<any> {
+    return this.postAccion('garage.php', 'actualizar_coche', { AppointmentID: appointmentId, ...cambios });
+  }
+
+  retirarCocheTaller(appointmentId: number): Observable<any> {
+    return this.postAccion('garage.php', 'retirar', { AppointmentID: appointmentId });
+  }
+
+  /** Ficha del coche: datos, visitas anteriores y notas. */
+  obtenerFichaCoche(appointmentId: number): Observable<any> {
+    return this.postAccion('garage.php', 'detalle', { AppointmentID: appointmentId });
+  }
+
+  crearNotaCoche(appointmentId: number, nota: string): Observable<any> {
+    return this.postAccion('garage.php', 'crear_nota', { AppointmentID: appointmentId, Note: nota });
+  }
+
+  eliminarNotaCoche(noteId: number): Observable<any> {
+    return this.postAccion('garage.php', 'eliminar_nota', { NoteID: noteId });
+  }
+
+  /** Cierra la sesión en el servidor y limpia los datos locales. */
+  cerrarSesion(): Observable<any> {
+    return this.postAccion('logout.php', 'logout').pipe(
+      catchError(() => of({ success: false })),
+      finalize(() => {
+        localStorage.removeItem('currentUser');
+        localStorage.removeItem('userName');
       })
     );
   }

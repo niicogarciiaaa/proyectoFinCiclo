@@ -27,6 +27,7 @@
               <input
                 type="email"
                 class="form-control"
+                autocomplete="username"
                 id="email"
                 formControlName="email"
                 [class.is-invalid]="loginForm.get('email')?.invalid && loginForm.get('email')?.touched"
@@ -42,23 +43,39 @@
 
             <div class="mb-3">
               <label for="password" class="form-label">{{ i18n.t('contrasena') }}</label>
-              <input
-                type="password"
-                class="form-control"
-                id="password"
-                formControlName="password"
-                [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
-                [placeholder]="i18n.t('placeholderContrasena')"
-              >
+              <div class="input-group has-validation">
+                <input
+                  [type]="mostrarPassword ? 'text' : 'password'"
+                  class="form-control"
+                  id="password"
+                  formControlName="password"
+                  autocomplete="current-password"
+                  [class.is-invalid]="loginForm.get('password')?.invalid && loginForm.get('password')?.touched"
+                  [placeholder]="i18n.t('placeholderContrasena')"
+                >
+                <button
+                  type="button"
+                  class="btn btn-outline-secondary"
+                  (click)="mostrarPassword = !mostrarPassword"
+                  [attr.aria-pressed]="mostrarPassword"
+                  [attr.aria-label]="mostrarPassword ? i18n.t('ocultarContrasena') : i18n.t('mostrarContrasena')"
+                >
+                  <i class="bi" [class.bi-eye]="!mostrarPassword" [class.bi-eye-slash]="mostrarPassword" aria-hidden="true"></i>
+                </button>
               <div class="invalid-feedback" *ngIf="loginForm.get('password')?.errors?.['required'] && loginForm.get('password')?.touched">
                 {{ i18n.t('contrasenaRequerida') }}
               </div>
               <div class="invalid-feedback" *ngIf="loginForm.get('password')?.errors?.['minlength'] && loginForm.get('password')?.touched">
                 {{ i18n.t('contrasenaMinimo') }}
               </div>
+              </div>
             </div>
 
-            <div class="alert alert-danger" *ngIf="errorMessage">
+            <div class="alert alert-warning py-2" *ngIf="sesionCaducada && !errorMessage" role="status">
+              <i class="bi bi-clock-history me-2" aria-hidden="true"></i>{{ i18n.t('sesionCaducada') }}
+            </div>
+
+            <div class="alert alert-danger" *ngIf="errorMessage" role="alert">
               <i class="bi bi-exclamation-triangle-fill me-2"></i>
               {{ errorMessage }}
             </div>

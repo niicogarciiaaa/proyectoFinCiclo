@@ -7,7 +7,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { DataAccessService } from '../../services/dataAccess.service';
-import { Router, RouterModule } from '@angular/router';
+import { ActivatedRoute, Router, RouterModule } from '@angular/router';
 import { I18nService } from '../../services/i18n.service';
 import { FormsModule } from '@angular/forms';
 
@@ -23,13 +23,18 @@ export class LoginComponent {
   errorMessage: string = '';
   loading: boolean = false;
   selectedLang: string;
+  mostrarPassword = false;
+  /** Se llega aquí porque la sesión del servidor caducó (interceptor 401). */
+  sesionCaducada = false;
 
   constructor(
     private fb: FormBuilder,
     private dataAccessService: DataAccessService,
     private router: Router,
-    public i18n: I18nService
+    public i18n: I18nService,
+    route: ActivatedRoute
   ) {
+    this.sesionCaducada = route.snapshot.queryParamMap.get('sesion') === 'caducada';
     this.selectedLang = this.i18n.currentLang || 'es';
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],

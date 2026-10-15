@@ -24,6 +24,15 @@ El orden es el siguiente:
    
 Ya nos cargará el inicio de sesión.
 
+> **Mejoras de octubre de 2026** (días festivos, reprogramar citas, reseñas, historial
+> por vehículo, estadísticas ampliadas, modo oscuro...): las tablas nuevas se crean solas
+> la primera vez que se usan. Si se prefiere crearlas a mano, ejecutar
+> `PHP/migrations/2026_10_mejoras.sql` en phpMyAdmin. El detalle de todas las mejoras
+> está en `Documentacion/MEJORAS_AutoCareHub.md`.
+>
+> Para regenerar la carpeta `COMPILADO` (frontend apuntando a `localhost/PHP`):
+> `cd AUTOCAREHUB && npm run build:local` y copiar `dist/autocarehub/browser/` en `COMPILADO/`.
+
 Los correos y las contraseñas de los usuarios son las siguentes:
 
 1. Cuenta de taller

@@ -1,0 +1,10 @@
+# Ficheros binarios: sin conversión de finales de línea
+*.pdf binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.ico binary
+*.woff binary
+*.woff2 binary
+*.docx binary
+*.odt binary

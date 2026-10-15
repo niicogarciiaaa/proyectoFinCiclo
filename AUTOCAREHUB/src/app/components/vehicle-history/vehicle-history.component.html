@@ -1,0 +1,68 @@
+<app-menu></app-menu>
+
+<main class="vehicle-history">
+  <h2>Historial de mantenimiento</h2>
+
+  <div *ngIf="vehiculos.length === 0 && !error" class="empty">
+    Aún no tienes vehículos registrados.
+  </div>
+
+  <div class="toolbar" *ngIf="vehiculos.length > 0">
+    <label for="vehiculo">Vehículo:</label>
+    <select id="vehiculo" class="form-select form-select-sm" [(ngModel)]="vehiculoId" (ngModelChange)="cargarHistorial()">
+      <option *ngFor="let v of vehiculos" [ngValue]="v.VehicleID">
+        {{ v.marca }} {{ v.modelo }} · {{ v.matricula }}
+      </option>
+    </select>
+    <button class="btn btn-outline-primary btn-sm" (click)="exportarCsv()" [disabled]="historial.length === 0">
+      <i class="bi bi-download" aria-hidden="true"></i> Exportar CSV
+    </button>
+  </div>
+
+  <div *ngIf="error" class="error-message" role="alert">{{ error }}</div>
+  <div *ngIf="loading" class="loading">Cargando historial...</div>
+
+  <section class="resumen" *ngIf="resumen && !loading" aria-label="Resumen del vehículo">
+    <div class="kpi">
+      <span class="num">{{ resumen.citas }}</span>
+      <span class="lbl">Citas</span>
+    </div>
+    <div class="kpi">
+      <span class="num">{{ resumen.finalizadas }}</span>
+      <span class="lbl">Servicios realizados</span>
+    </div>
+    <div class="kpi">
+      <span class="num">{{ formatMoneda(resumen.gastoTotal) }}</span>
+      <span class="lbl">Gasto facturado</span>
+    </div>
+    <div class="kpi" *ngIf="vehiculoInfo">
+      <span class="num">{{ vehiculoInfo.Anyo }}</span>
+      <span class="lbl">Año</span>
+    </div>
+  </section>
+
+  <div *ngIf="!loading && resumen && historial.length === 0" class="empty">
+    Este vehículo todavía no tiene citas.
+  </div>
+
+  <ol class="timeline" *ngIf="!loading && historial.length > 0">
+    <li *ngFor="let h of historial" [ngClass]="statusClass(h.Status)">
+      <div class="fecha">{{ formatFecha(h.StartDateTime) }}</div>
+      <div class="card-h">
+        <div class="titulo">
+          <strong>{{ h.Service }}</strong>
+          <span class="badge-estado">{{ h.Status }}</span>
+        </div>
+        <div class="detalle">
+          <span><i class="bi bi-tools" aria-hidden="true"></i> {{ h.WorkshopName }}</span>
+          <span *ngIf="h.InvoiceID">
+            <i class="bi bi-receipt" aria-hidden="true"></i>
+            Factura #{{ h.InvoiceID }} · {{ formatMoneda(h.TotalAmount || 0) }}
+            <em>({{ h.InvoiceStatus }})</em>
+          </span>
+        </div>
+        <div class="desc" *ngIf="h.Description">"{{ h.Description }}"</div>
+      </div>
+    </li>
+  </ol>
+</main>

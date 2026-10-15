@@ -1,0 +1,133 @@
+.vehicle-history {
+  max-width: 860px;
+  margin: 0 auto;
+  padding: 16px;
+}
+h2 {
+  text-align: center;
+  color: #333;
+  margin-bottom: 20px;
+  font-size: 1.5em;
+}
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+.toolbar select {
+  max-width: 320px;
+}
+.toolbar button {
+  margin-left: auto;
+}
+.loading,
+.empty {
+  text-align: center;
+  color: #888;
+  font-style: italic;
+  padding: 20px;
+}
+.error-message {
+  background: #ffebee;
+  color: #c62828;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+}
+.resumen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.kpi {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 14px;
+  text-align: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+.kpi .num {
+  display: block;
+  font-size: 1.4em;
+  font-weight: bold;
+  color: #1976d2;
+}
+.kpi .lbl {
+  color: #666;
+  font-size: 0.85em;
+}
+
+.timeline {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 18px;
+  border-left: 3px solid #e0e0e0;
+}
+.timeline li {
+  position: relative;
+  margin-bottom: 16px;
+  padding-left: 12px;
+}
+.timeline li::before {
+  content: '';
+  position: absolute;
+  left: -27px;
+  top: 4px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #999;
+  border: 3px solid #fff;
+}
+.timeline .fecha {
+  font-size: 0.82em;
+  color: #777;
+  margin-bottom: 4px;
+}
+.card-h {
+  background: #fff;
+  border: 1px solid #e6e6e6;
+  border-radius: 8px;
+  padding: 10px 14px;
+}
+.titulo {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.detalle {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  color: #666;
+  font-size: 0.88em;
+  margin-top: 4px;
+}
+.desc {
+  color: #888;
+  font-style: italic;
+  font-size: 0.85em;
+  margin-top: 4px;
+}
+.badge-estado {
+  padding: 2px 10px;
+  border-radius: 12px;
+  font-size: 0.75em;
+  font-weight: bold;
+  background: #eee;
+  color: #555;
+  white-space: nowrap;
+}
+.st-pendiente::before { background: #fb8c00 !important; }
+.st-confirmada::before { background: #1976d2 !important; }
+.st-finalizada::before { background: #43a047 !important; }
+.st-cancelada::before { background: #e53935 !important; }
+.st-finalizada .badge-estado { background: #e8f5e9; color: #2e7d32; }
+.st-confirmada .badge-estado { background: #e3f2fd; color: #1565c0; }
+.st-pendiente .badge-estado { background: #fff3e0; color: #e65100; }
+.st-cancelada .badge-estado { background: #ffebee; color: #c62828; }
+.st-cancelada .card-h { opacity: 0.7; }

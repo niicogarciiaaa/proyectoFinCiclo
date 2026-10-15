@@ -14,7 +14,7 @@
       >
         <option [ngValue]="0" disabled>Selecciona un taller</option>
         <option *ngFor="let workshop of workshops" [ngValue]="workshop.WorkshopID">
-          {{ workshop.Name }}
+          {{ workshop.Name }}{{ etiquetaValoracion(workshop.WorkshopID) }}
         </option>
       </select>
     </div>
@@ -37,6 +37,17 @@
 
     <div class="duration-info">
       Duración estimada: <strong>{{ duration }} min</strong>
+    </div>
+  </div>
+
+  <!-- Opiniones recientes del taller elegido -->
+  <div class="opiniones" *ngIf="opiniones.length > 0" aria-label="Opiniones recientes del taller">
+    <div class="opinion" *ngFor="let o of opiniones">
+      <span class="stars" [attr.aria-label]="o.Rating + ' de 5 estrellas'">
+        <span *ngFor="let s of estrellas" [class.off]="s > o.Rating">★</span>
+      </span>
+      <span class="autor">{{ o.UserName }} · {{ o.Service }}</span>
+      <p *ngIf="o.Comment">“{{ o.Comment }}”</p>
     </div>
   </div>
 

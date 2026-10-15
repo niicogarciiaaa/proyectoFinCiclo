@@ -1,4 +1,7 @@
 export const ES_TEXTS = {
+  mostrarContrasena: 'Mostrar contraseña',
+  ocultarContrasena: 'Ocultar contraseña',
+  sesionCaducada: 'Tu sesión ha caducado. Vuelve a iniciar sesión.',
   accederFacturas: 'Acceder a Facturas',
   pedirCita: 'Pedir una Cita',
   iniciarSesion: 'Iniciar Sesión',
@@ -50,7 +53,13 @@ export const ES_TEXTS = {
   // Textos para el componente home
   home: {
     welcome: "Bienvenido a AutocareHub!",
-    subtitle: "La solución para cuidar tu coche de una forma sencilla"
+    subtitle: "La solución para cuidar tu coche de una forma sencilla",
+    nextAppointments: "Tus próximas citas",
+    noAppointments: "No tienes citas próximas.",
+    bookNow: "Reservar una cita",
+    seeAll: "Ver todas mis citas",
+    today: "Citas de hoy",
+    pendingConfirm: "Pendientes de confirmar"
   },
   // Textos del menú
   menu: {
@@ -64,7 +73,16 @@ export const ES_TEXTS = {
     agendaSemanal: 'Agenda Semanal',
     agendaConfig: 'Agenda Inteligente',
     statistics: 'Estadísticas',
-    workshopsManagement: 'Gestión de Talleres'
+    workshopsManagement: 'Gestión de Talleres',
+    vehicleHistory: 'Historial vehículos',
+    taller3d: 'Taller 3D',
+    home: 'Inicio',
+    mainNav: 'Navegación principal',
+    skipToContent: 'Saltar al contenido',
+    toggleMenu: 'Abrir o cerrar el menú',
+    darkMode: 'Activar modo oscuro',
+    lightMode: 'Activar modo claro',
+    logout: 'Cerrar sesión'
   },
   workshops: {
     management: {

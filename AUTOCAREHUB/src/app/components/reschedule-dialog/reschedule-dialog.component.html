@@ -1,0 +1,56 @@
+<div class="ach-modal-overlay" (click)="cerrarSiFondo($event)">
+  <div class="ach-modal" role="dialog" aria-modal="true" aria-labelledby="reprogramar-titulo">
+    <h3 id="reprogramar-titulo">Reprogramar cita</h3>
+    <p class="actual">
+      Cita actual: <strong>{{ etiquetaFecha(cita.StartDateTime.substring(0, 10)) }}</strong>
+      a las <strong>{{ cita.StartDateTime.substring(11, 16) }}</strong>
+      <span *ngIf="cita.Service"> · {{ cita.Service }}</span>
+      ({{ duracionMinutos }} min)
+    </p>
+
+    <div *ngIf="cargando" class="info">Buscando huecos libres...</div>
+    <div *ngIf="error" class="err" role="alert">{{ error }}</div>
+
+    <ng-container *ngIf="!cargando && fechas.length === 0 && !error">
+      <p class="info">No hay huecos libres en los próximos 30 días.</p>
+    </ng-container>
+
+    <ng-container *ngIf="!cargando && fechas.length > 0">
+      <label class="lbl">1. Elige el día</label>
+      <div class="chips" role="listbox" aria-label="Días disponibles">
+        <button
+          type="button"
+          *ngFor="let f of fechas"
+          class="chip"
+          role="option"
+          [attr.aria-selected]="f === fechaSeleccionada"
+          [class.sel]="f === fechaSeleccionada"
+          (click)="elegirFecha(f)"
+        >{{ etiquetaFecha(f) }}</button>
+      </div>
+
+      <label class="lbl">2. Elige la hora</label>
+      <div class="chips" role="listbox" aria-label="Horas disponibles">
+        <button
+          type="button"
+          *ngFor="let s of slotsLibres"
+          class="chip"
+          role="option"
+          [attr.aria-selected]="s.hora === horaSeleccionada"
+          [class.sel]="s.hora === horaSeleccionada"
+          (click)="horaSeleccionada = s.hora"
+        >{{ s.hora }}</button>
+      </div>
+    </ng-container>
+
+    <div class="ach-modal-actions">
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="cerrar.emit()">Cerrar</button>
+      <button
+        type="button"
+        class="btn btn-primary btn-sm"
+        [disabled]="!horaSeleccionada || guardando"
+        (click)="confirmar()"
+      >{{ guardando ? 'Guardando...' : 'Mover cita' }}</button>
+    </div>
+  </div>
+</div>

@@ -1,0 +1,17 @@
+# ============================================================
+#  AutoCareHub - Protección del backend PHP (mejora de seguridad)
+#  Solo se deben poder invocar los endpoints de routes/ (y las páginas
+#  de instalación). El resto de carpetas son código que se incluye
+#  desde PHP y no tienen que ser accesibles por URL.
+# ============================================================
+
+# Sin listados de directorios.
+Options -Indexes
+
+# Bloquear el acceso directo a código interno, migraciones y logs.
+RedirectMatch 403 (?i)/(config|controllers|models|migrations|logs)(/|$)
+
+# Bloquear ficheros sensibles por extensión.
+<FilesMatch "(?i)\.(log|sql|md|ini|env|bak)$">
+    Require all denied
+</FilesMatch>

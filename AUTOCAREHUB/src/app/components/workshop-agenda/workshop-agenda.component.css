@@ -204,6 +204,7 @@ h2 {
 .acc.confirmar { background-color: #1976d2; }
 .acc.finalizar { background-color: #43a047; }
 .acc.cancelar  { background-color: #e53935; }
+.acc.reprogramar { background-color: #8e24aa; }
 .acc:hover { opacity: 0.88; }
 .acc.facturar { background-color: #6d4c41; }
 .cita-badge.facturada { background: #ede7f6; color: #5e35b1; margin-left: 4px; }
