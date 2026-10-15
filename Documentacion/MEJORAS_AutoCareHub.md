@@ -6,7 +6,7 @@
 
 **Proyecto:** AutoCareHub (Angular + PHP/MySQL)
 **Autor:** Nicolás García Moreira
-**Última actualización:** 30/06/2026
+**Última actualización:** 16/10/2026
 
 > **Restricción del proyecto:** la API existente no se modifica. Las funcionalidades
 > nuevas se construyen creando **llamadas nuevas**, nunca editando las llamadas ya
@@ -24,7 +24,8 @@
 6. [VeriFactu (AEAT)](#6-verifactu-aeat)
 7. [Seguridad](#7-seguridad)
 8. [Cambios en la base de datos](#8-cambios-en-la-base-de-datos)
-9. [Próximas mejoras propuestas](#9-próximas-mejoras-propuestas)
+9. [Despliegue automático a InfinityFree](#9-despliegue-automático-a-infinityfree)
+10. [Próximas mejoras propuestas](#10-próximas-mejoras-propuestas)
 
 ---
 
@@ -236,7 +237,35 @@ incluya ya estas tablas y columnas.
 
 ---
 
-## 9. Próximas mejoras propuestas
+## 9. Despliegue automático a InfinityFree
+
+**Qué es:** cada `push` a la rama `main` publica la web en InfinityFree sin pasos
+manuales, mediante GitHub Actions.
+
+**Cómo funciona** (`.github/workflows/deploy-infinityfree.yml`):
+
+1. Compila el frontend Angular en modo producción (usa `environment.prod.ts`).
+2. Sube `AUTOCAREHUB/dist/autocarehub/browser/` por FTP a `/htdocs/Autocare/frontend/`.
+3. Sube la carpeta `PHP/` a `/htdocs/Autocare/BACKEND/`, **excepto**
+   `config/database.php` (en el servidor tiene los datos de la BD de InfinityFree) y
+   los logs.
+
+Solo se suben los archivos que han cambiado desde el último despliegue. También se
+puede lanzar a mano desde la pestaña *Actions* de GitHub.
+
+**Configuración necesaria:** en GitHub › *Settings › Secrets and variables › Actions*,
+los secretos `FTP_SERVER`, `FTP_USERNAME` y `FTP_PASSWORD` (datos FTP del panel de
+InfinityFree).
+
+**Otros cambios:** el `baseHref` de `angular.json` pasa a `/Autocare/frontend/` (en
+minúsculas, como la carpeta del servidor).
+
+**Nota:** las migraciones SQL no se ejecutan solas; hay que lanzarlas a mano en la BD
+de producción antes de desplegar código que las necesite.
+
+---
+
+## 10. Próximas mejoras propuestas
 
 Ideas que encajan con lo construido, ordenadas por relación valor / esfuerzo:
 

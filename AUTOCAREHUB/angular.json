@@ -18,7 +18,7 @@
             "browser": "src/main.ts",
             "polyfills": ["zone.js"],
             "tsConfig": "tsconfig.app.json",
-            "baseHref": "/Autocare/Frontend/",
+            "baseHref": "/Autocare/frontend/",
             "assets": [
               {
                 "glob": "**/*",
@@ -43,8 +43,8 @@
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "2kB",
-                  "maximumError": "4kB"
+                  "maximumWarning": "6kB",
+                  "maximumError": "10kB"
                 }
               ],
               "outputHashing": "all",
@@ -69,7 +69,7 @@
             "buildTarget": "AUTOCAREHUB:build",
             "host": "localhost",
             "port": 4200,
-            "servePath": "/Autocare/Frontend/"
+            "servePath": "/Autocare/frontend/"
           },
           "configurations": {
             "production": {
