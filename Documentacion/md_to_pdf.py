@@ -26,6 +26,24 @@ AZUL = colors.HexColor("#1976d2")
 GRIS = colors.HexColor("#555555")
 
 
+def fuente_casilla():
+    """Registra una fuente con «☐» (casilla vacía) si el sistema la tiene."""
+    from reportlab.pdfbase import pdfmetrics
+    from reportlab.pdfbase.ttfonts import TTFont
+    import os
+    for ruta in ("/System/Library/Fonts/Supplemental/Arial Unicode.ttf", "/Library/Fonts/Arial Unicode.ttf"):
+        if os.path.exists(ruta):
+            try:
+                pdfmetrics.registerFont(TTFont("Casilla", ruta))
+                return '<font name="Casilla" color="#555555" size="12">\u2610</font>'
+            except Exception:
+                pass
+    return '<font name="ZapfDingbats" color="#555555">q</font>'
+
+
+CASILLA = None
+
+
 def estilos():
     base = getSampleStyleSheet()
     s = {}
@@ -52,8 +70,12 @@ def inline(text):
     text = html.escape(text)
     text = re.sub(r"\*\*(.+?)\*\*", r"<b>\1</b>", text)
     text = re.sub(r"`(.+?)`", r'<font face="Courier" color="#b5179e">\1</font>', text)
+    text = re.sub(r"(?<![\w*])\*(?!\s)([^*]+?)(?<!\s)\*(?![\w*])", r"<i>\1</i>", text)
     # [texto](url) -> texto (sin enlace activo, solo texto)
     text = re.sub(r"\[(.+?)\]\((.+?)\)", r"\1", text)
+    # Caracteres que no tiene Helvetica: flecha (fuente Symbol) y marca «web»
+    text = text.replace("→", '<font face="Symbol">\u2192</font>')
+    text = text.replace("🌐", '<font color="#1d4ed8" size="8"><b>[WEB]</b></font>')
     return text
 
 
@@ -109,6 +131,21 @@ def parse(md_path, S):
 
         if not line:
             flush_bullets()
+            i += 1
+            continue
+
+        # Casilla de comprobación «- [ ] texto» (con sangría para subniveles)
+        casilla = re.match(r"^(\s*)- \[ \] (.*)$", raw)
+        if casilla:
+            flush_bullets()
+            nivel = len(casilla.group(1).replace("\t", "  ")) // 2
+            estilo = ParagraphStyle("check", parent=S["bullet"], leftIndent=14 + nivel * 16,
+                                    firstLineIndent=-14, spaceAfter=3)
+            global CASILLA
+            if CASILLA is None:
+                CASILLA = fuente_casilla()
+            caja = CASILLA + "&nbsp;&nbsp;"
+            flow.append(Paragraph(caja + inline(casilla.group(2)), estilo))
             i += 1
             continue
 
