@@ -1,0 +1,53 @@
+<div class="seg">
+  <ol class="pasos" aria-label="Etapas de la reparación">
+    <li
+      *ngFor="let e of etapas; let i = index"
+      [class.hecho]="i < indiceActual"
+      [class.actual]="i === indiceActual"
+      [title]="e.nombre"
+    >
+      <span class="punto" aria-hidden="true"></span>
+      <span class="visually-hidden-text">{{ e.nombre }}{{ i === indiceActual ? ' (actual)' : '' }}</span>
+    </li>
+  </ol>
+  <p class="estado-actual">
+    <ng-container *ngIf="actual; else sinEmpezar">
+      <strong>{{ actual.StageLabel }}</strong> <span>· {{ fecha(actual.CreatedAt) }}</span>
+    </ng-container>
+    <ng-template #sinEmpezar><span>Sin empezar</span></ng-template>
+  </p>
+
+  <p class="error" *ngIf="error" role="alert">{{ error }}</p>
+
+  <ng-container *ngIf="!cancelada; else citaCancelada">
+    <div class="nueva">
+      <label class="visually-hidden-text" [attr.for]="'etapa-' + appointmentId">Nueva etapa</label>
+      <select [id]="'etapa-' + appointmentId" [(ngModel)]="etapaNueva">
+        <option *ngFor="let e of etapas" [value]="e.clave">{{ e.nombre }}</option>
+      </select>
+      <textarea
+        rows="2"
+        maxlength="500"
+        [(ngModel)]="nota"
+        placeholder="Nota para el cliente (opcional). Ej.: pieza pedida, llega el martes"
+        aria-label="Nota para el cliente"
+      ></textarea>
+      <div class="botones">
+        <button type="button" class="principal" [disabled]="guardando || !etapaNueva" (click)="guardar()">
+          {{ guardando ? 'Guardando...' : 'Actualizar etapa' }}
+        </button>
+        <button type="button" class="enlace" *ngIf="actual" (click)="deshacer()">Deshacer la última</button>
+      </div>
+    </div>
+  </ng-container>
+  <ng-template #citaCancelada><p class="vacio">La cita está cancelada.</p></ng-template>
+
+  <p class="vacio" *ngIf="cargando">Cargando...</p>
+  <ul class="historial" *ngIf="historial.length > 0">
+    <li *ngFor="let p of historial.slice().reverse()">
+      <span class="h-fecha">{{ fecha(p.CreatedAt) }}</span>
+      <span class="h-etapa">{{ p.StageLabel }}</span>
+      <span class="h-nota" *ngIf="p.Note">{{ p.Note }}</span>
+    </li>
+  </ul>
+</div>

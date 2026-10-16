@@ -1,0 +1,18 @@
+.exportacion {
+  display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px;
+  margin: 16px 0; padding: 16px 18px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px;
+}
+.texto { flex: 1 1 280px; }
+h3 { font-size: 1.05rem; margin: 0 0 4px; color: #1f2937; }
+h3 i { color: #16a34a; margin-right: 4px; }
+p { margin: 0; color: #6b7280; font-size: 0.88rem; }
+.controles { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 10px; }
+label { display: flex; flex-direction: column; gap: 4px; font-size: 0.78rem; color: #6b7280; }
+select { border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 8px; background: #fff; color: #1f2937; }
+button {
+  display: inline-flex; align-items: center; gap: 6px; border: 1px solid #111827; background: #111827; color: #fff;
+  border-radius: 8px; padding: 7px 14px; font-weight: 500; cursor: pointer;
+}
+button:disabled { opacity: 0.5; cursor: default; }
+.estado { flex-basis: 100%; font-size: 0.82rem; color: #166534; }
+.estado.error { color: #b91c1c; }

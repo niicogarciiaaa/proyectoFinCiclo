@@ -27,6 +27,7 @@
             <th>Fin</th>
             <th>Descripción</th>
             <th>Estado</th>
+            <th>Seguimiento</th>
           </tr>
         </thead>
         <tbody>
@@ -37,6 +38,17 @@
             <td>{{ cita.EndDateTime | date : 'dd/MM/yyyy HH:mm' }}</td>
             <td>{{ cita.Description }}</td>
             <td>{{ cita.Status }}</td>
+            <td class="text-nowrap">
+              <span class="me-2" [class.text-muted]="!seguimiento[cita.AppointmentID]">
+                {{ seguimiento[cita.AppointmentID]?.StageLabel || 'Sin empezar' }}
+              </span>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-secondary"
+                *ngIf="cita.Status !== 'Cancelada'"
+                (click)="citaSeguimiento = cita"
+              >Actualizar</button>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -45,4 +57,25 @@
   </ng-container>
 
   <p *ngIf="citas.length === 0 && !errorCitas" class="text-muted mt-4">No hay citas registradas para este taller.</p>
+</div>
+
+<!-- Diálogo: seguimiento de la reparación -->
+<div
+  class="ach-modal-overlay"
+  *ngIf="citaSeguimiento as c"
+  (click)="$event.target === $event.currentTarget && (citaSeguimiento = null)"
+  (keydown.escape)="citaSeguimiento = null"
+>
+  <div class="ach-modal" role="dialog" aria-modal="true" aria-labelledby="seg-titulo">
+    <h3 id="seg-titulo">Seguimiento · {{ c.Vehiculo }}</h3>
+    <p class="text-muted small">{{ c.UserName }} · {{ c.StartDateTime | date : 'dd/MM/yyyy HH:mm' }}</p>
+    <app-seguimiento-taller
+      [appointmentId]="c.AppointmentID"
+      [estadoCita]="c.Status"
+      (cambiado)="seguimientoCambiado(c.AppointmentID, $event)"
+    ></app-seguimiento-taller>
+    <div class="ach-modal-actions">
+      <button type="button" class="btn btn-outline-secondary btn-sm" (click)="citaSeguimiento = null">Cerrar</button>
+    </div>
+  </div>
 </div>

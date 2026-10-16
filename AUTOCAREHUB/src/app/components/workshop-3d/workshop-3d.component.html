@@ -163,6 +163,15 @@
             </button>
           </div>
 
+          <!-- Seguimiento de la reparación (lo ve el cliente en «Mis Citas») -->
+          <div class="bloque">
+            <h4>Seguimiento para el cliente</h4>
+            <app-seguimiento-taller
+              [appointmentId]="ficha.detalle.AppointmentID"
+              [estadoCita]="ficha.detalle.Status"
+            ></app-seguimiento-taller>
+          </div>
+
           <!-- En el taller -->
           <div class="bloque" *ngIf="cocheColocado as coche">
             <h4>En el taller</h4>

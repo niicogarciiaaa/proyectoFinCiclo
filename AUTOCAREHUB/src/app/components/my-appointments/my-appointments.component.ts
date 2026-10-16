@@ -5,6 +5,8 @@ import { DataAccessService } from '../../services/dataAccess.service';
 import { MenuComponent } from '../menu/menu.component';
 import { RescheduleDialogComponent } from '../reschedule-dialog/reschedule-dialog.component';
 import { SearchBoxComponent } from '../search-box/search-box.component';
+import { SeguimientoClienteComponent } from '../seguimiento-cliente/seguimiento-cliente.component';
+import { PasoSeguimiento } from '../../services/seguimiento';
 import { coincideBusqueda, fechaBuscable } from '../../services/search.util';
 
 interface MiCita {
@@ -33,7 +35,7 @@ interface MiCita {
 @Component({
   selector: 'app-my-appointments',
   standalone: true,
-  imports: [CommonModule, FormsModule, MenuComponent, RescheduleDialogComponent, SearchBoxComponent],
+  imports: [CommonModule, FormsModule, MenuComponent, RescheduleDialogComponent, SearchBoxComponent, SeguimientoClienteComponent],
   templateUrl: './my-appointments.component.html',
   styleUrl: './my-appointments.component.css',
 })
@@ -44,6 +46,8 @@ export class MyAppointmentsComponent implements OnInit {
   mensaje = '';
   filtro: 'proximas' | 'todas' = 'proximas';
   busqueda = '';
+  /** Última etapa del seguimiento de cada cita (AppointmentID → etapa). */
+  seguimiento: { [id: number]: PasoSeguimiento | undefined } = {};
 
   /** Cita que se está reprogramando (abre el diálogo). */
   citaAReprogramar: MiCita | null = null;
@@ -62,6 +66,11 @@ export class MyAppointmentsComponent implements OnInit {
   }
 
   cargar(): void {
+    // El seguimiento va aparte: si falla, las citas se muestran igual.
+    this.dataAccess.obtenerResumenSeguimiento().subscribe({
+      next: (res) => (this.seguimiento = res?.seguimiento || {}),
+      error: () => (this.seguimiento = {}),
+    });
     this.loading = true;
     this.dataAccess.obtenerMisCitas().subscribe({
       next: (res) => {

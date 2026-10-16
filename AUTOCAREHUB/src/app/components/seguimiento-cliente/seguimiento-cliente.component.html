@@ -1,0 +1,32 @@
+<section class="seg" [attr.aria-label]="'Seguimiento de la reparación: ' + actual.StageLabel">
+  <div class="cab">
+    <span class="titulo"><i class="bi {{ icono }}" aria-hidden="true"></i> {{ actual.StageLabel }}</span>
+    <span class="cuando">{{ fecha(actual.CreatedAt) }}</span>
+  </div>
+
+  <ol class="pasos">
+    <li *ngFor="let e of etapas; let i = index" [class.hecho]="i <= indiceActual" [class.actual]="i === indiceActual">
+      <span class="barra" aria-hidden="true"></span>
+      <span class="nombre">{{ e.nombre }}</span>
+    </li>
+  </ol>
+
+  <p class="nota" *ngIf="actual.Note">«{{ actual.Note }}»</p>
+
+  <button type="button" class="detalle" (click)="alternar()" [attr.aria-expanded]="abierto">
+    {{ abierto ? 'Ocultar historial' : 'Ver historial' }}
+    <i class="bi" [class.bi-chevron-down]="!abierto" [class.bi-chevron-up]="abierto" aria-hidden="true"></i>
+  </button>
+
+  <ng-container *ngIf="abierto">
+    <p class="error" *ngIf="error" role="alert">{{ error }}</p>
+    <p class="vacio" *ngIf="!historial && !error">Cargando...</p>
+    <ul class="historial" *ngIf="historial">
+      <li *ngFor="let p of historial.slice().reverse()">
+        <span class="h-fecha">{{ fecha(p.CreatedAt) }}</span>
+        <span class="h-etapa">{{ p.StageLabel }}</span>
+        <span class="h-nota" *ngIf="p.Note">{{ p.Note }}</span>
+      </li>
+    </ul>
+  </ng-container>
+</section>

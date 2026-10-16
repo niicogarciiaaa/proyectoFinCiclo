@@ -728,6 +728,40 @@ export class DataAccessService {
     });
   }
 
+  // ---------- Seguimiento de la reparación (tracking.php) ----------
+
+  /** Etapas del seguimiento, en orden. */
+  obtenerEtapasSeguimiento(): Observable<any> {
+    return this.postAccion('tracking.php', 'etapas');
+  }
+
+  /** Última etapa de cada cita del taller o del cliente que llama. */
+  obtenerResumenSeguimiento(): Observable<any> {
+    return this.postAccion('tracking.php', 'resumen');
+  }
+
+  /** Línea de tiempo completa de una cita. */
+  obtenerHistorialSeguimiento(appointmentId: number): Observable<any> {
+    return this.postAccion('tracking.php', 'historial', { AppointmentID: appointmentId });
+  }
+
+  /** (Taller) Marca una nueva etapa para una cita, con una nota opcional. */
+  avanzarSeguimiento(appointmentId: number, etapa: string, nota: string): Observable<any> {
+    return this.postAccion('tracking.php', 'avanzar', { AppointmentID: appointmentId, Etapa: etapa, Nota: nota });
+  }
+
+  /** (Taller) Deshace la última etapa registrada. */
+  deshacerSeguimiento(appointmentId: number): Observable<any> {
+    return this.postAccion('tracking.php', 'deshacer', { AppointmentID: appointmentId });
+  }
+
+  // ---------- Exportación para el gestor (accounting.php) ----------
+
+  /** (Taller) Facturas de un trimestre con el desglose de IVA por tipo. */
+  obtenerExportacionTrimestre(anyo: number, trimestre: number): Observable<any> {
+    return this.postAccion('accounting.php', 'trimestre', { Anyo: anyo, Trimestre: trimestre });
+  }
+
   // ---------- Taller en 3D (garage.php) ----------
 
   /** (Taller) Distribución, coches colocados y coches pendientes de una fecha. */

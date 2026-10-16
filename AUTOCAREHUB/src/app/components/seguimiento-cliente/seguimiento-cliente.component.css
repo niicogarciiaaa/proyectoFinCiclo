@@ -1,0 +1,25 @@
+.seg { margin-top: 10px; padding: 10px 12px; border: 1px solid #e5e7eb; border-radius: 10px; background: #fafafa; font-size: 0.85rem; }
+.cab { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; flex-wrap: wrap; }
+.titulo { font-weight: 600; color: #1f2937; }
+.titulo i { color: #fb8c00; margin-right: 4px; }
+.cuando { color: #9ca3af; font-size: 0.78rem; }
+.pasos { display: grid; grid-template-columns: repeat(6, 1fr); gap: 4px; list-style: none; padding: 0; margin: 8px 0 4px; }
+.pasos li { display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+.barra { height: 5px; border-radius: 3px; background: #e5e7eb; }
+.hecho .barra { background: #9ca3af; }
+.actual .barra { background: #fb8c00; }
+.nombre { font-size: 0.68rem; color: #9ca3af; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; }
+.actual .nombre { color: #1f2937; font-weight: 600; }
+.nota { margin: 6px 0 0; color: #4b5563; font-style: italic; }
+.detalle { margin-top: 6px; border: 0; background: none; padding: 0; color: #6b7280; cursor: pointer; font-size: 0.8rem; }
+.detalle:hover { color: #1f2937; }
+.error { color: #b91c1c; margin: 6px 0 0; }
+.vacio { color: #9ca3af; margin: 6px 0 0; }
+.historial { list-style: none; padding: 0; margin: 10px 0 0; border-left: 2px solid #e5e7eb; }
+.historial li { position: relative; padding: 0 0 10px 14px; display: flex; flex-direction: column; }
+.historial li::before { content: ''; position: absolute; left: -5px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: #9ca3af; }
+.historial li:first-child::before { background: #fb8c00; }
+.h-fecha { color: #9ca3af; font-size: 0.75rem; }
+.h-etapa { font-weight: 600; color: #1f2937; }
+.h-nota { color: #6b7280; white-space: pre-wrap; }
+@media (max-width: 520px) { .nombre { display: none; } .actual .nombre { display: block; grid-column: span 6; } }

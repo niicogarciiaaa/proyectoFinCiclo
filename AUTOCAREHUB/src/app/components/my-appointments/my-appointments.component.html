@@ -49,6 +49,11 @@
           <span *ngIf="c.WorkshopPhone"><i class="bi bi-telephone" aria-hidden="true"></i> {{ c.WorkshopPhone }}</span>
         </div>
         <div class="cita-desc" *ngIf="c.Description">"{{ c.Description }}"</div>
+        <app-seguimiento-cliente
+          *ngIf="seguimiento[c.AppointmentID] as paso"
+          [appointmentId]="c.AppointmentID"
+          [actual]="paso"
+        ></app-seguimiento-cliente>
         <div class="cita-review" *ngIf="c.ReviewRating">
           Tu valoración:
           <span class="stars" [attr.aria-label]="c.ReviewRating + ' de 5 estrellas'">

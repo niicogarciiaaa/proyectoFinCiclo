@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { MenuComponent } from '../menu/menu.component';
+import { SeguimientoTallerComponent } from '../seguimiento-taller/seguimiento-taller.component';
 import {
   CocheEnTaller,
   cocheConRetraso,
@@ -65,7 +66,7 @@ interface Ficha {
 @Component({
   selector: 'app-workshop-3d',
   standalone: true,
-  imports: [CommonModule, FormsModule, MenuComponent],
+  imports: [CommonModule, FormsModule, MenuComponent, SeguimientoTallerComponent],
   templateUrl: './workshop-3d.component.html',
   styleUrls: ['./workshop-3d.component.css', './workshop-3d.funciones.css'],
 })

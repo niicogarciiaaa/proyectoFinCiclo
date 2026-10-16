@@ -6,7 +6,7 @@
 
 **Proyecto:** AutoCareHub (Angular + PHP/MySQL)
 **Autor:** Nicolás García Moreira
-**Última actualización:** 16/10/2026
+**Última actualización:** 17/10/2026
 
 > **Restricción del proyecto:** la API existente no se modifica. Las funcionalidades
 > nuevas se construyen creando **llamadas nuevas**, nunca editando las llamadas ya
@@ -29,7 +29,9 @@
 11. [Nuevo diseño del PDF de factura](#11-nuevo-diseño-del-pdf-de-factura)
 12. [Avisos en el menú y buscador en las listas](#12-avisos-en-el-menú-y-buscador-en-las-listas)
 13. [Taller 3D con estilo minimalista](#13-taller-3d-con-estilo-minimalista)
-14. [Próximas mejoras propuestas](#14-próximas-mejoras-propuestas)
+14. [Seguimiento de la reparación paso a paso](#14-seguimiento-de-la-reparación-paso-a-paso)
+15. [Exportación para el gestor](#15-exportación-para-el-gestor)
+16. [Próximas mejoras propuestas](#16-próximas-mejoras-propuestas)
 
 ---
 
@@ -425,6 +427,7 @@ borra datos). Resumen:
 | Tabla `WorkshopClosures` | Días festivos / cierres puntuales (ver 8.10, `2026_10_mejoras.sql`). |
 | Tabla `WorkshopReviews` | Reseñas y valoraciones (ver 8.10, `2026_10_mejoras.sql`). |
 | Tablas `WorkshopLayouts`, `WorkshopBayAssignments`, `VehicleNotes` | Taller en 3D (ver 8.9 y 8.10). |
+| Tabla `AppointmentProgress` | Seguimiento de la reparación por etapas (ver 14, `2026_10_seguimiento.sql`). |
 
 También se actualizó `PHP/paginaCreacionBase.php` para que una base de datos nueva
 incluya ya estas tablas y columnas.
@@ -595,7 +598,65 @@ un coche, moviendo el otro y volviendo a meter el primero con su color.
 
 ---
 
-## 14. Próximas mejoras propuestas
+## 14. Seguimiento de la reparación paso a paso
+
+**Qué es:** el cliente ve en qué punto está la reparación de su coche, como el
+seguimiento de un pedido, y el taller lo actualiza en un clic.
+
+**Etapas:** *Vehículo recibido → En diagnóstico → Esperando piezas → En reparación →
+Listo para recoger → Entregado*. Cada cambio queda guardado con su fecha y una nota
+opcional para el cliente («pieza pedida, llega el martes»).
+
+**Taller** (`components/seguimiento-taller/`):
+
+- En la **ficha del coche del Taller 3D**, bloque «Seguimiento para el cliente».
+- En **Ver citas**, columna *Seguimiento* con la etapa actual y botón *Actualizar*.
+- Propone siempre la siguiente etapa, admite volver atrás (p. ej. de *En reparación* a
+  *Esperando piezas*) y permite **deshacer** la última si fue un error.
+
+**Cliente** (`components/seguimiento-cliente/`): en **Mis Citas**, cada cita con
+seguimiento muestra una barra de etapas, la nota más reciente y, al desplegar, el
+historial completo con fechas.
+
+**Backend nuevo** (`routes/tracking.php`, `TrackingController`, `models/Tracking.php`):
+acciones `etapas`, `resumen`, `historial`, `avanzar` y `deshacer`. Solo el taller de la
+cita puede cambiarla y el cliente solo ve las suyas (a quien no le corresponde se le
+responde «Cita no encontrada»). Las etapas están en una lista blanca y las citas
+canceladas no se pueden actualizar.
+
+**Base de datos:** tabla nueva `AppointmentProgress` (migración
+`PHP/migrations/2026_10_seguimiento.sql`; el endpoint también la crea si no existe).
+
+---
+
+## 15. Exportación para el gestor
+
+**Qué es:** en **Estadísticas**, el taller elige año y trimestre y descarga un **Excel
+(.xlsx)** listo para su gestoría.
+
+**Hojas del Excel:**
+
+1. **Resumen**: datos del taller (razón social y NIF de VeriFactu), periodo, IVA
+   repercutido por tipo (nº de facturas, base, cuota y total), totales y lo cobrado y
+   pendiente de cobro.
+2. **Libro IVA repercutido**: una fila por factura y tipo de IVA (fecha, nº, cliente,
+   base, tipo, cuota y total).
+3. **Facturas**: listado completo con cliente, email, vehículo, matrícula, estado,
+   importes y si tiene registro VeriFactu.
+
+Las fechas son fechas reales de Excel y los importes salen con formato en euros. Las
+bases se calculan a partir de las líneas de cada factura (cantidad × precio) y la
+cuota se redondea por factura y tipo. Si la factura tiene registro VeriFactu, se usa su
+nº de serie.
+
+**Archivos:** frontend `components/exportacion-gestor/`, `services/exportacion-gestor.ts`
+y `services/xlsx.util.ts` (generador de .xlsx propio, sin librerías). Backend nuevo
+`routes/accounting.php`, `AccountingController` y `models/Accounting.php` (solo
+lectura; solo el rol Taller).
+
+---
+
+## 16. Próximas mejoras propuestas
 
 Ideas que encajan con lo construido, ordenadas por relación valor / esfuerzo:
 
@@ -608,8 +669,8 @@ Ideas que encajan con lo construido, ordenadas por relación valor / esfuerzo:
   existen; falta el envío externo, que requiere SMTP o un proveedor de SMS. La tabla
   `NotificationPreferences` ya existe en el modelo de datos).
 - Que el taller pueda **responder a las reseñas**.
-- **Taller 3D:** que el cliente vea en qué puesto está su coche y su estado en tiempo
-  real, y adjuntar fotos a las notas del vehículo.
+- **Taller 3D:** que el cliente vea en qué puesto está su coche (la etapa de la
+  reparación ya la ve con el seguimiento) y adjuntar fotos a las notas del vehículo.
 
 **Cliente / negocio**
 - **Pago online** de facturas (Stripe en modo test) y marcado automático como *Pagada*.

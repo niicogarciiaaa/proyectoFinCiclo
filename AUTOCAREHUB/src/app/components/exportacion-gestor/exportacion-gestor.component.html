@@ -1,0 +1,27 @@
+<section class="exportacion" aria-labelledby="exp-titulo">
+  <div class="texto">
+    <h3 id="exp-titulo"><i class="bi bi-file-earmark-spreadsheet" aria-hidden="true"></i> Exportación para el gestor</h3>
+    <p>Excel del trimestre con el resumen de IVA por tipo, el libro de IVA repercutido y todas las facturas.</p>
+  </div>
+  <div class="controles">
+    <label>
+      Año
+      <select [(ngModel)]="anyo">
+        <option *ngFor="let a of anyos" [ngValue]="a">{{ a }}</option>
+      </select>
+    </label>
+    <label>
+      Trimestre
+      <select [(ngModel)]="trimestre">
+        <option *ngFor="let t of trimestres" [ngValue]="t">{{ t }}T</option>
+      </select>
+    </label>
+    <button type="button" (click)="descargar()" [disabled]="descargando">
+      <i class="bi bi-download" aria-hidden="true"></i> {{ descargando ? 'Preparando...' : 'Descargar Excel' }}
+    </button>
+  </div>
+  <p class="estado error" *ngIf="error" role="alert">{{ error }}</p>
+  <p class="estado" *ngIf="ultimo && !error" role="status">
+    Descargado {{ ultimo.etiqueta }}: {{ ultimo.facturas }} {{ ultimo.facturas === 1 ? 'factura' : 'facturas' }} · {{ euros(ultimo.total) }}
+  </p>
+</section>
