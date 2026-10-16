@@ -1,12 +1,13 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
+import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
 
 /**
  * Escena 3D del taller (Three.js), independiente de Angular.
  *
- * Construye el taller a partir de una «distribución» (suelo, paredes,
- * cartel y puestos: elevadores, foso, plazas, lavado) y coloca en cada
- * puesto el coche que lo ocupa. Todo se genera por código (sin modelos
+ * Construye el taller a partir de una «distribución» (planta y puestos:
+ * elevadores, foso, plazas, lavado) con un estilo minimalista y coloca en
+ * cada puesto el coche que lo ocupa. Todo se genera por código (sin modelos
  * externos). Notifica por callbacks los clics en coches y puestos y,
  * en modo edición, el arrastre de puestos por el suelo.
  */
@@ -45,27 +46,66 @@ export interface CocheEnTaller {
   Matricula: string;
   Status: string;
   Service: string;
+  /** Si llega, se usa para avisar de retraso (fin pasado y sin finalizar). */
+  EndDateTime?: string;
 }
 
 export interface GarageSceneCallbacks {
   onSelectCar: (appointmentId: number | null) => void;
   onSelectBay: (key: string | null) => void;
   onBayMoved: (key: string, x: number, z: number) => void;
+  /** Se ha soltado un coche arrastrado: puesto de destino (o null si fuera). */
+  onCarDropped?: (appointmentId: number, bayKey: string | null) => void;
+  /** El ratón pasa por encima de un coche (null al salir). */
+  onHoverCar?: (appointmentId: number | null, clientX: number, clientY: number) => void;
+  /** Doble clic sobre un coche (p. ej. subir o bajar el elevador). */
+  onDoubleClickCar?: (appointmentId: number) => void;
+}
+
+/** Posición de la cámara, para recordarla entre visitas. */
+export interface EstadoCamara {
+  pos: [number, number, number];
+  target: [number, number, number];
+}
+
+/** La cita debería haber terminado ya y no está finalizada. */
+export function cocheConRetraso(c: { EndDateTime?: string; Status: string }, ahora = new Date()): boolean {
+  if (!c.EndDateTime || c.Status === 'Finalizada' || c.Status === 'Cancelada') return false;
+  return new Date(c.EndDateTime.replace(' ', 'T')) < ahora;
 }
 
 /** Medidas de un puesto (metros): ancho en X local y largo en Z local. */
 const PUESTO_ANCHO = 3.4;
 const PUESTO_LARGO = 5.8;
-const ALTURA_PAREDES = 4.5;
 /** Altura a la que sube un elevador. */
 const ALTURA_ELEVADO = 1.8;
 
 const COLOR_ESTADO: { [estado: string]: string } = {
-  Pendiente: '#fb8c00',
-  Confirmada: '#1976d2',
-  Finalizada: '#43a047',
-  Cancelada: '#e53935',
+  Pendiente: '#f59e0b',
+  Confirmada: '#3b82f6',
+  Finalizada: '#10b981',
+  Cancelada: '#ef4444',
 };
+
+/**
+ * Paleta del estilo minimalista: fondo y suelo casi blancos, líneas grises
+ * finas y equipos blancos; el único color fuerte es el de acento de la
+ * distribución (colorElevadores) y el de cada coche.
+ */
+const PALETA = {
+  fondo: '#f1f3f5',
+  suelo: '#fafbfc',
+  borde: '#dfe3e8',
+  linea: '#d0d5dc',
+  equipo: '#ffffff',
+  metal: '#cfd4db',
+  oscuro: '#3a4049',
+  texto: '#8a94a3',
+  agua: '#e6f2fb',
+  cristal: '#2d333b',
+  rueda: '#2a2e35',
+};
+const FUENTE = '"Inter", "Segoe UI", system-ui, -apple-system, sans-serif';
 
 /** Tipos de puesto en los que el coche puede subir. */
 export const PUESTOS_ELEVABLES: TipoPuesto[] = ['elevador2', 'elevador4'];
@@ -75,7 +115,7 @@ interface PuestoObj {
   grupo: THREE.Group;
   /** Parte móvil (carro del elevador): el coche va encima. */
   elevable: THREE.Group;
-  seleccion: THREE.LineSegments;
+  seleccion: THREE.Object3D;
 }
 
 interface CocheObj {
@@ -104,37 +144,51 @@ export class GarageScene {
   private cocheSeleccionado: number | null = null;
   private puestoSeleccionado: string | null = null;
   private arrastrando: { key: string; offset: THREE.Vector3 } | null = null;
+  /** Coche pulsado en modo vista (se convierte en arrastre al moverlo). */
+  private cogido: { id: number; arrastrando: boolean } | null = null;
+  private puestoResaltado: string | null = null;
+  /** Mostrar con un contorno tenue todos los puestos libres (al arrastrar). */
+  private verLibres = false;
+  /** Estados visibles; null = todos. Los demás coches se atenúan. */
+  private filtroEstados: Set<string> | null = null;
+  private hoverCoche: number | null = null;
   private pulsadoEn = new THREE.Vector2();
 
   private frame = 0;
   private resizeObserver: ResizeObserver;
   private reloj = new THREE.Clock();
+  private sol = new THREE.DirectionalLight('#ffffff', 1.9);
 
   constructor(private contenedor: HTMLElement, private callbacks: GarageSceneCallbacks) {
     this.renderer = new THREE.WebGLRenderer({ antialias: true });
     this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    this.renderer.toneMapping = THREE.NeutralToneMapping;
     this.renderer.shadowMap.enabled = true;
-    this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    this.renderer.shadowMap.type = THREE.PCFShadowMap;
     this.renderer.domElement.style.display = 'block';
     this.renderer.domElement.style.touchAction = 'none';
     contenedor.appendChild(this.renderer.domElement);
 
-    this.scene.background = new THREE.Color('#cfd8dc');
-    this.camera = new THREE.PerspectiveCamera(45, 1, 0.1, 500);
+    this.scene.background = new THREE.Color(PALETA.fondo);
+    // Niebla suave: el suelo se funde con el fondo, sin horizonte marcado
+    this.scene.fog = new THREE.Fog(PALETA.fondo, 45, 110);
+    this.camera = new THREE.PerspectiveCamera(35, 1, 0.1, 500);
     this.controls = new OrbitControls(this.camera, this.renderer.domElement);
     this.controls.enableDamping = true;
-    this.controls.maxPolarAngle = Math.PI / 2.05; // no bajar del suelo
+    this.controls.maxPolarAngle = Math.PI / 2.15; // no bajar del suelo
     this.controls.minDistance = 4;
     this.controls.maxDistance = 120;
 
-    this.scene.add(new THREE.HemisphereLight('#ffffff', '#607d8b', 1.6));
-    const sol = new THREE.DirectionalLight('#ffffff', 1.8);
-    sol.position.set(12, 25, 14);
-    sol.castShadow = true;
-    sol.shadow.mapSize.set(2048, 2048);
-    sol.shadow.bias = -0.0005;
-    this.scene.add(sol);
-    this.scene.add(sol.target);
+    // Luz ambiente clara y una luz principal con sombras muy suaves
+    this.scene.add(new THREE.HemisphereLight('#ffffff', '#d5dbe3', 1.7));
+    this.sol.position.set(-8, 26, 14);
+    this.sol.castShadow = true;
+    this.sol.shadow.mapSize.set(2048, 2048);
+    this.sol.shadow.bias = -0.0004;
+    this.sol.shadow.normalBias = 0.02;
+    this.sol.shadow.radius = 6;
+    this.scene.add(this.sol);
+    this.scene.add(this.sol.target);
     this.scene.add(this.estatico);
 
     const el = this.renderer.domElement;
@@ -142,6 +196,7 @@ export class GarageScene {
     el.addEventListener('pointermove', this.onPointerMove);
     el.addEventListener('pointerup', this.onPointerUp);
     el.addEventListener('pointerleave', this.onPointerUp);
+    el.addEventListener('dblclick', this.onDoubleClick);
 
     this.resizeObserver = new ResizeObserver(() => this.ajustarTamano());
     this.resizeObserver.observe(contenedor);
@@ -204,18 +259,67 @@ export class GarageScene {
     this.camera.position.set(pos.x + 6, pos.y + 5, pos.z + 8);
   }
 
+  /** Puesto que hay bajo un punto de la pantalla (o null). */
+  puestoEn(clientX: number, clientY: number): string | null {
+    const pick = this.pickEn({ clientX, clientY });
+    return pick?.key ?? null;
+  }
+
+  /** Resalta un puesto (destino de un arrastre); null para quitarlo. */
+  resaltarPuesto(key: string | null): void {
+    if (key === this.puestoResaltado) return;
+    this.puestoResaltado = key;
+    this.aplicarSeleccion();
+  }
+
+  /** Resalta (o deja de resaltar) todos los puestos libres. */
+  mostrarLibres(activo: boolean): void {
+    this.verLibres = activo;
+    this.aplicarSeleccion();
+  }
+
+  /** Atenúa los coches cuyo estado no está en la lista (null = ver todos). */
+  setFiltroEstados(estados: string[] | null): void {
+    this.filtroEstados = estados ? new Set(estados) : null;
+    this.aplicarSeleccion();
+  }
+
+  /** Imagen PNG de la vista actual (data URL). */
+  captura(): string {
+    this.renderer.render(this.scene, this.camera);
+    return this.renderer.domElement.toDataURL('image/png');
+  }
+
+  getCamara(): EstadoCamara {
+    const p = this.camera.position;
+    const t = this.controls.target;
+    return { pos: [p.x, p.y, p.z], target: [t.x, t.y, t.z] };
+  }
+
+  setCamara(c: EstadoCamara): void {
+    this.camera.position.set(...c.pos);
+    this.controls.target.set(...c.target);
+    this.controls.update();
+  }
+
+  /** Giro automático lento de la cámara (modo presentación). */
+  setAutoRotate(activo: boolean): void {
+    this.controls.autoRotate = activo;
+    this.controls.autoRotateSpeed = 0.6;
+  }
+
   vistaInicial(): void {
     const l = this.layout;
     const tam = l ? Math.max(l.ancho, l.fondo) : 26;
     this.controls.target.set(0, 0, 0);
-    this.camera.position.set(tam * 0.15, tam * 0.75, tam * 0.95);
+    this.camera.position.set(tam * 0.3, tam * 0.8, tam * 0.95);
   }
 
   vistaPlanta(): void {
     const l = this.layout;
     const tam = l ? Math.max(l.ancho, l.fondo) : 26;
     this.controls.target.set(0, 0, 0);
-    this.camera.position.set(0, tam * 1.35, 0.01);
+    this.camera.position.set(0, tam * 1.9, 0.01);
   }
 
   dispose(): void {
@@ -226,6 +330,7 @@ export class GarageScene {
     el.removeEventListener('pointermove', this.onPointerMove);
     el.removeEventListener('pointerup', this.onPointerUp);
     el.removeEventListener('pointerleave', this.onPointerUp);
+    el.removeEventListener('dblclick', this.onDoubleClick);
     this.controls.dispose();
     this.limpiarGrupo(this.estatico);
     this.renderer.dispose();
@@ -237,66 +342,45 @@ export class GarageScene {
   // =================================================================
 
   private construirNave(l: Distribucion): void {
-    // Suelo
-    const suelo = new THREE.Mesh(
-      new THREE.PlaneGeometry(l.ancho, l.fondo),
-      new THREE.MeshStandardMaterial({ color: l.colorSuelo, roughness: 0.85 })
+    // Suelo infinito (se pierde en la niebla) que solo recoge sombras
+    const exterior = new THREE.Mesh(
+      new THREE.PlaneGeometry(400, 400),
+      new THREE.MeshStandardMaterial({ color: PALETA.fondo, roughness: 1 })
     );
-    suelo.rotation.x = -Math.PI / 2;
-    suelo.receiveShadow = true;
-    this.estatico.add(suelo);
+    exterior.rotation.x = -Math.PI / 2;
+    exterior.position.y = -0.01;
+    exterior.receiveShadow = true;
+    this.estatico.add(exterior);
 
-    // Rejilla sutil (baldosas de 2 m)
-    const rejilla = new THREE.GridHelper(Math.max(l.ancho, l.fondo), Math.max(l.ancho, l.fondo) / 2, '#000000', '#000000');
-    const matRejilla = rejilla.material as THREE.Material;
-    matRejilla.transparent = true;
-    matRejilla.opacity = 0.06;
-    rejilla.position.y = 0.002;
-    rejilla.scale.set(l.ancho / Math.max(l.ancho, l.fondo), 1, l.fondo / Math.max(l.ancho, l.fondo));
-    this.estatico.add(rejilla);
-
-    // Paredes: fondo y laterales (el frente queda abierto para ver dentro)
-    const matPared = new THREE.MeshStandardMaterial({ color: l.colorParedes, roughness: 0.95 });
-    const grosor = 0.25;
-    const fondoPared = new THREE.Mesh(new THREE.BoxGeometry(l.ancho + grosor * 2, ALTURA_PAREDES, grosor), matPared);
-    fondoPared.position.set(0, ALTURA_PAREDES / 2, -l.fondo / 2 - grosor / 2);
-    fondoPared.receiveShadow = true;
-    this.estatico.add(fondoPared);
-    for (const lado of [-1, 1]) {
-      const pared = new THREE.Mesh(new THREE.BoxGeometry(grosor, ALTURA_PAREDES, l.fondo), matPared);
-      pared.position.set(lado * (l.ancho / 2 + grosor / 2), ALTURA_PAREDES / 2, 0);
-      pared.receiveShadow = true;
-      this.estatico.add(pared);
-    }
-
-    // Franja de color corporativo en la pared del fondo
-    const franja = new THREE.Mesh(
-      new THREE.BoxGeometry(l.ancho, 0.35, 0.05),
-      new THREE.MeshStandardMaterial({ color: l.colorElevadores })
+    // Planta del taller: una losa clara con las esquinas redondeadas
+    const losa = new THREE.Mesh(
+      new THREE.ShapeGeometry(this.formaRedondeada(l.ancho, l.fondo, 0.8), 12),
+      new THREE.MeshStandardMaterial({ color: PALETA.suelo, roughness: 0.95 })
     );
-    franja.position.set(0, 1.1, -l.fondo / 2 + 0.03);
-    this.estatico.add(franja);
+    losa.rotation.x = -Math.PI / 2;
+    losa.receiveShadow = true;
+    this.estatico.add(losa);
+    this.estatico.add(this.contorno(l.ancho, l.fondo, 0.8, 0.06, PALETA.borde, 0.002));
 
-    // Cartel con el nombre del taller
+    // Nombre del taller, discreto, pintado en el suelo junto al borde del fondo
     if (l.nombre) {
-      const textura = this.texturaTexto(l.nombre, { fondo: '#263238', color: '#ffffff', ancho: 1024, alto: 160, tam: 92 });
-      const anchoCartel = Math.min(l.ancho * 0.6, 14);
-      const cartel = new THREE.Mesh(
-        new THREE.PlaneGeometry(anchoCartel, anchoCartel * (160 / 1024)),
-        new THREE.MeshBasicMaterial({ map: textura })
+      const tex = this.texturaTexto(l.nombre.toUpperCase(), { color: PALETA.texto, ancho: 1024, alto: 96, tam: 54, peso: 600, espaciado: 6 });
+      const ancho = Math.min(l.ancho * 0.5, 11);
+      const rotulo = new THREE.Mesh(
+        new THREE.PlaneGeometry(ancho, ancho * (96 / 1024)),
+        new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
       );
-      cartel.position.set(0, ALTURA_PAREDES - 0.9, -l.fondo / 2 + 0.04);
-      this.estatico.add(cartel);
+      rotulo.rotation.x = -Math.PI / 2;
+      rotulo.position.set(0, 0.003, -l.fondo / 2 - 0.9);
+      this.estatico.add(rotulo);
     }
 
-    // Línea amarilla de seguridad en la entrada
-    const entrada = new THREE.Mesh(
-      new THREE.PlaneGeometry(l.ancho, 0.15),
-      new THREE.MeshBasicMaterial({ color: l.colorLineas })
-    );
-    entrada.rotation.x = -Math.PI / 2;
-    entrada.position.set(0, 0.004, l.fondo / 2 - 0.3);
-    this.estatico.add(entrada);
+    // La sombra cubre todo el taller
+    const cam = this.sol.shadow.camera;
+    const r = Math.max(l.ancho, l.fondo) * 0.75;
+    cam.left = -r; cam.right = r; cam.top = r; cam.bottom = -r;
+    cam.near = 1; cam.far = 80;
+    cam.updateProjectionMatrix();
   }
 
   private construirPuesto(p: Puesto, l: Distribucion): void {
@@ -308,101 +392,88 @@ export class GarageScene {
     const elevable = new THREE.Group();
     grupo.add(elevable);
 
-    const colorEstructura = p.color || l.colorElevadores;
-    const matEstructura = new THREE.MeshStandardMaterial({ color: colorEstructura, metalness: 0.3, roughness: 0.5 });
-    const matMetal = new THREE.MeshStandardMaterial({ color: '#90a4ae', metalness: 0.6, roughness: 0.4 });
+    const acento = new THREE.MeshStandardMaterial({ color: p.color || l.colorElevadores, roughness: 0.5 });
+    const equipo = new THREE.MeshStandardMaterial({ color: PALETA.equipo, roughness: 0.55 });
+    const metal = new THREE.MeshStandardMaterial({ color: PALETA.metal, roughness: 0.5, metalness: 0.1 });
 
-    // Marcas en el suelo (todas los tipos)
-    this.marcasSuelo(grupo, l.colorLineas, p.tipo === 'lavado' ? '#4fc3f7' : undefined);
+    // Contorno fino del puesto (y un fondo tenue en el lavado)
+    if (p.tipo === 'lavado') {
+      const fondo = new THREE.Mesh(
+        new THREE.ShapeGeometry(this.formaRedondeada(PUESTO_ANCHO, PUESTO_LARGO, 0.35), 8),
+        new THREE.MeshStandardMaterial({ color: PALETA.agua, roughness: 1 })
+      );
+      fondo.rotation.x = -Math.PI / 2;
+      fondo.position.y = 0.003;
+      fondo.receiveShadow = true;
+      grupo.add(fondo);
+    }
+    grupo.add(this.contorno(PUESTO_ANCHO, PUESTO_LARGO, 0.35, 0.05, PALETA.linea, 0.004));
 
     switch (p.tipo) {
       case 'elevador2': {
-        // Dos columnas laterales con su carro y cuatro brazos bajo el coche
+        // Dos columnas finas con un remate de color y brazos bajo el coche
         for (const lado of [-1, 1]) {
-          const columna = this.caja(0.35, 3.8, 0.45, matEstructura);
-          columna.position.set(lado * (PUESTO_ANCHO / 2 - 0.15), 1.9, 0);
+          const x = lado * (PUESTO_ANCHO / 2 - 0.2);
+          const columna = this.caja(0.26, 3.2, 0.34, equipo, 0.08);
+          columna.position.set(x, 1.6, 0);
           grupo.add(columna);
-          const base = this.caja(0.7, 0.08, 0.8, matEstructura);
-          base.position.set(lado * (PUESTO_ANCHO / 2 - 0.15), 0.04, 0);
-          grupo.add(base);
-          const carro = this.caja(0.4, 0.5, 0.5, matMetal);
-          carro.position.set(lado * (PUESTO_ANCHO / 2 - 0.15), 0.3, 0);
+          const remate = this.caja(0.27, 0.12, 0.35, acento, 0.05);
+          remate.position.set(x, 3.16, 0);
+          grupo.add(remate);
+          const carro = this.caja(0.3, 0.36, 0.42, acento, 0.06);
+          carro.position.set(x, 0.3, 0);
           elevable.add(carro);
           for (const sentido of [-1, 1]) {
-            const brazo = this.caja(1.2, 0.08, 0.14, matMetal);
-            brazo.position.set(lado * (PUESTO_ANCHO / 2 - 0.85), 0.12, sentido * 0.9);
-            brazo.rotation.y = sentido * lado * 0.35;
+            const brazo = this.caja(1.1, 0.07, 0.12, metal, 0.03);
+            brazo.position.set(lado * (PUESTO_ANCHO / 2 - 0.85), 0.14, sentido * 0.85);
+            brazo.rotation.y = sentido * lado * 0.3;
             elevable.add(brazo);
-            const taco = this.caja(0.22, 0.1, 0.22, new THREE.MeshStandardMaterial({ color: '#212121' }));
-            taco.position.set(lado * 0.75, 0.2, sentido * 1.15);
-            elevable.add(taco);
           }
         }
-        // Travesaño superior
-        const travesano = this.caja(PUESTO_ANCHO, 0.2, 0.3, matEstructura);
-        travesano.position.set(0, 3.85, 0);
-        grupo.add(travesano);
         break;
       }
       case 'elevador4': {
-        // Cuatro columnas en las esquinas y dos rampas que suben con el coche
+        // Cuatro postes finos y dos rampas que suben con el coche
         for (const lx of [-1, 1]) {
           for (const lz of [-1, 1]) {
-            const columna = this.caja(0.3, 2.8, 0.3, matEstructura);
-            columna.position.set(lx * (PUESTO_ANCHO / 2 - 0.1), 1.4, lz * (PUESTO_LARGO / 2 - 0.3));
-            grupo.add(columna);
+            const poste = this.caja(0.22, 2.4, 0.22, equipo, 0.06);
+            poste.position.set(lx * (PUESTO_ANCHO / 2 - 0.15), 1.2, lz * (PUESTO_LARGO / 2 - 0.3));
+            grupo.add(poste);
+            const remate = this.caja(0.23, 0.1, 0.23, acento, 0.04);
+            remate.position.set(lx * (PUESTO_ANCHO / 2 - 0.15), 2.38, lz * (PUESTO_LARGO / 2 - 0.3));
+            grupo.add(remate);
           }
-          const rampa = this.caja(0.65, 0.12, PUESTO_LARGO - 0.4, matMetal);
+          const rampa = this.caja(0.6, 0.1, PUESTO_LARGO - 0.6, metal, 0.04);
           rampa.position.set(lx * 0.78, 0.12, 0);
           elevable.add(rampa);
         }
-        for (const lz of [-1, 1]) {
-          const traviesa = this.caja(PUESTO_ANCHO - 0.1, 0.2, 0.3, matEstructura);
-          traviesa.position.set(0, 0.2, lz * (PUESTO_LARGO / 2 - 0.3));
-          elevable.add(traviesa);
-        }
-        elevable.userData['baseCoche'] = 0.18; // el coche apoya sobre las rampas
+        elevable.userData['baseCoche'] = 0.17; // el coche apoya sobre las rampas
         break;
       }
       case 'foso': {
-        // Hueco oscuro con borde de seguridad amarillo y negro
+        // Ranura oscura con las esquinas redondeadas
         const hueco = new THREE.Mesh(
-          new THREE.PlaneGeometry(1.0, PUESTO_LARGO - 0.6),
-          new THREE.MeshStandardMaterial({ color: '#111111' })
+          new THREE.ShapeGeometry(this.formaRedondeada(0.95, PUESTO_LARGO - 0.9, 0.2), 6),
+          new THREE.MeshStandardMaterial({ color: PALETA.oscuro, roughness: 1 })
         );
         hueco.rotation.x = -Math.PI / 2;
-        hueco.position.y = 0.006;
+        hueco.position.y = 0.005;
         grupo.add(hueco);
-        const textura = this.texturaRayas();
-        for (const lado of [-1, 1]) {
-          const borde = new THREE.Mesh(
-            new THREE.PlaneGeometry(0.2, PUESTO_LARGO - 0.6),
-            new THREE.MeshBasicMaterial({ map: textura })
-          );
-          borde.rotation.x = -Math.PI / 2;
-          borde.position.set(lado * 0.6, 0.007, 0);
-          grupo.add(borde);
-        }
         break;
       }
       case 'lavado': {
-        // Arco de lavado con dos rodillos
-        const matArco = new THREE.MeshStandardMaterial({ color: p.color || '#0288d1', metalness: 0.2 });
+        // Arco fino
         for (const lado of [-1, 1]) {
-          const pilar = this.caja(0.3, 3.0, 0.4, matArco);
-          pilar.position.set(lado * (PUESTO_ANCHO / 2 - 0.1), 1.5, -1.4);
+          const pilar = this.caja(0.2, 2.8, 0.3, equipo, 0.06);
+          pilar.position.set(lado * (PUESTO_ANCHO / 2 - 0.15), 1.4, -1.3);
           grupo.add(pilar);
-          const rodillo = new THREE.Mesh(
-            new THREE.CylinderGeometry(0.35, 0.35, 2.4, 16),
-            new THREE.MeshStandardMaterial({ color: '#4fc3f7', roughness: 1 })
-          );
-          rodillo.position.set(lado * (PUESTO_ANCHO / 2 - 0.55), 1.3, -1.4);
-          rodillo.castShadow = true;
-          grupo.add(rodillo);
         }
-        const viga = this.caja(PUESTO_ANCHO, 0.3, 0.4, matArco);
-        viga.position.set(0, 3.0, -1.4);
+        const viga = this.caja(PUESTO_ANCHO - 0.1, 0.18, 0.3, equipo, 0.06);
+        viga.position.set(0, 2.8, -1.3);
         grupo.add(viga);
+        const franja = this.caja(PUESTO_ANCHO - 0.4, 0.06, 0.31, acento, 0.02);
+        franja.position.set(0, 2.66, -1.3);
+        grupo.add(franja);
         break;
       }
       case 'plaza':
@@ -410,24 +481,21 @@ export class GarageScene {
         break;
     }
 
-    // Etiqueta con el nombre del puesto, pintada en el suelo delante
+    // Nombre del puesto en el suelo, en gris y sin adornos
     if (p.etiqueta) {
-      const tex = this.texturaTexto(p.etiqueta, { fondo: 'rgba(0,0,0,0)', color: '#ffffff', ancho: 512, alto: 96, tam: 60, sombra: true });
+      const tex = this.texturaTexto(p.etiqueta, { color: '#6b7584', ancho: 512, alto: 96, tam: 50, peso: 600 });
       const rotulo = new THREE.Mesh(
-        new THREE.PlaneGeometry(2.6, 2.6 * (96 / 512)),
+        new THREE.PlaneGeometry(3, 3 * (96 / 512)),
         new THREE.MeshBasicMaterial({ map: tex, transparent: true, depthWrite: false })
       );
       rotulo.rotation.x = -Math.PI / 2;
-      rotulo.position.set(0, 0.01, PUESTO_LARGO / 2 + 0.35);
+      rotulo.position.set(0, 0.006, PUESTO_LARGO / 2 + 0.5);
       grupo.add(rotulo);
     }
 
-    // Marco de selección (solo visible al seleccionar en modo edición)
-    const seleccion = new THREE.LineSegments(
-      new THREE.EdgesGeometry(new THREE.BoxGeometry(PUESTO_ANCHO + 0.3, 0.05, PUESTO_LARGO + 0.9)),
-      new THREE.LineBasicMaterial({ color: '#00e5ff' })
-    );
-    seleccion.position.set(0, 0.03, 0.25);
+    // Contorno de selección (modo edición), con el color de acento
+    const seleccion = this.contorno(PUESTO_ANCHO + 0.4, PUESTO_LARGO + 1.3, 0.5, 0.09, p.color || l.colorElevadores, 0.008);
+    seleccion.position.z = 0.3;
     seleccion.visible = false;
     grupo.add(seleccion);
 
@@ -440,7 +508,7 @@ export class GarageScene {
     grupo.add(zona);
 
     grupo.traverse((o) => {
-      if ((o as THREE.Mesh).isMesh && o !== zona) {
+      if ((o as THREE.Mesh).isMesh && o !== zona && (o as THREE.Mesh).geometry.type !== 'ShapeGeometry') {
         o.castShadow = true;
         o.receiveShadow = true;
       }
@@ -448,33 +516,6 @@ export class GarageScene {
 
     this.estatico.add(grupo);
     this.puestos.set(p.key, { datos: p, grupo, elevable, seleccion });
-  }
-
-  /** Líneas pintadas del contorno del puesto. */
-  private marcasSuelo(grupo: THREE.Group, color: string, relleno?: string): void {
-    const mat = new THREE.MeshBasicMaterial({ color });
-    const g = 0.1;
-    const lineas: [number, number, number, number][] = [
-      [PUESTO_ANCHO, g, 0, -PUESTO_LARGO / 2],
-      [PUESTO_ANCHO, g, 0, PUESTO_LARGO / 2],
-      [g, PUESTO_LARGO, -PUESTO_ANCHO / 2, 0],
-      [g, PUESTO_LARGO, PUESTO_ANCHO / 2, 0],
-    ];
-    for (const [w, h, x, z] of lineas) {
-      const m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), mat);
-      m.rotation.x = -Math.PI / 2;
-      m.position.set(x, 0.005, z);
-      grupo.add(m);
-    }
-    if (relleno) {
-      const r = new THREE.Mesh(
-        new THREE.PlaneGeometry(PUESTO_ANCHO, PUESTO_LARGO),
-        new THREE.MeshStandardMaterial({ color: relleno, transparent: true, opacity: 0.35 })
-      );
-      r.rotation.x = -Math.PI / 2;
-      r.position.y = 0.004;
-      grupo.add(r);
-    }
   }
 
   // =================================================================
@@ -509,65 +550,30 @@ export class GarageScene {
     const grupo = new THREE.Group();
     grupo.userData = { pick: { tipo: 'coche', id: datos.AppointmentID } };
 
+    // Coche simplificado de bordes redondeados, de un solo color mate
     const carroceria = new THREE.MeshStandardMaterial({
-      color: datos.CarColor || '#1976d2', metalness: 0.45, roughness: 0.35,
+      color: datos.CarColor || '#3b82f6', roughness: 0.5, metalness: 0.05,
     });
-    const cristal = new THREE.MeshStandardMaterial({
-      color: '#263238', metalness: 0.9, roughness: 0.1, transparent: true, opacity: 0.85,
-    });
-    const negro = new THREE.MeshStandardMaterial({ color: '#1b1b1b', roughness: 0.9 });
-    const llanta = new THREE.MeshStandardMaterial({ color: '#b0bec5', metalness: 0.8, roughness: 0.3 });
+    const cristal = new THREE.MeshStandardMaterial({ color: PALETA.cristal, roughness: 0.3 });
+    const rueda = new THREE.MeshStandardMaterial({ color: PALETA.rueda, roughness: 0.9 });
 
-    // Carrocería baja, capó y maletero
-    const bajos = this.caja(1.8, 0.55, 4.3, carroceria);
-    bajos.position.y = 0.6;
-    grupo.add(bajos);
-    // Habitáculo con cristales
-    const cabina = this.caja(1.55, 0.55, 2.1, cristal);
-    cabina.position.set(0, 1.12, -0.2);
+    const cuerpo = this.caja(1.8, 0.62, 4.2, carroceria, 0.22);
+    cuerpo.position.y = 0.66;
+    grupo.add(cuerpo);
+    const cabina = this.caja(1.56, 0.56, 2.15, cristal, 0.22);
+    cabina.position.set(0, 1.16, -0.2);
     grupo.add(cabina);
-    const techo = this.caja(1.5, 0.06, 1.7, carroceria);
-    techo.position.set(0, 1.42, -0.25);
+    const techo = this.caja(1.5, 0.12, 1.8, carroceria, 0.06);
+    techo.position.set(0, 1.42, -0.22);
     grupo.add(techo);
-    // Parachoques
-    for (const z of [-2.17, 2.17]) {
-      const parachoques = this.caja(1.82, 0.22, 0.12, negro);
-      parachoques.position.set(0, 0.42, z);
-      grupo.add(parachoques);
-    }
-    // Ruedas
-    for (const x of [-0.88, 0.88]) {
+    for (const x of [-0.84, 0.84]) {
       for (const z of [-1.35, 1.35]) {
-        const rueda = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.26, 20), negro);
-        rueda.rotation.z = Math.PI / 2;
-        rueda.position.set(x, 0.34, z);
-        grupo.add(rueda);
-        const tapacubos = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, 0.27, 12), llanta);
-        tapacubos.rotation.z = Math.PI / 2;
-        tapacubos.position.copy(rueda.position);
-        grupo.add(tapacubos);
+        const r = new THREE.Mesh(new THREE.CylinderGeometry(0.34, 0.34, 0.24, 24), rueda);
+        r.rotation.z = Math.PI / 2;
+        r.position.set(x, 0.34, z);
+        grupo.add(r);
       }
     }
-    // Faros y pilotos
-    const faro = new THREE.MeshStandardMaterial({ color: '#fffde7', emissive: '#fff9c4', emissiveIntensity: 0.6 });
-    const piloto = new THREE.MeshStandardMaterial({ color: '#c62828', emissive: '#b71c1c', emissiveIntensity: 0.5 });
-    for (const x of [-0.62, 0.62]) {
-      const f = this.caja(0.42, 0.14, 0.05, faro);
-      f.position.set(x, 0.72, 2.16);
-      grupo.add(f);
-      const pt = this.caja(0.42, 0.14, 0.05, piloto);
-      pt.position.set(x, 0.72, -2.16);
-      grupo.add(pt);
-    }
-    // Matrículas delante y detrás
-    const texMatricula = this.texturaMatricula(datos.Matricula || '');
-    for (const [z, rotY] of [[2.24, 0], [-2.24, Math.PI]] as [number, number][]) {
-      const placa = new THREE.Mesh(new THREE.PlaneGeometry(0.52, 0.12), new THREE.MeshBasicMaterial({ map: texMatricula }));
-      placa.position.set(0, 0.46, z);
-      placa.rotation.y = rotY;
-      grupo.add(placa);
-    }
-
     grupo.traverse((o) => {
       if ((o as THREE.Mesh).isMesh) {
         o.castShadow = true;
@@ -575,24 +581,24 @@ export class GarageScene {
       }
     });
 
-    // Anillo de color según el estado de la cita (y resalte al seleccionar)
+    // Contorno en el suelo: solo se ve al seleccionar el coche
     const anillo = new THREE.Mesh(
-      new THREE.RingGeometry(2.55, 2.75, 48),
-      new THREE.MeshBasicMaterial({ color: COLOR_ESTADO[datos.Status] || '#9e9e9e', side: THREE.DoubleSide, transparent: true, opacity: 0.85 })
+      new THREE.ShapeGeometry(this.formaAnillo(2.5, 4.9, 0.6, 0.09), 10),
+      new THREE.MeshBasicMaterial({ color: COLOR_ESTADO[datos.Status] || '#94a3b8', transparent: true, opacity: 0.9, depthWrite: false })
     );
     anillo.rotation.x = -Math.PI / 2;
-    anillo.position.y = 0.03;
-    anillo.scale.set(0.75, 1, 1);
+    anillo.position.y = 0.012;
+    anillo.visible = false;
     grupo.add(anillo);
 
-    // Cartel flotante con matrícula y modelo
+    // Etiqueta flotante: punto del estado, matrícula y modelo
     const cartel = new THREE.Sprite(new THREE.SpriteMaterial({
       map: this.texturaEtiquetaCoche(datos),
       depthTest: false,
       transparent: true,
     }));
-    cartel.scale.set(2.6, 0.65, 1);
-    cartel.position.set(0, 2.35, 0);
+    cartel.scale.set(2.6, 0.81, 1);
+    cartel.position.set(0, 2.25, 0);
     cartel.renderOrder = 10;
     grupo.add(cartel);
 
@@ -609,13 +615,42 @@ export class GarageScene {
   private aplicarSeleccion(): void {
     for (const [id, c] of this.coches) {
       const sel = id === this.cocheSeleccionado;
-      c.carroceria.emissive.set(sel ? '#00e5ff' : '#000000');
-      c.carroceria.emissiveIntensity = sel ? 0.1 : 0;
-      c.anillo.scale.set(sel ? 0.85 : 0.75, 1, sel ? 1.1 : 1);
+      c.anillo.visible = sel;
+      c.carroceria.emissive.set(sel ? '#ffffff' : '#000000');
+      c.carroceria.emissiveIntensity = sel ? 0.08 : 0;
+      this.atenuar(c, !sel && !!this.filtroEstados && !this.filtroEstados.has(c.datos.Status));
     }
+    const ocupados = new Set([...this.coches.values()]
+      .filter((c) => c.datos.AppointmentID !== this.cogido?.id)
+      .map((c) => c.datos.BayKey));
     for (const [key, p] of this.puestos) {
-      p.seleccion.visible = this.modoEdicion && key === this.puestoSeleccionado;
+      const fuerte = (this.modoEdicion && key === this.puestoSeleccionado) || key === this.puestoResaltado;
+      const libre = this.verLibres && !ocupados.has(key);
+      p.seleccion.visible = fuerte || libre;
+      const mat = (p.seleccion as THREE.Mesh).material as THREE.MeshBasicMaterial;
+      mat.transparent = true;
+      mat.opacity = fuerte ? 1 : 0.35;
     }
+  }
+
+  /** Vuelve casi transparente un coche (filtro por estado) o lo restaura. */
+  private atenuar(c: CocheObj, si: boolean): void {
+    if (c.grupo.userData['atenuado'] === si) return;
+    c.grupo.userData['atenuado'] = si;
+    c.grupo.traverse((o) => {
+      const m = o as THREE.Mesh | THREE.Sprite;
+      const mat = (m as any).material as THREE.Material | undefined;
+      if (!mat || o === c.anillo) return;
+      if (mat.userData['opacidad'] === undefined) {
+        mat.userData['opacidad'] = mat.opacity;
+        mat.userData['transparente'] = mat.transparent;
+      }
+      mat.transparent = si || mat.userData['transparente'];
+      mat.opacity = si ? 0.12 : mat.userData['opacidad'];
+      mat.depthWrite = !si;
+      mat.needsUpdate = true;
+      if ((o as THREE.Mesh).isMesh) (o as THREE.Mesh).castShadow = !si;
+    });
   }
 
   // =================================================================
@@ -624,7 +659,16 @@ export class GarageScene {
 
   private onPointerDown = (ev: PointerEvent): void => {
     this.pulsadoEn.set(ev.clientX, ev.clientY);
-    if (!this.modoEdicion) return;
+    if (!this.modoEdicion) {
+      // Pulsar un coche: si luego se mueve el ratón, se arrastra a otro puesto.
+      const pick = ev.button === 0 ? this.pickEn(ev) : null;
+      if (pick?.tipo === 'coche' && pick.id !== undefined) {
+        this.cogido = { id: pick.id, arrastrando: false };
+        this.controls.enabled = false;
+        this.renderer.domElement.setPointerCapture(ev.pointerId);
+      }
+      return;
+    }
     const pick = this.pickEn(ev);
     if (pick?.tipo === 'puesto' || (pick?.tipo === 'coche' && pick.key)) {
       const key = pick.key as string;
@@ -642,6 +686,23 @@ export class GarageScene {
   };
 
   private onPointerMove = (ev: PointerEvent): void => {
+    if (this.cogido) {
+      const movido = Math.hypot(ev.clientX - this.pulsadoEn.x, ev.clientY - this.pulsadoEn.y);
+      const coche = this.coches.get(this.cogido.id);
+      if (coche && (this.cogido.arrastrando || movido > 6)) {
+        if (!this.cogido.arrastrando) {
+          this.cogido.arrastrando = true;
+          this.verLibres = true;
+          this.estatico.attach(coche.grupo); // sale del puesto sin saltar
+          this.avisarHover(null, ev);
+        }
+        const punto = this.puntoSuelo(ev);
+        if (punto) coche.grupo.position.set(punto.x, 0.35, punto.z);
+        this.renderer.domElement.style.cursor = 'grabbing';
+        this.resaltarPuesto(this.puestoBajo(ev, coche.grupo));
+      }
+      return;
+    }
     if (this.arrastrando && this.layout) {
       const punto = this.puntoSuelo(ev);
       const p = this.puestos.get(this.arrastrando.key);
@@ -659,9 +720,31 @@ export class GarageScene {
     const pick = this.pickEn(ev);
     const pinchable = pick && (pick.tipo === 'coche' || this.modoEdicion);
     this.renderer.domElement.style.cursor = pinchable ? 'pointer' : 'grab';
+    this.avisarHover(!this.modoEdicion && pick?.tipo === 'coche' ? pick.id ?? null : null, ev);
   };
 
   private onPointerUp = (ev: PointerEvent): void => {
+    if (ev.type === 'pointerleave') this.avisarHover(null, ev);
+    if (this.cogido) {
+      const { id, arrastrando } = this.cogido;
+      this.cogido = null;
+      this.controls.enabled = true;
+      if (this.renderer.domElement.hasPointerCapture(ev.pointerId)) {
+        this.renderer.domElement.releasePointerCapture(ev.pointerId);
+      }
+      if (arrastrando) {
+        const coche = this.coches.get(id);
+        const destino = coche ? this.puestoBajo(ev, coche.grupo) : null;
+        this.verLibres = false;
+        this.resaltarPuesto(null);
+        // Vuelve a su sitio; si el cambio se guarda, la vista se refresca con setCars.
+        this.colocarCoches(this.listaCoches);
+        this.aplicarSeleccion();
+        if (ev.type === 'pointerup') this.callbacks.onCarDropped?.(id, destino);
+        return;
+      }
+      // Sin movimiento: es un clic normal y sigue abajo (selecciona el coche).
+    }
     if (this.arrastrando) {
       const p = this.puestos.get(this.arrastrando.key);
       if (p) {
@@ -693,13 +776,20 @@ export class GarageScene {
     this.aplicarSeleccion();
   };
 
+  private onDoubleClick = (ev: MouseEvent): void => {
+    if (this.modoEdicion) return;
+    const pick = this.pickEn(ev);
+    if (pick?.tipo === 'coche' && pick.id !== undefined) this.callbacks.onDoubleClickCar?.(pick.id);
+  };
+
   /** Devuelve qué hay bajo el puntero: un coche (con su puesto) o un puesto. */
-  private pickEn(ev: PointerEvent): { tipo: string; id?: number; key?: string } | null {
+  private pickEn(ev: { clientX: number; clientY: number }, ignorar?: THREE.Object3D): { tipo: string; id?: number; key?: string } | null {
     const rect = this.renderer.domElement.getBoundingClientRect();
     this.puntero.set(((ev.clientX - rect.left) / rect.width) * 2 - 1, -((ev.clientY - rect.top) / rect.height) * 2 + 1);
     this.raycaster.setFromCamera(this.puntero, this.camera);
     const hits = this.raycaster.intersectObjects(this.estatico.children, true);
     for (const hit of hits) {
+      if (ignorar && this.esDescendiente(hit.object, ignorar)) continue;
       let o: THREE.Object3D | null = hit.object;
       let coche: number | undefined;
       while (o) {
@@ -712,6 +802,25 @@ export class GarageScene {
       }
     }
     return null;
+  }
+
+  /** Puesto bajo el puntero ignorando el coche que se arrastra. */
+  private puestoBajo(ev: { clientX: number; clientY: number }, coche: THREE.Object3D): string | null {
+    return this.pickEn(ev, coche)?.key ?? null;
+  }
+
+  private esDescendiente(o: THREE.Object3D, padre: THREE.Object3D): boolean {
+    for (let x: THREE.Object3D | null = o; x; x = x.parent) {
+      if (x === padre) return true;
+    }
+    return false;
+  }
+
+  /** Avisa del coche bajo el ratón (solo cuando cambia, o para mover el aviso). */
+  private avisarHover(id: number | null, ev: { clientX: number; clientY: number }): void {
+    if (id === null && this.hoverCoche === null) return;
+    this.hoverCoche = id;
+    this.callbacks.onHoverCar?.(id, ev.clientX, ev.clientY);
   }
 
   private puntoSuelo(ev: PointerEvent): THREE.Vector3 | null {
@@ -753,93 +862,117 @@ export class GarageScene {
   //  Utilidades
   // =================================================================
 
-  private caja(w: number, h: number, d: number, mat: THREE.Material): THREE.Mesh {
-    return new THREE.Mesh(new THREE.BoxGeometry(w, h, d), mat);
+  /** Caja con las aristas redondeadas (radio en metros). */
+  private caja(w: number, h: number, d: number, mat: THREE.Material, radio = 0): THREE.Mesh {
+    const r = Math.min(radio, w / 2, h / 2, d / 2) * 0.99;
+    const geo = r > 0 ? new RoundedBoxGeometry(w, h, d, 3, r) : new THREE.BoxGeometry(w, h, d);
+    return new THREE.Mesh(geo, mat);
   }
 
-  private texturaTexto(texto: string, o: { fondo: string; color: string; ancho: number; alto: number; tam: number; sombra?: boolean }): THREE.CanvasTexture {
+  /** Rectángulo de esquinas redondeadas centrado en el origen (plano XY). */
+  private formaRedondeada(w: number, h: number, r: number): THREE.Shape {
+    const s = new THREE.Shape();
+    this.trazarRedondeado(s, w, h, r);
+    return s;
+  }
+
+  /** Marco de esquinas redondeadas (rectángulo con hueco) de grosor `g`. */
+  private formaAnillo(w: number, h: number, r: number, g: number): THREE.Shape {
+    const s = this.formaRedondeada(w, h, r);
+    const hueco = new THREE.Path();
+    this.trazarRedondeado(hueco, w - g * 2, h - g * 2, Math.max(r - g, 0.01));
+    s.holes.push(hueco);
+    return s;
+  }
+
+  private trazarRedondeado(p: THREE.Path, w: number, h: number, r: number): void {
+    const x = -w / 2, y = -h / 2;
+    r = Math.min(r, w / 2, h / 2);
+    p.moveTo(x + r, y);
+    p.lineTo(x + w - r, y);
+    p.quadraticCurveTo(x + w, y, x + w, y + r);
+    p.lineTo(x + w, y + h - r);
+    p.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    p.lineTo(x + r, y + h);
+    p.quadraticCurveTo(x, y + h, x, y + h - r);
+    p.lineTo(x, y + r);
+    p.quadraticCurveTo(x, y, x + r, y);
+  }
+
+  /** Línea fina de contorno pintada en el suelo. */
+  private contorno(w: number, h: number, r: number, g: number, color: string, y: number): THREE.Mesh {
+    const m = new THREE.Mesh(
+      new THREE.ShapeGeometry(this.formaAnillo(w, h, r, g), 10),
+      new THREE.MeshBasicMaterial({ color, depthWrite: false })
+    );
+    m.rotation.x = -Math.PI / 2;
+    m.position.y = y;
+    return m;
+  }
+
+  private texturaTexto(texto: string, o: { color: string; ancho: number; alto: number; tam: number; peso?: number; espaciado?: number }): THREE.CanvasTexture {
     const canvas = document.createElement('canvas');
     canvas.width = o.ancho;
     canvas.height = o.alto;
     const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = o.fondo;
-    ctx.fillRect(0, 0, o.ancho, o.alto);
-    ctx.font = `bold ${o.tam}px Arial, sans-serif`;
+    ctx.font = `${o.peso ?? 600} ${o.tam}px ${FUENTE}`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    if (o.sombra) {
-      ctx.shadowColor = 'rgba(0,0,0,0.8)';
-      ctx.shadowBlur = 8;
-    }
+    if (o.espaciado) (ctx as any).letterSpacing = `${o.espaciado}px`;
     ctx.fillStyle = o.color;
     ctx.fillText(texto, o.ancho / 2, o.alto / 2, o.ancho - 20);
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
-    tex.anisotropy = 4;
+    tex.anisotropy = 8;
     return tex;
   }
 
-  /** Matrícula europea: banda azul con «E» y caracteres negros sobre blanco. */
-  private texturaMatricula(matricula: string): THREE.CanvasTexture {
-    const canvas = document.createElement('canvas');
-    canvas.width = 520;
-    canvas.height = 120;
-    const ctx = canvas.getContext('2d')!;
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, 520, 120);
-    ctx.fillStyle = '#003399';
-    ctx.fillRect(0, 0, 60, 120);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = 'bold 40px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('E', 30, 95);
-    ctx.fillStyle = '#111111';
-    ctx.font = 'bold 82px Arial';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(matricula.toUpperCase(), 290, 64, 440);
-    ctx.strokeStyle = '#111111';
-    ctx.lineWidth = 6;
-    ctx.strokeRect(3, 3, 514, 114);
-    const tex = new THREE.CanvasTexture(canvas);
-    tex.colorSpace = THREE.SRGBColorSpace;
-    return tex;
-  }
-
-  /** Cartel flotante: matrícula y marca/modelo con el color del estado. */
+  /** Etiqueta flotante: tarjeta blanca con punto de estado, matrícula y modelo. */
   private texturaEtiquetaCoche(d: CocheEnTaller): THREE.CanvasTexture {
+    const W = 460, H = 144;
     const canvas = document.createElement('canvas');
-    canvas.width = 512;
-    canvas.height = 128;
+    canvas.width = W;
+    canvas.height = H;
     const ctx = canvas.getContext('2d')!;
-    const color = COLOR_ESTADO[d.Status] || '#607d8b';
-    ctx.fillStyle = 'rgba(255,255,255,0.95)';
-    this.rectRedondeado(ctx, 4, 4, 504, 120, 22);
+    // Sombra suave bajo la tarjeta
+    ctx.shadowColor = 'rgba(15, 23, 42, 0.18)';
+    ctx.shadowBlur = 16;
+    ctx.shadowOffsetY = 4;
+    ctx.fillStyle = '#ffffff';
+    this.rectRedondeado(ctx, 14, 10, W - 28, H - 32, 26);
     ctx.fill();
-    ctx.lineWidth = 8;
-    ctx.strokeStyle = color;
-    ctx.stroke();
-    ctx.fillStyle = '#111';
-    ctx.textAlign = 'center';
-    ctx.font = 'bold 50px Arial';
-    ctx.fillText((d.Matricula || '').toUpperCase(), 256, 58, 470);
-    ctx.fillStyle = '#555';
-    ctx.font = '32px Arial';
-    ctx.fillText(`${d.Marca} ${d.Modelo}`.trim(), 256, 102, 470);
+    ctx.shadowColor = 'transparent';
+
+    const color = COLOR_ESTADO[d.Status] || '#94a3b8';
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.arc(52, 48, 10, 0, Math.PI * 2);
+    ctx.fill();
+
+    ctx.textAlign = 'left';
+    ctx.textBaseline = 'middle';
+    const retraso = cocheConRetraso(d);
+    if (retraso) {
+      // Aviso de retraso en la esquina: la cita ya debería haber terminado
+      ctx.font = `700 22px ${FUENTE}`;
+      const txt = 'RETRASO';
+      const tw = ctx.measureText(txt).width + 22;
+      ctx.fillStyle = '#fee2e2';
+      this.rectRedondeado(ctx, W - 34 - tw, 31, tw, 34, 17);
+      ctx.fill();
+      ctx.fillStyle = '#b91c1c';
+      ctx.fillText(txt, W - 34 - tw + 11, 49);
+    }
+    ctx.fillStyle = '#1f2937';
+    ctx.font = `700 40px ${FUENTE}`;
+    ctx.fillText((d.Matricula || '').toUpperCase(), 76, 50, retraso ? W - 250 : W - 110);
+    ctx.fillStyle = '#8a94a3';
+    ctx.font = `500 26px ${FUENTE}`;
+    ctx.fillText(`${d.Marca} ${d.Modelo}`.trim(), 44, 88, W - 80);
     const tex = new THREE.CanvasTexture(canvas);
     tex.colorSpace = THREE.SRGBColorSpace;
+    tex.anisotropy = 8;
     return tex;
-  }
-
-  private texturaRayas(): THREE.CanvasTexture {
-    const canvas = document.createElement('canvas');
-    canvas.width = 32;
-    canvas.height = 256;
-    const ctx = canvas.getContext('2d')!;
-    for (let i = 0; i < 16; i++) {
-      ctx.fillStyle = i % 2 ? '#111111' : '#fdd835';
-      ctx.fillRect(0, i * 16, 32, 16);
-    }
-    return new THREE.CanvasTexture(canvas);
   }
 
   private rectRedondeado(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number): void {

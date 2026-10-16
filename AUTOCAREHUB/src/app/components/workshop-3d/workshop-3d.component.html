@@ -3,14 +3,14 @@
 <main class="taller3d">
   <!-- ================= BARRA SUPERIOR ================= -->
   <div class="barra">
-    <h2><i class="bi bi-box" aria-hidden="true"></i> Taller en 3D</h2>
+    <h2>Taller</h2>
 
     <div class="modo" role="group" aria-label="Modo">
       <button type="button" [class.activo]="!editando" (click)="editando && descartarEdicion()">
-        <i class="bi bi-eye" aria-hidden="true"></i> Ver taller
+        Ver taller
       </button>
       <button type="button" [class.activo]="editando" (click)="!editando && entrarEdicion()">
-        <i class="bi bi-pencil-square" aria-hidden="true"></i> Editar distribución
+        Editar distribución
       </button>
     </div>
 
@@ -19,7 +19,35 @@
       <input type="date" [(ngModel)]="fecha" (change)="cambiarFecha()" />
     </label>
 
+    <form class="buscar" *ngIf="!editando" (submit)="$event.preventDefault(); buscarMatricula()" role="search">
+      <i class="bi bi-search" aria-hidden="true"></i>
+      <input
+        #buscador
+        type="search"
+        list="matriculas-taller"
+        [(ngModel)]="busqueda"
+        name="busqueda"
+        placeholder="Buscar matrícula"
+        aria-label="Buscar un coche por matrícula"
+        (change)="buscarMatricula()"
+      />
+      <datalist id="matriculas-taller">
+        <option *ngFor="let m of matriculas" [value]="m"></option>
+      </datalist>
+    </form>
+
+    <div class="resumen" *ngIf="layout && !editando" aria-live="polite">
+      <span class="ocupacion" [title]="ocupacion.porcentaje + ' % de ocupación'">
+        <span class="barra-ocupacion" aria-hidden="true"><span [style.width.%]="ocupacion.porcentaje"></span></span>
+        {{ ocupacion.ocupados }}/{{ ocupacion.total }} puestos
+      </span>
+      <span class="retrasos" *ngIf="numRetrasos > 0">{{ numRetrasos }} con retraso</span>
+    </div>
+
     <div class="camara">
+      <button type="button" (click)="descargarCaptura()" title="Descargar imagen (C)"><i class="bi bi-camera" aria-hidden="true"></i><span class="visually-hidden-text">Descargar imagen del taller</span></button>
+      <button type="button" (click)="alternarGiro()" [class.activo]="girando" [attr.aria-pressed]="girando" title="Girar automáticamente"><i class="bi bi-arrow-repeat" aria-hidden="true"></i><span class="visually-hidden-text">Girar automáticamente</span></button>
+      <button type="button" (click)="alternarPantallaCompleta()" [title]="pantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'"><i class="bi" [class.bi-fullscreen]="!pantallaCompleta" [class.bi-fullscreen-exit]="pantallaCompleta" aria-hidden="true"></i><span class="visually-hidden-text">Pantalla completa</span></button>
       <button type="button" (click)="vistaInicial()" title="Vista inicial"><i class="bi bi-house" aria-hidden="true"></i><span class="visually-hidden-text">Vista inicial</span></button>
       <button type="button" (click)="vistaPlanta()" title="Vista de planta"><i class="bi bi-grid" aria-hidden="true"></i><span class="visually-hidden-text">Vista de planta</span></button>
     </div>
@@ -30,21 +58,61 @@
 
   <div class="contenido">
     <!-- ================= VISOR 3D ================= -->
-    <div class="visor-wrap">
+    <div
+      class="visor-wrap"
+      #visorWrap
+      [class.soltando]="arrastrandoPendiente !== null"
+      (dragover)="sobreVisor($event)"
+      (drop)="soltarEnVisor($event)"
+    >
       <div class="visor" #visor aria-label="Vista 3D del taller" role="img"></div>
+
+      <!-- Aviso al pasar el ratón por un coche -->
+      <div class="tooltip-coche" #tooltip [hidden]="!hover" aria-hidden="true">
+        <ng-container *ngIf="hover">
+          <strong>{{ hover.Matricula | uppercase }}</strong>
+          <span class="t-modelo">{{ hover.Marca }} {{ hover.Modelo }}</span>
+          <span>{{ hover.Service }}</span>
+          <span>{{ hora(hover.StartDateTime) }}–{{ hora(hover.EndDateTime) }} · {{ hover.UserName }}</span>
+          <span class="t-tiempo" [class.t-retraso]="conRetraso(hover)">{{ tiempoCita(hover) }}</span>
+          <span class="badge-estado" [ngClass]="claseEstado(hover.Status)">{{ hover.Status }}</span>
+        </ng-container>
+      </div>
       <div class="cargando" *ngIf="cargando">Cargando taller...</div>
       <div class="ayuda">
         <ng-container *ngIf="!editando">
-          <i class="bi bi-mouse" aria-hidden="true"></i> Arrastra para girar · rueda para acercar · clic derecho para desplazar · <strong>pulsa un coche</strong> para ver su ficha
+          <ng-container *ngIf="arrastrandoPendiente === null; else ayudaSoltar">
+            <strong>Pulsa un coche</strong> para ver su ficha · <strong>arrástralo</strong> para cambiarlo de puesto · <strong>?</strong> atajos
+          </ng-container>
+          <ng-template #ayudaSoltar><strong>Suelta el coche</strong> encima de un puesto libre</ng-template>
         </ng-container>
         <ng-container *ngIf="editando">
-          <i class="bi bi-arrows-move" aria-hidden="true"></i> <strong>Arrastra un puesto</strong> para moverlo · pulsa uno para editarlo
+          <strong>Arrastra un puesto</strong> para moverlo · pulsa uno para editarlo
         </ng-container>
       </div>
-      <div class="leyenda" *ngIf="!editando">
-        <span><i class="dot st-pendiente"></i>Pendiente</span>
-        <span><i class="dot st-confirmada"></i>Confirmada</span>
-        <span><i class="dot st-finalizada"></i>Finalizada</span>
+      <div class="leyenda" *ngIf="!editando" role="group" aria-label="Mostrar coches por estado">
+        <button
+          type="button"
+          *ngFor="let e of estadosLeyenda"
+          [class.apagado]="estadosOcultos.has(e)"
+          [attr.aria-pressed]="!estadosOcultos.has(e)"
+          (click)="alternarEstado(e)"
+          [title]="(estadosOcultos.has(e) ? 'Mostrar' : 'Atenuar') + ' coches ' + e.toLowerCase() + 's'"
+        ><i class="dot no-invert" [ngClass]="claseEstado(e)"></i>{{ e }}</button>
+      </div>
+
+      <div class="atajos" *ngIf="verAtajos" role="dialog" aria-label="Atajos de teclado">
+        <strong>Atajos de teclado</strong>
+        <dl>
+          <dt>/</dt><dd>Buscar matrícula</dd>
+          <dt>I · P</dt><dd>Vista inicial · planta</dd>
+          <dt>F</dt><dd>Pantalla completa</dd>
+          <dt>G</dt><dd>Giro automático</dd>
+          <dt>C</dt><dd>Descargar imagen</dd>
+          <dt>E</dt><dd>Subir / bajar elevador</dd>
+          <dt>Doble clic</dt><dd>Subir / bajar elevador del coche</dd>
+          <dt>Esc</dt><dd>Cerrar ficha</dd>
+        </dl>
       </div>
     </div>
 
@@ -66,10 +134,15 @@
           <dl class="datos">
             <dt>Cliente</dt><dd>{{ ficha.detalle.UserName }}<br /><small>{{ ficha.detalle.UserEmail }}</small></dd>
             <dt>Servicio</dt><dd>{{ ficha.detalle.Service }}</dd>
-            <dt>Horario</dt><dd>{{ fechaCorta(ficha.detalle.StartDateTime) }} · {{ hora(ficha.detalle.StartDateTime) }}–{{ hora(ficha.detalle.EndDateTime) }}</dd>
+            <dt>Horario</dt>
+            <dd>
+              {{ fechaCorta(ficha.detalle.StartDateTime) }} · {{ hora(ficha.detalle.StartDateTime) }}–{{ hora(ficha.detalle.EndDateTime) }}
+              <br /><small [class.retraso]="conRetraso(ficha.detalle)">{{ tiempoCita(ficha.detalle) }}</small>
+            </dd>
             <dt>Estado</dt>
             <dd>
               <span class="badge-estado" [ngClass]="claseEstado(ficha.detalle.Status)">{{ ficha.detalle.Status }}</span>
+              <span class="badge-estado st-cancelada" *ngIf="conRetraso(ficha.detalle)">Con retraso</span>
               <span class="badge-estado facturada" *ngIf="ficha.detalle.InvoiceID">Factura #{{ ficha.detalle.InvoiceID }}</span>
             </dd>
             <ng-container *ngIf="ficha.detalle.Description && ficha.detalle.Description !== ficha.detalle.Service">
@@ -125,7 +198,7 @@
 
           <!-- Notas -->
           <div class="bloque">
-            <h4><i class="bi bi-journal-text" aria-hidden="true"></i> Notas del vehículo</h4>
+            <h4>Notas del vehículo</h4>
             <textarea
               rows="3"
               maxlength="2000"
@@ -151,7 +224,7 @@
 
           <!-- Visitas anteriores -->
           <div class="bloque" *ngIf="ficha.visitas.length > 0">
-            <h4><i class="bi bi-clock-history" aria-hidden="true"></i> Visitas anteriores</h4>
+            <h4>Visitas anteriores</h4>
             <ul class="visitas">
               <li *ngFor="let v of ficha.visitas">
                 <span>{{ fechaCorta(v.StartDateTime) }}</span>
@@ -166,9 +239,17 @@
       <!-- ---------- LISTAS (sin coche seleccionado) ---------- -->
       <ng-container *ngIf="!editando && !cocheSel">
         <section class="bloque">
-          <h4><i class="bi bi-hourglass-split" aria-hidden="true"></i> Por colocar ({{ pendientes.length }})</h4>
+          <h4>Por colocar ({{ pendientes.length }})</h4>
           <p class="vacio" *ngIf="pendientes.length === 0">No hay más coches con cita este día.</p>
-          <div class="tarjeta" *ngFor="let c of pendientes">
+          <p class="pista" *ngIf="pendientes.length > 0">Arrástralos a un puesto del taller o usa «Meter».</p>
+          <div
+            class="tarjeta arrastrable"
+            *ngFor="let c of pendientes"
+            draggable="true"
+            [class.arrastrando]="arrastrandoPendiente === c.AppointmentID"
+            (dragstart)="empezarArrastrePendiente($event, c)"
+            (dragend)="terminarArrastrePendiente()"
+          >
             <div class="tarjeta-cab">
               <strong>{{ c.Matricula | uppercase }}</strong>
               <span class="badge-estado" [ngClass]="claseEstado(c.Status)">{{ c.Status }}</span>
@@ -187,7 +268,7 @@
         </section>
 
         <section class="bloque">
-          <h4><i class="bi bi-car-front" aria-hidden="true"></i> En el taller ({{ coches.length }})</h4>
+          <h4>En el taller ({{ coches.length }})</h4>
           <p class="vacio" *ngIf="coches.length === 0">El taller está vacío.</p>
           <button type="button" class="tarjeta clicable" *ngFor="let c of coches" (click)="abrirDesdeLista(c.AppointmentID)">
             <div class="tarjeta-cab">
@@ -195,6 +276,7 @@
               <span class="badge-estado" [ngClass]="claseEstado(c.Status)">{{ c.Status }}</span>
             </div>
             <div class="sub">{{ c.Marca }} {{ c.Modelo }} · {{ nombrePuesto(c.BayKey) }}{{ c.Lifted ? ' · elevado' : '' }}</div>
+            <div class="sub retraso" *ngIf="conRetraso(c)">Con retraso · debía terminar a las {{ hora(c.EndDateTime) }}</div>
           </button>
         </section>
       </ng-container>
@@ -202,7 +284,7 @@
       <!-- ---------- EDITOR DE DISTRIBUCIÓN ---------- -->
       <ng-container *ngIf="editando && layoutEdit">
         <section class="bloque" *ngIf="puestoEditado as p">
-          <h4><i class="bi bi-sliders" aria-hidden="true"></i> Puesto seleccionado</h4>
+          <h4>Puesto seleccionado</h4>
           <label class="fila">Nombre <input type="text" maxlength="30" [(ngModel)]="p.etiqueta" (change)="aplicarEdicion()" /></label>
           <label class="fila">
             Tipo
@@ -238,7 +320,7 @@
         </section>
 
         <section class="bloque">
-          <h4><i class="bi bi-plus-square" aria-hidden="true"></i> Añadir puesto</h4>
+          <h4>Añadir puesto</h4>
           <div class="tipos">
             <button type="button" *ngFor="let t of tipos" (click)="anadirPuesto(t.valor)">
               <i class="bi {{ t.icono }}" aria-hidden="true"></i> {{ t.nombre }}
@@ -247,22 +329,20 @@
         </section>
 
         <section class="bloque">
-          <h4><i class="bi bi-building" aria-hidden="true"></i> Nave</h4>
-          <label class="fila">Cartel <input type="text" maxlength="40" [(ngModel)]="layoutEdit.nombre" (change)="aplicarEdicion()" /></label>
+          <h4>Planta</h4>
+          <label class="fila">Nombre <input type="text" maxlength="40" [(ngModel)]="layoutEdit.nombre" (change)="aplicarEdicion()" /></label>
           <div class="fila dos">
             <label>Ancho (m) <input type="number" min="10" max="80" [(ngModel)]="layoutEdit.ancho" (change)="aplicarEdicion(true)" /></label>
             <label>Fondo (m) <input type="number" min="8" max="60" [(ngModel)]="layoutEdit.fondo" (change)="aplicarEdicion(true)" /></label>
           </div>
-          <div class="paleta">
-            <label>Suelo <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorSuelo" (change)="aplicarEdicion()" /></label>
-            <label>Paredes <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorParedes" (change)="aplicarEdicion()" /></label>
-            <label>Elevadores <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorElevadores" (change)="aplicarEdicion()" /></label>
-            <label>Líneas <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorLineas" (change)="aplicarEdicion()" /></label>
-          </div>
+          <label class="fila">
+            Color de acento
+            <input class="no-invert" type="color" [(ngModel)]="layoutEdit.colorElevadores" (change)="aplicarEdicion()" />
+          </label>
         </section>
 
         <section class="bloque">
-          <h4><i class="bi bi-list-ul" aria-hidden="true"></i> Puestos ({{ layoutEdit.puestos.length }})</h4>
+          <h4>Puestos ({{ layoutEdit.puestos.length }})</h4>
           <button
             type="button"
             class="tarjeta clicable"

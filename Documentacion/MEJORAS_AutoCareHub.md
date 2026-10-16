@@ -28,7 +28,8 @@
 10. [Despliegue automático a InfinityFree](#10-despliegue-automático-a-infinityfree)
 11. [Nuevo diseño del PDF de factura](#11-nuevo-diseño-del-pdf-de-factura)
 12. [Avisos en el menú y buscador en las listas](#12-avisos-en-el-menú-y-buscador-en-las-listas)
-13. [Próximas mejoras propuestas](#13-próximas-mejoras-propuestas)
+13. [Taller 3D con estilo minimalista](#13-taller-3d-con-estilo-minimalista)
+14. [Próximas mejoras propuestas](#14-próximas-mejoras-propuestas)
 
 ---
 
@@ -521,7 +522,70 @@ fecha e importe formateados. *Ver citas* del taller usa las tablas de Bootstrap
 
 ---
 
-## 13. Próximas mejoras propuestas
+## 13. Taller 3D con estilo minimalista
+
+**Qué es:** rediseño visual del *Taller 3D* para que sea más limpio y fácil de leer.
+Solo cambia el aspecto: el funcionamiento, los datos y la API siguen igual.
+
+**Escena** (`components/workshop-3d/garage-scene.ts`):
+
+- Fondo y suelo casi blancos que se funden con una niebla suave; sin paredes, cartel
+  ni línea amarilla. La planta es una losa clara con las esquinas redondeadas y el
+  nombre del taller pintado en gris junto al borde.
+- Puestos marcados con un contorno gris fino. Elevadores, postes y arco de lavado más
+  finos, en blanco y con un único **color de acento** (el de la distribución).
+- Coches simplificados con bordes redondeados y un solo color mate, sin faros,
+  tapacubos ni matrículas en 3D; la matrícula va en la etiqueta flotante.
+- Etiqueta flotante convertida en una tarjeta blanca con sombra suave, un punto con el
+  color del estado, la matrícula y el modelo. El aro de color permanente desaparece: el
+  contorno de color solo se muestra en el coche seleccionado.
+- Luz más uniforme con sombras suaves que cubren todo el taller, y una cámara con
+  menos perspectiva.
+
+**Interfaz** (`workshop-3d.component.html/.css`, y `workshop-3d.funciones.css` para los estilos de las funciones nuevas): paleta neutra con bordes finos,
+selector de modo tipo «píldora», un solo botón principal oscuro (el resto con
+borde), estados como punto de color + texto en lugar de cápsulas de colores, notas
+en gris claro y títulos de sección pequeños en mayúsculas. En el editor de la
+distribución los cuatro colores (suelo, paredes, elevadores y líneas) se reducen a un
+único **color de acento**.
+
+**Funciones nuevas:**
+
+- **Arrastrar coches en la vista 3D**: se pulsa un coche y se suelta en otro puesto.
+  El puesto de destino se resalta mientras se arrastra. Si está ocupado, la app ofrece
+  **intercambiar** los dos coches.
+- **Arrastrar desde «Por colocar»**: las tarjetas de los coches con cita se pueden
+  soltar directamente sobre un puesto libre de la vista 3D (sigue existiendo el botón
+  «Meter»).
+- **Ficha rápida al pasar el ratón**: matrícula, modelo, servicio, horario, cliente y
+  estado, sin tener que abrir la ficha.
+- **Aviso de retraso**: si la hora de fin de la cita ya ha pasado y no está
+  finalizada, la etiqueta del coche muestra «RETRASO», y la lista y la ficha lo
+  indican. Se revisa cada minuto.
+- **Buscar por matrícula** (con sugerencias): enfoca el coche y abre su ficha; si
+  todavía está por colocar, lo indica.
+- **Ocupación del taller** en la barra superior («5/8 puestos», con barra) y número de
+  coches con retraso.
+- **Pantalla completa** y **giro automático** de la cámara, pensados para dejar el
+  taller a la vista en una pantalla o TV.
+- **Filtro por estado** en la leyenda: al pulsar *Pendiente*, *Confirmada* o
+  *Finalizada* se atenúan esos coches para centrarse en el resto.
+- **Puestos libres resaltados** con un contorno tenue mientras se arrastra un coche.
+- **Tiempo de cada cita** en el aviso y en la ficha: «Empieza en 20 min», «Faltan
+  45 min», «Retraso de 1 h 10 min» o «Terminada».
+- **Doble clic** en un coche para subir o bajar su elevador.
+- **Descargar imagen** de la vista actual en PNG (`taller-AAAA-MM-DD.png`).
+- **La cámara se recuerda** entre visitas (en el propio navegador).
+- **Atajos de teclado** (se ven con `?`): `/` buscar, `I`/`P` vista inicial o de
+  planta, `F` pantalla completa, `G` giro, `C` imagen, `E` elevador y `Esc` cerrar
+  la ficha.
+
+Todo usa las llamadas que ya existían en `garage.php`: el intercambio se hace sacando
+un coche, moviendo el otro y volviendo a meter el primero con su color.
+
+---
+
+## 14. Próximas mejoras propuestas
 
 Ideas que encajan con lo construido, ordenadas por relación valor / esfuerzo:
 

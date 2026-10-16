@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, NgZone, OnDestroy, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, NgZone, OnDestroy, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
@@ -6,7 +6,9 @@ import { DataAccessService } from '../../services/dataAccess.service';
 import { MenuComponent } from '../menu/menu.component';
 import {
   CocheEnTaller,
+  cocheConRetraso,
   Distribucion,
+  EstadoCamara,
   GarageScene,
   Puesto,
   PUESTOS_ELEVABLES,
@@ -65,10 +67,22 @@ interface Ficha {
   standalone: true,
   imports: [CommonModule, FormsModule, MenuComponent],
   templateUrl: './workshop-3d.component.html',
-  styleUrl: './workshop-3d.component.css',
+  styleUrls: ['./workshop-3d.component.css', './workshop-3d.funciones.css'],
 })
 export class Workshop3dComponent implements AfterViewInit, OnDestroy {
   @ViewChild('visor', { static: true }) visor!: ElementRef<HTMLDivElement>;
+  @ViewChild('visorWrap', { static: true }) visorWrap!: ElementRef<HTMLDivElement>;
+  @ViewChild('tooltip') tooltip?: ElementRef<HTMLDivElement>;
+  @ViewChild('buscador') buscador?: ElementRef<HTMLInputElement>;
+
+  private readonly CLAVE_CAMARA = 'taller3d.camara';
+  private camaraRestaurada = false;
+
+  /** Estados que se pueden filtrar desde la leyenda. */
+  readonly estadosLeyenda = ['Pendiente', 'Confirmada', 'Finalizada'];
+  /** Estados ocultos (atenuados) en la vista. */
+  estadosOcultos = new Set<string>();
+  verAtajos = false;
 
   private escena: GarageScene | null = null;
 
@@ -97,6 +111,17 @@ export class Workshop3dComponent implements AfterViewInit, OnDestroy {
   nuevaNota = '';
   puestoDestino: { [appointmentId: number]: string } = {};
 
+  // Aviso flotante al pasar el ratón por un coche
+  hover: CocheColocado | null = null;
+
+  // Búsqueda por matrícula, presentación y arrastre desde la lista
+  busqueda = '';
+  pantallaCompleta = false;
+  girando = false;
+  arrastrandoPendiente: number | null = null;
+  private reloj: ReturnType<typeof setInterval> | null = null;
+  private alCambiarPantalla = () => this.zone.run(() => (this.pantallaCompleta = !!document.fullscreenElement));
+
   // Modo edición de la distribución
   editando = false;
   layoutEdit: Distribucion | null = null;
@@ -116,12 +141,31 @@ export class Workshop3dComponent implements AfterViewInit, OnDestroy {
         onSelectCar: (id) => this.zone.run(() => this.seleccionarCoche(id)),
         onSelectBay: (key) => this.zone.run(() => (this.puestoSel = key)),
         onBayMoved: (key, x, z) => this.zone.run(() => this.puestoMovido(key, x, z)),
+        onCarDropped: (id, key) => this.zone.run(() => this.cocheSoltado(id, key)),
+        onHoverCar: (id, x, y) => this.moverAvisoHover(id, x, y),
+        onDoubleClickCar: (id) => this.zone.run(() => this.dobleClicCoche(id)),
       });
     });
+    window.addEventListener('pagehide', this.guardarCamara);
     this.cargar();
+    document.addEventListener('fullscreenchange', this.alCambiarPantalla);
+    // Cada minuto se repintan las etiquetas para que aparezcan los retrasos nuevos.
+    this.zone.runOutsideAngular(() => {
+      this.reloj = setInterval(() => {
+        if (!this.editando && this.coches.some((c) => cocheConRetraso(c))) {
+          this.escena?.setCars(this.coches);
+          this.escena?.selectCar(this.cocheSel);
+        }
+      }, 60_000);
+    });
   }
 
   ngOnDestroy(): void {
+    this.guardarCamara();
+    window.removeEventListener('pagehide', this.guardarCamara);
+    if (this.reloj) clearInterval(this.reloj);
+    document.removeEventListener('fullscreenchange', this.alCambiarPantalla);
+    if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
     this.escena?.dispose();
   }
 
@@ -144,6 +188,7 @@ export class Workshop3dComponent implements AfterViewInit, OnDestroy {
         this.pendientes = res.pendientes || [];
         if (!this.editando) {
           this.escena?.setLayout(this.layout!);
+          this.restaurarCamara();
         }
         this.escena?.setCars(this.coches);
         if (this.cocheSel && !this.coches.some((c) => c.AppointmentID === this.cocheSel)) {
@@ -190,18 +235,128 @@ export class Workshop3dComponent implements AfterViewInit, OnDestroy {
   }
 
   moverA(bayKey: string): void {
-    const id = this.cocheSel;
-    if (!id || !bayKey) return;
+    if (this.cocheSel) this.moverCoche(this.cocheSel, bayKey);
+  }
+
+  /** Mueve un coche ya colocado a otro puesto libre. */
+  private moverCoche(id: number, bayKey: string): void {
+    if (!bayKey) return;
     this.dataAccess.asignarPuesto(id, bayKey).subscribe({
       next: (res) => {
         this.coches = res.coches || this.coches;
         this.escena?.setCars(this.coches);
-        this.escena?.selectCar(id);
-        if (this.ficha?.puesto) this.ficha.puesto.BayKey = bayKey;
+        this.escena?.selectCar(this.cocheSel);
+        if (this.cocheSel === id && this.ficha?.puesto) this.ficha.puesto.BayKey = bayKey;
         this.mostrarAviso(`Movido a ${this.nombrePuesto(bayKey)}`);
       },
       error: (e) => this.mostrarAviso(e.message, true),
     });
+  }
+
+  /** Se ha soltado un coche arrastrado en la vista 3D. */
+  private cocheSoltado(id: number, bayKey: string | null): void {
+    const coche = this.coches.find((c) => c.AppointmentID === id);
+    if (!coche || !bayKey || bayKey === coche.BayKey) return; // vuelve a su sitio
+    const otro = this.coches.find((c) => c.BayKey === bayKey);
+    if (!otro) {
+      this.moverCoche(id, bayKey);
+    } else if (confirm(`${this.nombrePuesto(bayKey)} está ocupado por ${otro.Matricula}. ¿Intercambiar los dos coches?`)) {
+      this.intercambiar(coche, otro);
+    }
+  }
+
+  /**
+   * Intercambia dos coches de puesto con las llamadas existentes: se saca
+   * uno, se mueve el otro y se vuelve a meter el primero (con su color).
+   */
+  private intercambiar(a: CocheColocado, b: CocheColocado): void {
+    const puestoA = a.BayKey;
+    const puestoB = b.BayKey;
+    const colorB = b.CarColor;
+    const fallo = (e: any) => {
+      this.mostrarAviso(e?.message || 'No se pudo intercambiar', true);
+      this.cargar();
+    };
+    this.dataAccess.retirarCocheTaller(b.AppointmentID).subscribe({
+      next: () => this.dataAccess.asignarPuesto(a.AppointmentID, puestoB).subscribe({
+        next: () => this.dataAccess.asignarPuesto(b.AppointmentID, puestoA).subscribe({
+          next: () => this.dataAccess.actualizarCocheTaller(b.AppointmentID, { CarColor: colorB }).subscribe({
+            next: () => {
+              this.cargar();
+              this.mostrarAviso(`${a.Matricula} y ${b.Matricula} intercambiados`);
+            },
+            error: () => this.cargar(),
+          }),
+          error: fallo,
+        }),
+        error: fallo,
+      }),
+      error: fallo,
+    });
+  }
+
+  /** Doble clic en un coche: sube o baja el elevador (si está en uno). */
+  private dobleClicCoche(id: number): void {
+    const coche = this.coches.find((c) => c.AppointmentID === id);
+    const puesto = coche && this.layout?.puestos.find((p) => p.key === coche.BayKey);
+    if (!coche || !puesto || !PUESTOS_ELEVABLES.includes(puesto.tipo)) return;
+    if (this.cocheSel !== id) this.seleccionarCoche(id);
+    this.cocheSel = id;
+    this.alternarElevador();
+  }
+
+  // ---------- Arrastrar un coche de «Por colocar» a la vista 3D ----------
+
+  empezarArrastrePendiente(ev: DragEvent, c: CochePendiente): void {
+    this.arrastrandoPendiente = c.AppointmentID;
+    this.escena?.mostrarLibres(true);
+    ev.dataTransfer?.setData('text/plain', String(c.AppointmentID));
+    if (ev.dataTransfer) ev.dataTransfer.effectAllowed = 'move';
+  }
+
+  terminarArrastrePendiente(): void {
+    this.arrastrandoPendiente = null;
+    this.escena?.mostrarLibres(false);
+    this.escena?.resaltarPuesto(null);
+  }
+
+  sobreVisor(ev: DragEvent): void {
+    if (this.arrastrandoPendiente === null || this.editando) return;
+    ev.preventDefault(); // permite soltar
+    this.escena?.resaltarPuesto(this.escena.puestoEn(ev.clientX, ev.clientY));
+  }
+
+  soltarEnVisor(ev: DragEvent): void {
+    ev.preventDefault();
+    const id = this.arrastrandoPendiente;
+    const key = this.escena?.puestoEn(ev.clientX, ev.clientY) ?? null;
+    this.terminarArrastrePendiente();
+    const c = this.pendientes.find((p) => p.AppointmentID === id);
+    if (!c) return;
+    if (!key) {
+      this.mostrarAviso('Suelta el coche encima de un puesto', true);
+      return;
+    }
+    if (this.coches.some((x) => x.BayKey === key)) {
+      this.mostrarAviso(`${this.nombrePuesto(key)} ya está ocupado`, true);
+      return;
+    }
+    this.puestoDestino[c.AppointmentID] = key;
+    this.meterEnTaller(c);
+  }
+
+  // ---------- Aviso flotante (fuera de Angular para no repintar en cada movimiento) ----------
+
+  private moverAvisoHover(id: number | null, x: number, y: number): void {
+    const actual = this.hover?.AppointmentID ?? null;
+    if (id !== actual) {
+      this.zone.run(() => (this.hover = id === null ? null : this.coches.find((c) => c.AppointmentID === id) || null));
+    }
+    const el = this.tooltip?.nativeElement;
+    if (el && id !== null) {
+      const r = this.visorWrap.nativeElement.getBoundingClientRect();
+      el.style.transform = `translate(${Math.min(x - r.left + 14, r.width - 230)}px, ${y - r.top + 14}px)`;
+    }
   }
 
   alternarElevador(): void {
@@ -483,6 +638,152 @@ export class Workshop3dComponent implements AfterViewInit, OnDestroy {
   // =================================================================
   //  Cámara y presentación
   // =================================================================
+
+  /** Matrículas para el buscador (en el taller y por colocar). */
+  get matriculas(): string[] {
+    return [...this.coches, ...this.pendientes].map((c) => (c.Matricula || '').toUpperCase());
+  }
+
+  /** Busca un coche por matrícula: lo enfoca y abre su ficha. */
+  buscarMatricula(): void {
+    const q = this.busqueda.replace(/[\s-]/g, '').toUpperCase();
+    if (!q) return;
+    const coincide = (m: string) => (m || '').replace(/[\s-]/g, '').toUpperCase().includes(q);
+    const enTaller = this.coches.find((c) => coincide(c.Matricula));
+    if (enTaller) {
+      if (this.editando) this.descartarEdicion();
+      this.abrirDesdeLista(enTaller.AppointmentID);
+      this.busqueda = '';
+      return;
+    }
+    const pendiente = this.pendientes.find((c) => coincide(c.Matricula));
+    if (pendiente) {
+      this.mostrarAviso(`${pendiente.Matricula.toUpperCase()} tiene cita hoy a las ${this.hora(pendiente.StartDateTime)} y está por colocar`);
+      this.seleccionarCoche(pendiente.AppointmentID);
+      this.busqueda = '';
+      return;
+    }
+    this.mostrarAviso(`No hay ningún coche con la matrícula «${this.busqueda}» este día`, true);
+  }
+
+  /** Puestos ocupados / total, para el resumen. */
+  get ocupacion(): { ocupados: number; total: number; porcentaje: number } {
+    const total = this.layout?.puestos.length || 0;
+    const ocupados = this.coches.length;
+    return { ocupados, total, porcentaje: total ? Math.round((ocupados / total) * 100) : 0 };
+  }
+
+  get numRetrasos(): number {
+    return this.coches.filter((c) => cocheConRetraso(c)).length;
+  }
+
+  conRetraso(c: { EndDateTime?: string; Status: string }): boolean {
+    return cocheConRetraso(c);
+  }
+
+  alternarPantallaCompleta(): void {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    } else {
+      this.visorWrap.nativeElement.requestFullscreen?.().catch(() => this.mostrarAviso('El navegador no permite la pantalla completa', true));
+    }
+  }
+
+  alternarGiro(): void {
+    this.girando = !this.girando;
+    this.escena?.setAutoRotate(this.girando);
+  }
+
+  // ---------- Filtro por estado (leyenda) ----------
+
+  alternarEstado(estado: string): void {
+    if (this.estadosOcultos.has(estado)) this.estadosOcultos.delete(estado);
+    else this.estadosOcultos.add(estado);
+    const visibles = ['Pendiente', 'Confirmada', 'Finalizada', 'Cancelada'].filter((e) => !this.estadosOcultos.has(e));
+    this.escena?.setFiltroEstados(this.estadosOcultos.size ? visibles : null);
+  }
+
+  // ---------- Captura de la vista ----------
+
+  descargarCaptura(): void {
+    const url = this.escena?.captura();
+    if (!url) return;
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `taller-${this.fecha}.png`;
+    a.click();
+  }
+
+  // ---------- Recordar la cámara entre visitas ----------
+
+  private guardarCamara = (): void => {
+    const c = this.escena?.getCamara();
+    if (!c || !this.camaraRestaurada) return;
+    try { localStorage.setItem(this.CLAVE_CAMARA, JSON.stringify(c)); } catch { /* sin almacenamiento */ }
+  };
+
+  private restaurarCamara(): void {
+    if (this.camaraRestaurada) return;
+    this.camaraRestaurada = true;
+    try {
+      const c: EstadoCamara = JSON.parse(localStorage.getItem(this.CLAVE_CAMARA) || 'null');
+      if (c && Array.isArray(c.pos) && Array.isArray(c.target)) this.escena?.setCamara(c);
+    } catch { /* sin almacenamiento o dato corrupto */ }
+  }
+
+  // ---------- Tiempo de cada cita ----------
+
+  /** «Empieza en 20 min», «Faltan 45 min», «Retraso de 1 h 10 min»... */
+  tiempoCita(c: { StartDateTime: string; EndDateTime: string; Status: string }): string {
+    if (c.Status === 'Finalizada') return 'Terminada';
+    if (c.Status === 'Cancelada') return '';
+    const ahora = Date.now();
+    const ini = new Date(c.StartDateTime.replace(' ', 'T')).getTime();
+    const fin = new Date(c.EndDateTime.replace(' ', 'T')).getTime();
+    if (ahora < ini) return `Empieza en ${this.duracion(ini - ahora)}`;
+    if (ahora <= fin) return `Faltan ${this.duracion(fin - ahora)}`;
+    return `Retraso de ${this.duracion(ahora - fin)}`;
+  }
+
+  private duracion(ms: number): string {
+    const min = Math.max(1, Math.round(ms / 60000));
+    if (min < 60) return `${min} min`;
+    const h = Math.floor(min / 60);
+    if (h >= 24) return `${Math.floor(h / 24)} d`;
+    const m = min % 60;
+    return m ? `${h} h ${m} min` : `${h} h`;
+  }
+
+  // ---------- Atajos de teclado ----------
+
+  @HostListener('document:keydown', ['$event'])
+  atajo(ev: KeyboardEvent): void {
+    const t = ev.target as HTMLElement | null;
+    if (ev.ctrlKey || ev.metaKey || ev.altKey) return;
+    if (t && (t.isContentEditable || ['INPUT', 'TEXTAREA', 'SELECT'].includes(t.tagName))) return;
+    const k = ev.key.toLowerCase();
+    if (k === 'escape') {
+      if (this.verAtajos) this.verAtajos = false;
+      else if (this.cocheSel) this.cerrarFicha();
+      return;
+    }
+    if (this.editando) return;
+    const acciones: { [tecla: string]: () => void } = {
+      '/': () => this.buscador?.nativeElement.focus(),
+      '?': () => (this.verAtajos = !this.verAtajos),
+      f: () => this.alternarPantallaCompleta(),
+      g: () => this.alternarGiro(),
+      i: () => this.vistaInicial(),
+      p: () => this.vistaPlanta(),
+      c: () => this.descargarCaptura(),
+      e: () => this.esElevable && this.alternarElevador(),
+    };
+    const accion = acciones[k] || acciones[ev.key];
+    if (accion) {
+      ev.preventDefault();
+      accion();
+    }
+  }
 
   vistaInicial(): void {
     this.escena?.vistaInicial();

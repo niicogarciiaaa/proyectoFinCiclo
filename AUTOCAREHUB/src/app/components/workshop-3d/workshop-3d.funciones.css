@@ -1,0 +1,154 @@
+/* Taller 3D — estilos de las funciones: leyenda filtrable, atajos, buscador,
+   ocupación, aviso al pasar el ratón y arrastre desde «Por colocar».
+   Usa las variables --t-* definidas en workshop-3d.component.css. */
+.leyenda {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  display: flex;
+  gap: 2px;
+  padding: 3px;
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(6px);
+  border-radius: 999px;
+}
+.leyenda button {
+  border: 0;
+  background: none;
+  border-radius: 999px;
+  padding: 3px 10px;
+  font-size: 0.75rem;
+  color: var(--t-suave);
+  cursor: pointer;
+}
+.leyenda button:hover {
+  background: #f3f4f6;
+}
+.leyenda button.apagado {
+  color: var(--t-tenue);
+  text-decoration: line-through;
+}
+.leyenda button.apagado 
+/* ---------- Buscador, ocupación y retrasos ---------- */
+.buscar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0 10px;
+  height: 34px;
+  border: 1px solid var(--t-borde);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--t-tenue);
+}
+.buscar:focus-within {
+  border-color: var(--t-acento);
+  box-shadow: 0 0 0 3px rgba(251, 140, 0, 0.15);
+}
+.buscar input {
+  border: 0;
+  outline: 0;
+  width: 150px;
+  font-size: 0.85rem;
+  color: var(--t-texto);
+  background: transparent;
+  text-transform: uppercase;
+}
+.resumen {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.8rem;
+  color: var(--t-suave);
+}
+.ocupacion {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.barra-ocupacion {
+  display: inline-block;
+  width: 56px;
+  height: 6px;
+  border-radius: 3px;
+  background: #e5e7eb;
+  overflow: hidden;
+}
+.barra-ocupacion span {
+  display: block;
+  height: 100%;
+  background: var(--t-primario);
+  border-radius: 3px;
+  transition: width 0.3s;
+}
+.retrasos {
+  color: #b91c1c;
+  font-weight: 500;
+}
+.camara button.activo {
+  color: var(--t-texto);
+  border-color: var(--t-primario);
+}
+.retraso {
+  color: #b91c1c;
+}
+
+/* ---------- Aviso al pasar el ratón ---------- */
+.tooltip-coche {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 170px;
+  max-width: 220px;
+  padding: 10px 12px;
+  background: #fff;
+  border: 1px solid var(--t-borde);
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.12);
+  font-size: 0.78rem;
+  color: var(--t-suave);
+  pointer-events: none;
+}
+.tooltip-coche strong {
+  color: var(--t-texto);
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+.tooltip-coche .t-modelo {
+  color: var(--t-texto);
+}
+.t-tiempo {
+  color: var(--t-texto);
+  font-weight: 500;
+}
+.t-retraso {
+  color: #b91c1c;
+}
+
+/* ---------- Arrastrar desde «Por colocar» ---------- */
+.pista {
+  font-size: 0.78rem;
+  color: var(--t-tenue);
+  margin: -4px 0 8px;
+}
+.tarjeta.arrastrable {
+  cursor: grab;
+}
+.tarjeta.arrastrando {
+  opacity: 0.5;
+  border-style: dashed;
+}
+.visor-wrap.soltando {
+  border-color: var(--t-acento);
+  box-shadow: 0 0 0 3px rgba(251, 140, 0, 0.18);
+}
+
+/* Pantalla completa: el visor ocupa toda la pantalla */
+.visor-wrap:fullscreen {
+  border-radius: 0;
+  border: 0;
+}
