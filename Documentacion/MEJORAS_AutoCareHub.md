@@ -26,7 +26,8 @@
 8. [Mejoras de octubre de 2026](#8-mejoras-de-octubre-de-2026)
 9. [Cambios en la base de datos](#9-cambios-en-la-base-de-datos)
 10. [Despliegue automático a InfinityFree](#10-despliegue-automático-a-infinityfree)
-11. [Próximas mejoras propuestas](#11-próximas-mejoras-propuestas)
+11. [Nuevo diseño del PDF de factura](#11-nuevo-diseño-del-pdf-de-factura)
+12. [Próximas mejoras propuestas](#12-próximas-mejoras-propuestas)
 
 ---
 
@@ -456,7 +457,39 @@ de producción antes de desplegar código que las necesite.
 
 ---
 
-## 11. Próximas mejoras propuestas
+## 11. Nuevo diseño del PDF de factura
+
+**Qué es:** rediseño completo del PDF que se descarga al pulsar **PDF** en una
+factura (cliente y taller), para que tenga aspecto de factura profesional.
+
+**Qué aporta:**
+
+- **Logo bien proporcionado**: antes la imagen (vertical y con mucho margen
+  transparente) se deformaba en una caja horizontal. Ahora se usa un recorte
+  (`assets/img/LogoFactura.png`) y se respeta su proporción, junto a la marca
+  *AutoCareHub*.
+- **Franja resumen** con nº de factura, fecha de emisión, estado (con color) e importe
+  total.
+- **Tres tarjetas**: *Emitida por* (taller, dirección, teléfono, NIF), *Facturar a*
+  (cliente y nº de cita) y *Vehículo*.
+- **Tabla de conceptos** con `jspdf-autotable`: cabecera oscura, filas alternas y
+  **salto de página automático** con la cabecera repetida (antes, con muchas líneas,
+  la tabla se salía de la hoja).
+- **Desglose del IVA por tipo** (21 %, 10 %…) y total destacado; nota según el estado
+  (*Factura pagada* / *Pendiente de pago*).
+- **Bloque VeriFactu** a continuación de los totales (ya no fijo al pie, donde se
+  solapaba), con la leyenda «QR tributario» encima del código.
+- **Pie en todas las hojas** con los datos del taller y «Página X de Y».
+- Importes y cantidades en formato español (`1.761,70 €`, `1,5`).
+- Se corrige el color del estado: la base de datos guarda `Pagado` y el PDF lo
+  reconoce tanto en masculino como en femenino.
+
+**Archivos:** `services/invoice-pdf.service.ts`, `assets/img/LogoFactura.png`. Sin
+cambios en la API ni en la base de datos.
+
+---
+
+## 12. Próximas mejoras propuestas
 
 Ideas que encajan con lo construido, ordenadas por relación valor / esfuerzo:
 
