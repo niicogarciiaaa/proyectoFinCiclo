@@ -82,7 +82,12 @@ export const ES_TEXTS = {
     toggleMenu: 'Abrir o cerrar el menú',
     darkMode: 'Activar modo oscuro',
     lightMode: 'Activar modo claro',
-    logout: 'Cerrar sesión'
+    logout: 'Cerrar sesión',
+    badgeAny: 'Tienes avisos pendientes',
+    badgeChat: 'mensajes sin leer',
+    badgeAgenda: 'citas por confirmar',
+    badgeMisCitas: 'citas en las próximas 48 horas',
+    badgeFacturas: 'facturas pendientes de pago'
   },
   workshops: {
     management: {

@@ -5,6 +5,8 @@ import { ActivatedRoute } from '@angular/router';
 import { DataAccessService, Invoice } from '../../services/dataAccess.service';
 import { InvoicePdfService } from '../../services/invoice-pdf.service';
 import { MenuComponent } from '../menu/menu.component';
+import { SearchBoxComponent } from '../search-box/search-box.component';
+import { coincideBusqueda, fechaBuscable } from '../../services/search.util';
 import { AppointmentsViewerComponent } from '../appointments-viewer/appointments-viewer.component';
 
 interface InvoiceItemWorkshop {
@@ -19,10 +21,12 @@ interface InvoiceItemWorkshop {
   standalone: true,
   templateUrl: './invoices-generator.component.html',
   styleUrls: ['./invoices-generator.component.css'],
-  imports: [FormsModule, CommonModule, MenuComponent],
+  imports: [FormsModule, CommonModule, MenuComponent, SearchBoxComponent],
 })
 export class InvoicesGeneratorComponent implements OnInit {
   facturas: Invoice[] = [];
+  busquedaFacturas = '';
+  busquedaCitas = '';
   appointment_id: number | null = null;
   items: InvoiceItemWorkshop[] = [];
   estado: string = 'Pendiente';
@@ -176,6 +180,23 @@ export class InvoicesGeneratorComponent implements OnInit {
   formatCita(c: any): string {
     const fecha = (c.StartDateTime || '').substring(0, 16).replace('T', ' ');
     return `#${c.AppointmentID} · ${fecha} · ${c.Vehiculo} · ${c.UserName}`;
+  }
+
+  get facturasFiltradas(): Invoice[] {
+    return this.facturas.filter((f) =>
+      coincideBusqueda(this.busquedaFacturas, [
+        f.InvoiceID, `AUTOCARE-${f.InvoiceID}`, f.UserName, f.Estado,
+        f.Estado === 'Pagado' ? 'pagada' : '', f.TotalAmount, fechaBuscable(f.Date), f.Marca, f.Modelo,
+      ])
+    );
+  }
+
+  get citasFiltradas(): any[] {
+    return this.citasTaller.filter((c) =>
+      coincideBusqueda(this.busquedaCitas, [
+        c.AppointmentID, c.UserName, c.Vehiculo, c.Service, c.Description, c.Status, fechaBuscable(c.StartDateTime),
+      ])
+    );
   }
 
   /**  Método para obtener todas las facturas */

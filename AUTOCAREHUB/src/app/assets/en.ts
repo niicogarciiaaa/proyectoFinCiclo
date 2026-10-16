@@ -80,7 +80,12 @@ export const EN_TEXTS = {
     toggleMenu: 'Open or close the menu',
     darkMode: 'Enable dark mode',
     lightMode: 'Enable light mode',
-    logout: 'Log out'
+    logout: 'Log out',
+    badgeAny: 'You have pending notices',
+    badgeChat: 'unread messages',
+    badgeAgenda: 'appointments to confirm',
+    badgeMisCitas: 'appointments in the next 48 hours',
+    badgeFacturas: 'invoices pending payment'
   },
   workshops: {
     management: {

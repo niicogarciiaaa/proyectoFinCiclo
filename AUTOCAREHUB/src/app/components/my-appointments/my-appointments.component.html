@@ -22,12 +22,20 @@
     <button [class.active]="filtro === 'todas'" [attr.aria-pressed]="filtro === 'todas'" (click)="filtro = 'todas'">Todas</button>
   </div>
 
+  <app-search-box
+    [(valor)]="busqueda"
+    placeholder="Buscar por servicio, taller, coche o fecha..."
+    [total]="citasDelFiltro.length"
+    [encontrados]="citasFiltradas.length"
+  ></app-search-box>
+
   <div *ngIf="loading" class="loading">Cargando tus citas...</div>
   <div *ngIf="error" class="error-message" role="alert">{{ error }}</div>
   <div *ngIf="mensaje" class="ok-message" role="status">{{ mensaje }}</div>
 
   <div *ngIf="!loading && citasFiltradas.length === 0" class="empty">
-    No tienes citas {{ filtro === 'proximas' ? 'próximas' : '' }}.
+    <ng-container *ngIf="busqueda; else sinCitas">Ninguna cita coincide con «{{ busqueda }}».</ng-container>
+    <ng-template #sinCitas>No tienes citas {{ filtro === 'proximas' ? 'próximas' : '' }}.</ng-template>
   </div>
 
   <div class="cita-list">

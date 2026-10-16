@@ -4,6 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { MenuComponent } from '../menu/menu.component';
 import { RescheduleDialogComponent } from '../reschedule-dialog/reschedule-dialog.component';
+import { SearchBoxComponent } from '../search-box/search-box.component';
+import { coincideBusqueda, fechaBuscable } from '../../services/search.util';
 
 interface MiCita {
   AppointmentID: number;
@@ -31,7 +33,7 @@ interface MiCita {
 @Component({
   selector: 'app-my-appointments',
   standalone: true,
-  imports: [CommonModule, FormsModule, MenuComponent, RescheduleDialogComponent],
+  imports: [CommonModule, FormsModule, MenuComponent, RescheduleDialogComponent, SearchBoxComponent],
   templateUrl: './my-appointments.component.html',
   styleUrl: './my-appointments.component.css',
 })
@@ -41,6 +43,7 @@ export class MyAppointmentsComponent implements OnInit {
   error = '';
   mensaje = '';
   filtro: 'proximas' | 'todas' = 'proximas';
+  busqueda = '';
 
   /** Cita que se está reprogramando (abre el diálogo). */
   citaAReprogramar: MiCita | null = null;
@@ -72,10 +75,19 @@ export class MyAppointmentsComponent implements OnInit {
     });
   }
 
-  get citasFiltradas(): MiCita[] {
+  /** Citas de la pestaña elegida (próximas o todas), antes de buscar. */
+  get citasDelFiltro(): MiCita[] {
     if (this.filtro === 'todas') return this.citas;
     const ahora = new Date();
     return this.citas.filter((c) => this.fecha(c.EndDateTime) >= ahora);
+  }
+
+  get citasFiltradas(): MiCita[] {
+    return this.citasDelFiltro.filter((c) =>
+      coincideBusqueda(this.busqueda, [
+        c.Service, c.WorkshopName, c.Vehiculo, c.Status, c.Description, fechaBuscable(c.StartDateTime),
+      ])
+    );
   }
 
   /** Citas activas que empiezan en las próximas 48 horas (recordatorio). */

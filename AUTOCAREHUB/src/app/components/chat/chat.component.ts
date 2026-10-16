@@ -9,6 +9,7 @@ import {
 import { MenuComponent } from '../menu/menu.component';
 import { interval, Subscription } from 'rxjs';
 import { I18nService } from '../../services/i18n.service';
+import { BadgesService } from '../../services/badges.service';
 
 @Component({
   selector: 'app-chat',
@@ -34,7 +35,8 @@ export class ChatComponent implements OnInit, OnDestroy {
 
   constructor(
     private dataService: DataAccessService,
-    public i18n: I18nService
+    public i18n: I18nService,
+    private badges: BadgesService
   ) {}
 
   ngOnInit() {
@@ -74,10 +76,16 @@ export class ChatComponent implements OnInit, OnDestroy {
       (response) => {
         if (response.success) {
           this.chats = response.chats;
+          this.actualizarAviso();
         }
       },
       (error) => console.error(this.i18n.t('CHAT.ERROR_CARGAR_CHATS'), error)
     );
+  }
+
+  /** Pasa al menú el total de mensajes sin leer. */
+  private actualizarAviso() {
+    this.badges.fijar('/chat', this.dataService.getUnreadCount(this.chats));
   }
 
   seleccionarChat(chat: Chat) {
@@ -100,6 +108,10 @@ export class ChatComponent implements OnInit, OnDestroy {
       (response) => {
         if (response.success) {
           this.mensajes = response.messages;
+          // Al abrir el chat sus mensajes quedan leídos: actualizar el aviso del menú.
+          const abierto = this.chats.find((c) => c.ChatID === chatId);
+          if (abierto) abierto.unreadCount = 0;
+          this.actualizarAviso();
         }
       },
       (error) => console.error(this.i18n.t('CHAT.ERROR_CARGAR_MENSAJES'), error)

@@ -27,7 +27,8 @@
 9. [Cambios en la base de datos](#9-cambios-en-la-base-de-datos)
 10. [Despliegue automático a InfinityFree](#10-despliegue-automático-a-infinityfree)
 11. [Nuevo diseño del PDF de factura](#11-nuevo-diseño-del-pdf-de-factura)
-12. [Próximas mejoras propuestas](#12-próximas-mejoras-propuestas)
+12. [Avisos en el menú y buscador en las listas](#12-avisos-en-el-menú-y-buscador-en-las-listas)
+13. [Próximas mejoras propuestas](#13-próximas-mejoras-propuestas)
 
 ---
 
@@ -489,7 +490,38 @@ cambios en la API ni en la base de datos.
 
 ---
 
-## 12. Próximas mejoras propuestas
+## 12. Avisos en el menú y buscador en las listas
+
+**Qué es:** dos mejoras para que la app sea más cómoda en el día a día: el menú
+avisa de lo que requiere atención y las listas largas se pueden filtrar escribiendo.
+
+**Avisos en el menú** (`services/badges.service.ts`, `components/menu/`):
+
+- Un contador naranja junto a cada opción del menú:
+  - **Taller:** *Chats* (mensajes sin leer) y *Agenda Semanal* (citas por confirmar).
+  - **Cliente:** *Chats* (mensajes sin leer), *Mis Citas* (citas en las próximas
+    48 horas) y *Ver facturas* (facturas pendientes de pago).
+- En el móvil, un punto naranja sobre el botón del menú indica que hay avisos.
+- Se actualizan al cambiar de pantalla y cada minuto mientras la pestaña está
+  visible; al abrir un chat, su contador baja al momento.
+- Usa solo llamadas que ya existían (chats, citas y facturas): sin cambios en la API.
+
+**Buscador en las listas** (`services/search.util.ts`, `components/search-box/`):
+
+- Caja de búsqueda en *Mis Citas* y *Ver facturas* (cliente) y en *Ver citas* y
+  *Generar Factura* (facturas y citas del taller).
+- No distingue mayúsculas ni tildes y admite varias palabras a la vez
+  («laura seat»); también busca fechas como se escriben (`14/10/2026`, `14/10`).
+- Muestra cuántos resultados hay («3 de 12») y se limpia con la X o la tecla Esc.
+
+**Otros cambios:** *Ver facturas* pasa a tener un botón **Descargar PDF** en cada
+fila (antes había que seleccionar la factura y luego generar el PDF), con nº,
+fecha e importe formateados. *Ver citas* del taller usa las tablas de Bootstrap
+(antes usaba clases de una librería que el proyecto no tiene y se veía sin estilo).
+
+---
+
+## 13. Próximas mejoras propuestas
 
 Ideas que encajan con lo construido, ordenadas por relación valor / esfuerzo:
 

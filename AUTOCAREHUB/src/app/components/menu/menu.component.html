@@ -13,6 +13,7 @@
     aria-controls="menu-principal"
   >
     <i class="bi" [class.bi-list]="!menuAbierto" [class.bi-x-lg]="menuAbierto" aria-hidden="true"></i>
+    <span class="aviso-punto" *ngIf="hayAvisos && !menuAbierto" aria-hidden="true"></span>
     <span class="visually-hidden-text">{{ i18n.t('menu.toggleMenu') }}</span>
   </button>
 
@@ -23,7 +24,12 @@
         routerLinkActive="active"
         ariaCurrentWhenActive="page"
         (click)="menuAbierto = false"
-      >{{ i18n.t(route.label) }}</a>
+      >{{ i18n.t(route.label) }}<span
+          class="aviso"
+          *ngIf="contadores[route.path] > 0"
+          [attr.aria-label]="textoAviso(route.path)"
+          [title]="textoAviso(route.path)"
+        >{{ contadores[route.path] > 99 ? '99+' : contadores[route.path] }}</span></a>
     </li>
   </ul>
 

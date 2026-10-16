@@ -276,6 +276,14 @@
             No hay facturas disponibles.
           </div>
 
+          <app-search-box
+            *ngIf="facturas.length > 0"
+            [(valor)]="busquedaFacturas"
+            placeholder="Buscar por nº, cliente, fecha, importe o estado..."
+            [total]="facturas.length"
+            [encontrados]="facturasFiltradas.length"
+          ></app-search-box>
+
           <div class="table-responsive" *ngIf="facturas.length > 0">
             <table class="table table-striped">
               <thead>
@@ -289,7 +297,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let factura of facturas">
+                <tr *ngFor="let factura of facturasFiltradas">
                   <td>{{ factura.InvoiceID }}</td>
                   <td>{{ factura.Date | date : "dd/MM/yyyy" }}</td>
                   <td>{{ factura.TotalAmount | currency : "EUR" }}</td>
@@ -330,6 +338,14 @@
             No hay citas registradas para este taller.
           </div>
 
+          <app-search-box
+            *ngIf="citasTaller.length > 0"
+            [(valor)]="busquedaCitas"
+            placeholder="Buscar por cliente, vehículo, servicio, estado o fecha..."
+            [total]="citasTaller.length"
+            [encontrados]="citasFiltradas.length"
+          ></app-search-box>
+
           <div class="table-responsive" *ngIf="citasTaller.length > 0">
             <table class="table table-striped">
               <thead>
@@ -343,7 +359,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr *ngFor="let cita of citasTaller">
+                <tr *ngFor="let cita of citasFiltradas">
                   <td>{{ cita.AppointmentID }}</td>
                   <td>{{ cita.StartDateTime | date : "dd/MM/yyyy HH:mm" }}</td>
                   <td>{{ cita.Vehiculo }}</td>

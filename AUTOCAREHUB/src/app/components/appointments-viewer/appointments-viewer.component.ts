@@ -2,6 +2,8 @@ import { Component } from '@angular/core';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { CommonModule } from '@angular/common';
 import { MenuComponent } from '../menu/menu.component';
+import { SearchBoxComponent } from '../search-box/search-box.component';
+import { coincideBusqueda, fechaBuscable } from '../../services/search.util';
 
 interface Cita {
   AppointmentID: number;
@@ -19,12 +21,21 @@ interface Cita {
 @Component({
   selector: 'app-appointments-viewer',
   standalone: true,
-  imports: [CommonModule, MenuComponent],
+  imports: [CommonModule, MenuComponent, SearchBoxComponent],
   templateUrl: './appointments-viewer.component.html',
   styleUrl: './appointments-viewer.component.css',
 })
 export class AppointmentsViewerComponent {
   citas: Cita[] = [];
+  busqueda = '';
+
+  get citasFiltradas(): Cita[] {
+    return this.citas.filter((c) =>
+      coincideBusqueda(this.busqueda, [
+        c.UserName, c.Vehiculo, c.Service, c.Description, c.Status, fechaBuscable(c.StartDateTime),
+      ])
+    );
+  }
   errorCitas: string = '';
   constructor(private dataAccessService: DataAccessService) {}
 
