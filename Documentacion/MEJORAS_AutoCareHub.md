@@ -457,6 +457,16 @@ minúsculas, como la carpeta del servidor).
 **Nota:** las migraciones SQL no se ejecutan solas; hay que lanzarlas a mano en la BD
 de producción antes de desplegar código que las necesite.
 
+**Avisos del hosting (16/10/2026):**
+
+- InfinityFree **bloquea con un 403 cualquier dirección `.php` que contenga «chat»**
+  (también `chats.php`), así que el chat no funciona en producción. Los avisos del
+  menú dejan de consultar los chats en cuanto esa llamada falla, para no llenar la
+  consola de errores.
+- Tras un despliegue, una pestaña abierta con la versión anterior podía pedir trozos
+  de código (`chunk-XXXX.js`) que ya no existen y quedarse en blanco. Ahora la app se
+  **recarga sola una vez** cuando ocurre (`services/chunk-error.handler.ts`).
+
 ---
 
 ## 11. Nuevo diseño del PDF de factura

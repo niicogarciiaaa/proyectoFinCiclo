@@ -20,6 +20,11 @@ export class BadgesService implements OnDestroy {
 
   private sondeo: Subscription | null = null;
   private rol = '';
+  /**
+   * Si la llamada de chats falla (p. ej. el hosting bloquea chats.php), se deja
+   * de pedir durante la sesión para no llenar la consola de errores.
+   */
+  private chatsNoDisponibles = false;
 
   constructor(private dataAccess: DataAccessService) {}
 
@@ -47,6 +52,7 @@ export class BadgesService implements OnDestroy {
     this.sondeo?.unsubscribe();
     this.sondeo = null;
     this.rol = '';
+    this.chatsNoDisponibles = false;
     this.contadoresSubject.next({});
   }
 
@@ -57,10 +63,15 @@ export class BadgesService implements OnDestroy {
 
   /** Vuelve a calcular los contadores ahora mismo. */
   refrescar(): void {
-    const chats$ = this.dataAccess.obtenerChats().pipe(
-      map((res) => this.dataAccess.getUnreadCount(res?.chats || [])),
-      catchError(() => of(0))
-    );
+    const chats$ = this.chatsNoDisponibles
+      ? of(0)
+      : this.dataAccess.obtenerChats().pipe(
+          map((res) => this.dataAccess.getUnreadCount(res?.chats || [])),
+          catchError(() => {
+            this.chatsNoDisponibles = true;
+            return of(0);
+          })
+        );
 
     if (this.rol === 'taller') {
       const pendientes$ = this.dataAccess.obtenerCitasTallerAgenda().pipe(
