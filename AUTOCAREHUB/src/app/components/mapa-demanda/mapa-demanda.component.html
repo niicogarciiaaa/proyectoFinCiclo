@@ -1,0 +1,44 @@
+<section class="mapa" aria-labelledby="mapa-titulo">
+  <div class="cab">
+    <h3 id="mapa-titulo">Horas de más trabajo</h3>
+    <label>
+      Periodo
+      <select [(ngModel)]="meses" (ngModelChange)="calcular()">
+        <option [ngValue]="3">3 meses</option>
+        <option [ngValue]="6">6 meses</option>
+        <option [ngValue]="12">12 meses</option>
+      </select>
+    </label>
+  </div>
+
+  <p class="vacio" *ngIf="error" role="alert">{{ error }}</p>
+  <p class="vacio" *ngIf="!error && total === 0">Sin citas en este periodo.</p>
+
+  <ng-container *ngIf="total > 0">
+    <p class="resumen">
+      Momento de más demanda: <strong>{{ punta }}</strong>. Día más tranquilo: <strong>{{ tranquilo }}</strong>.
+      <span>({{ total }} citas)</span>
+    </p>
+    <div class="tabla">
+      <table>
+        <thead>
+          <tr>
+            <th scope="col"><span class="oculto">Día</span></th>
+            <th scope="col" *ngFor="let h of horas">{{ h }}h</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let fila of celdas; let d = index">
+            <th scope="row">{{ dias[d] }}</th>
+            <td
+              *ngFor="let n of fila; let i = index"
+              [style.background]="fondo(n)"
+              [style.color]="texto(n)"
+              [title]="nombresDia[d] + ' a las ' + horas[i] + ':00 · ' + n + (n === 1 ? ' cita' : ' citas')"
+            >{{ n || '' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </ng-container>
+</section>

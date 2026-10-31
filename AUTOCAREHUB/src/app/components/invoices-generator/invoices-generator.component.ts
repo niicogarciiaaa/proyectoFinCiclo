@@ -6,6 +6,7 @@ import { DataAccessService, Invoice } from '../../services/dataAccess.service';
 import { InvoicePdfService } from '../../services/invoice-pdf.service';
 import { MenuComponent } from '../menu/menu.component';
 import { SearchBoxComponent } from '../search-box/search-box.component';
+import { LineaPlantilla, PlantillasFacturaComponent } from '../plantillas-factura/plantillas-factura.component';
 import { coincideBusqueda, fechaBuscable } from '../../services/search.util';
 import { AppointmentsViewerComponent } from '../appointments-viewer/appointments-viewer.component';
 
@@ -21,7 +22,7 @@ interface InvoiceItemWorkshop {
   standalone: true,
   templateUrl: './invoices-generator.component.html',
   styleUrls: ['./invoices-generator.component.css'],
-  imports: [FormsModule, CommonModule, MenuComponent, SearchBoxComponent],
+  imports: [FormsModule, CommonModule, MenuComponent, SearchBoxComponent, PlantillasFacturaComponent],
 })
 export class InvoicesGeneratorComponent implements OnInit {
   facturas: Invoice[] = [];
@@ -197,6 +198,11 @@ export class InvoicesGeneratorComponent implements OnInit {
         c.AppointmentID, c.UserName, c.Vehiculo, c.Service, c.Description, c.Status, fechaBuscable(c.StartDateTime),
       ])
     );
+  }
+
+  /** Añade a la factura las líneas de una plantilla de trabajo. */
+  aplicarPlantilla(lineas: LineaPlantilla[]): void {
+    this.items = [...this.items, ...lineas];
   }
 
   /**  Método para obtener todas las facturas */

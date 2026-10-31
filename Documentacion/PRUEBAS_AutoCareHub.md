@@ -2,7 +2,7 @@
 
 **Proyecto:** AutoCareHub (Angular + PHP/MySQL)
 **Autor:** Nicolás García Moreira
-**Última actualización:** 17/10/2026
+**Última actualización:** 31/10/2026
 
 > Cada punto indica qué hacer y qué se debería ver (→). Hazla primero en **local** y
 > repite en la **web publicada** los puntos marcados con 🌐. Cuentas de prueba (contraseña
@@ -146,6 +146,15 @@
 - [ ] Con la web abierta durante un despliegue, navegar a otra pantalla → como mucho se recarga una vez, sin pantalla en blanco.
 - [ ] Consola del navegador (F12) sin errores repetidos (solo uno de chats, que es lo esperado).
 - [ ] **Ficha del coche del Taller 3D en producción** → comprobar que abre; si falla, anotar *Red → garage.php → Respuesta*.
+
+## 14. Funciones añadidas
+
+- [ ] **Modo demostración** (inicio del taller): *Crear datos de ejemplo* → aparecen citas, facturas y coches; *Borrar* → desaparecen y lo real sigue igual.
+- [ ] **Asistente de averías** (*Pedir cita*): elegir un síntoma o escribir «hace ruido al frenar» → orientación y servicio sugerido; *Usar esta sugerencia* → se selecciona y cambia la duración.
+- [ ] **Coste por coche** (*Historial de vehículos*): la tabla coincide con las facturas y al cambiar de coche cambian los desgloses.
+- [ ] **Horas de más trabajo** (*Estadísticas*): el mapa cambia con el periodo y el momento de más demanda es coherente.
+- [ ] **Plantillas** (*Generar Factura*): guardar las líneas como plantilla, añadirla a otra factura → el total se recalcula; borrarla.
+- [ ] **Pantalla TV** (botón del Taller 3D): los coches salen en su columna; al cambiar una etapa a «Listo», pasa a *Listos* en menos de un minuto.
 
 ---
 

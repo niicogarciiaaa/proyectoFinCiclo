@@ -1,0 +1,47 @@
+<section class="coste" *ngIf="filas.length > 0" aria-labelledby="coste-titulo">
+  <h3 id="coste-titulo">¿Cuánto me cuesta cada coche?</h3>
+
+  <div class="tabla">
+    <table>
+      <thead>
+        <tr>
+          <th>Vehículo</th>
+          <th class="num">Total</th>
+          <th class="num">En {{ anyoActual }}</th>
+          <th class="num">Facturas</th>
+          <th>Última</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let f of filas" [class.sel]="f.id === vehiculoId">
+          <td>{{ f.nombre }}</td>
+          <td class="num fuerte">{{ euros(f.total) }}</td>
+          <td class="num">{{ euros(f.esteAnyo) }}</td>
+          <td class="num">{{ f.facturas }}</td>
+          <td>{{ fecha(f.ultima) }}</td>
+        </tr>
+      </tbody>
+      <tfoot *ngIf="filas.length > 1">
+        <tr><td>Total</td><td class="num fuerte">{{ euros(totalGeneral) }}</td><td colspan="3"></td></tr>
+      </tfoot>
+    </table>
+  </div>
+
+  <div class="desgloses" *ngIf="porAnyo.length > 0">
+    <div>
+      <h4>Coche seleccionado, por año</h4>
+      <div class="barra" *ngFor="let b of porAnyo">
+        <div class="cab"><span>{{ b.etiqueta }}</span><span>{{ euros(b.total) }}</span></div>
+        <div class="pista"><div [style.width.%]="b.pct"></div></div>
+      </div>
+    </div>
+    <div>
+      <h4>Coche seleccionado, por servicio</h4>
+      <div class="barra" *ngFor="let b of porServicio">
+        <div class="cab"><span>{{ b.etiqueta }}</span><span>{{ euros(b.total) }}</span></div>
+        <div class="pista"><div [style.width.%]="b.pct"></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="nota">Importes con IVA de las facturas no canceladas.</p>
+</section>

@@ -9,6 +9,7 @@ import {
 import { MenuComponent } from '../menu/menu.component';
 import { descargarCsv } from '../../services/csv.util';
 import { ExportacionGestorComponent } from '../exportacion-gestor/exportacion-gestor.component';
+import { MapaDemandaComponent } from '../mapa-demanda/mapa-demanda.component';
 
 interface PeriodoIngresos {
   Periodo: string;
@@ -33,7 +34,7 @@ interface ResumenResenas {
 @Component({
   selector: 'app-statistics-viewer',
   standalone: true,
-  imports: [CommonModule, FormsModule, MenuComponent, ExportacionGestorComponent],
+  imports: [CommonModule, FormsModule, MenuComponent, ExportacionGestorComponent, MapaDemandaComponent],
   templateUrl: './statistics-viewer.component.html',
   styleUrl: './statistics-viewer.component.css',
 })

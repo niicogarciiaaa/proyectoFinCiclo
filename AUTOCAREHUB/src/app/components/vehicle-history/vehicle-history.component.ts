@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { DataAccessService } from '../../services/dataAccess.service';
 import { MenuComponent } from '../menu/menu.component';
 import { descargarCsv } from '../../services/csv.util';
+import { CosteCochesComponent } from '../coste-coches/coste-coches.component';
 
 interface EntradaHistorial {
   AppointmentID: number;
@@ -26,7 +27,7 @@ interface EntradaHistorial {
 @Component({
   selector: 'app-vehicle-history',
   standalone: true,
-  imports: [CommonModule, FormsModule, MenuComponent],
+  imports: [CommonModule, FormsModule, MenuComponent, CosteCochesComponent],
   templateUrl: './vehicle-history.component.html',
   styleUrl: './vehicle-history.component.css',
 })

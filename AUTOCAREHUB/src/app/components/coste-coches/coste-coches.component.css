@@ -1,0 +1,17 @@
+.coste { margin: 16px 0; padding: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; color: #1f2937; }
+h3 { font-size: 1.05rem; margin: 0 0 10px; }
+h4 { font-size: 0.8rem; font-weight: 600; color: #6b7280; margin: 0 0 8px; }
+.tabla { overflow-x: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 0.86rem; }
+th { text-align: left; color: #6b7280; font-weight: 500; border-bottom: 1px solid #e5e7eb; padding: 6px 8px; white-space: nowrap; }
+td { padding: 7px 8px; border-bottom: 1px solid #f3f4f6; }
+tfoot td { border-bottom: 0; font-weight: 600; }
+.num { text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.fuerte { font-weight: 600; }
+tr.sel td { background: #fff7ed; }
+.desgloses { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 18px; margin-top: 16px; }
+.barra { margin-bottom: 8px; font-size: 0.82rem; }
+.cab { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+.pista { height: 6px; background: #f3f4f6; border-radius: 3px; overflow: hidden; }
+.pista div { height: 100%; background: #fb8c00; border-radius: 3px; }
+.nota { margin: 10px 0 0; font-size: 0.76rem; color: #9ca3af; }

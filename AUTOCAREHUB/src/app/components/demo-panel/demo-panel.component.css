@@ -1,0 +1,11 @@
+.demo { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 12px 24px; margin: 20px 0; padding: 14px 18px; border: 1px dashed #d1d5db; border-radius: 12px; background: #fff; color: #1f2937; }
+.demo > div { flex: 1 1 280px; }
+h3 { font-size: 1rem; margin: 0 0 4px; }
+h3 i { color: #fb8c00; margin-right: 4px; }
+p { margin: 0; font-size: 0.86rem; color: #6b7280; }
+.ok { color: #166534; margin-top: 4px; }
+.error { color: #b91c1c; margin-top: 4px; }
+button { border-radius: 8px; padding: 7px 14px; cursor: pointer; font-weight: 500; }
+button:disabled { opacity: 0.5; cursor: default; }
+.principal { border: 1px solid #111827; background: #111827; color: #fff; }
+.secundario { border: 1px solid #fecaca; background: #fff; color: #b91c1c; }

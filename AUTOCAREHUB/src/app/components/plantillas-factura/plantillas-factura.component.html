@@ -1,0 +1,30 @@
+<section class="plantillas" aria-label="Plantillas de trabajo">
+  <strong>Plantillas de trabajo</strong>
+  <div class="fila" *ngIf="plantillas.length > 0">
+    <select [(ngModel)]="elegida" name="plantilla" aria-label="Elegir plantilla">
+      <option [ngValue]="null">Elige una plantilla...</option>
+      <option *ngFor="let p of plantillas" [ngValue]="p.TemplateID">
+        {{ p.Name }} · {{ p.Items.length }} {{ p.Items.length === 1 ? 'línea' : 'líneas' }} · {{ total(p) | currency : 'EUR' }}
+      </option>
+    </select>
+    <button type="button" class="principal" [disabled]="!elegida" (click)="usar()">Añadir a la factura</button>
+    <button type="button" class="enlace" *ngIf="elegida" (click)="borrar()">Borrar</button>
+  </div>
+  <p class="vacio" *ngIf="plantillas.length === 0">
+    Añade líneas a la factura y guárdalas aquí para reutilizarlas en trabajos habituales.
+  </p>
+
+  <div class="fila" *ngIf="lineas.length > 0">
+    <ng-container *ngIf="guardando; else botonGuardar">
+      <input type="text" name="nombrePlantilla" maxlength="80" [(ngModel)]="nombre" placeholder="Nombre, p. ej. Revisión completa" aria-label="Nombre de la plantilla" />
+      <button type="button" class="principal" [disabled]="!nombre.trim()" (click)="guardar()">Guardar</button>
+      <button type="button" class="enlace" (click)="guardando = false">Cancelar</button>
+    </ng-container>
+    <ng-template #botonGuardar>
+      <button type="button" class="enlace" (click)="guardando = true">Guardar estas {{ lineas.length }} líneas como plantilla</button>
+    </ng-template>
+  </div>
+
+  <p class="ok" *ngIf="mensaje" role="status">{{ mensaje }}</p>
+  <p class="error" *ngIf="error" role="alert">{{ error }}</p>
+</section>

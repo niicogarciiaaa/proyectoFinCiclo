@@ -1,0 +1,27 @@
+:host { display: block; min-height: 100vh; background: #111827; color: #f9fafb; }
+.pantalla { background: #111827; padding: 2.2vh 2.5vw; min-height: 100vh; display: flex; flex-direction: column; }
+header { display: flex; align-items: center; justify-content: space-between; gap: 20px; margin-bottom: 2.5vh; }
+h1 { font-size: clamp(1.3rem, 2.6vw, 2.6rem); font-weight: 700; margin: 0; }
+header p { margin: 0; color: #9ca3af; font-size: clamp(0.85rem, 1.3vw, 1.3rem); text-transform: capitalize; }
+.reloj { font-size: clamp(2rem, 5vw, 5rem); font-weight: 700; font-variant-numeric: tabular-nums; margin-left: auto; }
+.acciones { display: flex; gap: 8px; opacity: 0.5; }
+.acciones:hover { opacity: 1; }
+.acciones button, .acciones a { width: 36px; height: 36px; display: inline-flex; align-items: center; justify-content: center; border: 1px solid #374151; border-radius: 8px; background: none; color: #d1d5db; cursor: pointer; text-decoration: none; }
+.error { background: #7f1d1d; padding: 10px 14px; border-radius: 8px; margin: 0 0 16px; }
+.columnas { flex: 1; display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5vw; min-height: 0; }
+section { background: #1f2937; border-radius: 14px; padding: 1.6vh 1.2vw; overflow: hidden; }
+h2 { display: flex; justify-content: space-between; align-items: center; font-size: clamp(1rem, 1.6vw, 1.7rem); font-weight: 600; margin: 0 0 1.5vh; color: #d1d5db; }
+h2 span { background: #374151; border-radius: 999px; padding: 0 12px; color: #fff; }
+.listos h2 { color: #6ee7b7; }
+.vacio { color: #6b7280; font-size: clamp(0.9rem, 1.2vw, 1.2rem); }
+article { background: #111827; border-radius: 10px; padding: 1.2vh 1vw; margin-bottom: 1.2vh; border-left: 4px solid #4b5563; }
+.listos article { border-left-color: #10b981; }
+article.retraso { border-left-color: #ef4444; }
+.fila1 { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.matricula { font-size: clamp(1.1rem, 2vw, 2.1rem); letter-spacing: 0.06em; }
+.hora { color: #d1d5db; font-size: clamp(0.85rem, 1.2vw, 1.3rem); font-variant-numeric: tabular-nums; }
+.fila2 { color: #9ca3af; font-size: clamp(0.8rem, 1.05vw, 1.15rem); margin-top: 2px; }
+.fila3 { display: flex; flex-wrap: wrap; gap: 4px 12px; margin-top: 4px; font-size: clamp(0.78rem, 1vw, 1.1rem); color: #9ca3af; }
+.etapa { color: #fdba74; font-weight: 600; }
+.aviso { color: #fca5a5; font-weight: 700; }
+@media (max-width: 800px) { .columnas { grid-template-columns: 1fr; } }

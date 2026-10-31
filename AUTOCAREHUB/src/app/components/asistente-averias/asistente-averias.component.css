@@ -1,0 +1,20 @@
+.asistente { margin: 12px 0; border: 1px solid #e5e7eb; border-radius: 10px; background: #fff; }
+.cabecera { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 10px 14px; border: 0; background: none; cursor: pointer; font-weight: 600; color: #1f2937; text-align: left; }
+.cabecera .bi-question-circle { color: #fb8c00; margin-right: 4px; }
+.cuerpo { padding: 0 14px 14px; font-size: 0.9rem; color: #374151; }
+.ayuda, .sin { margin: 0 0 10px; color: #6b7280; }
+.sintomas { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.sintomas button { border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; padding: 5px 12px; font-size: 0.82rem; cursor: pointer; color: #374151; }
+.sintomas button:hover { background: #f9fafb; }
+.sintomas button.activo { border-color: #fb8c00; box-shadow: 0 0 0 1px #fb8c00; }
+.describir { display: flex; gap: 6px; margin-bottom: 10px; }
+.describir input { flex: 1; min-width: 0; border: 1px solid #e5e7eb; border-radius: 8px; padding: 6px 10px; }
+.describir button { border: 1px solid #d1d5db; background: #fff; border-radius: 8px; padding: 6px 12px; cursor: pointer; }
+.describir button:disabled { opacity: 0.5; cursor: default; }
+.resultado { background: #f9fafb; border-radius: 8px; padding: 10px 12px; margin-bottom: 10px; }
+.resultado p { margin: 0 0 6px; }
+.resultado p:last-child { margin-bottom: 0; }
+.titulo { font-weight: 600; color: #1f2937; }
+.urgente { margin-left: 6px; color: #b91c1c; font-size: 0.78rem; font-weight: 600; }
+.aplicar { border: 1px solid #111827; background: #111827; color: #fff; border-radius: 8px; padding: 6px 14px; cursor: pointer; }
+.nota { margin: 8px 0 0; font-size: 0.76rem; color: #9ca3af; }

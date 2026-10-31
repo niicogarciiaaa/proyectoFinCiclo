@@ -1,0 +1,14 @@
+.mapa { margin: 16px 0; padding: 16px; background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; color: #1f2937; }
+.cab { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 8px; }
+h3 { font-size: 1.05rem; margin: 0; }
+label { display: inline-flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #6b7280; }
+select { border: 1px solid #e5e7eb; border-radius: 8px; padding: 4px 8px; background: #fff; color: #1f2937; }
+.resumen { font-size: 0.88rem; margin: 0 0 12px; color: #374151; }
+.resumen span { color: #9ca3af; }
+.vacio { color: #9ca3af; margin: 8px 0 0; font-size: 0.88rem; }
+.tabla { overflow-x: auto; }
+table { border-collapse: separate; border-spacing: 3px; width: 100%; font-size: 0.78rem; }
+th { font-weight: 500; color: #6b7280; text-align: center; padding: 2px 4px; white-space: nowrap; }
+tbody th { text-align: left; padding-right: 8px; }
+td { min-width: 30px; height: 30px; border-radius: 5px; text-align: center; font-weight: 600; }
+.oculto { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); }

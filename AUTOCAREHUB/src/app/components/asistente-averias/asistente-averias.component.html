@@ -1,0 +1,47 @@
+<section class="asistente">
+  <button type="button" class="cabecera" (click)="abierto = !abierto" [attr.aria-expanded]="abierto">
+    <span><i class="bi bi-question-circle" aria-hidden="true"></i> ¿No sabes qué servicio necesitas?</span>
+    <i class="bi" [class.bi-chevron-down]="!abierto" [class.bi-chevron-up]="abierto" aria-hidden="true"></i>
+  </button>
+
+  <div class="cuerpo" *ngIf="abierto">
+    <p class="ayuda">Elige lo que le pasa a tu coche o cuéntalo con tus palabras.</p>
+    <div class="sintomas">
+      <button type="button" *ngFor="let s of sintomas" [class.activo]="seleccionado === s" (click)="elegirSintoma(s)">
+        <i class="bi {{ s.icono }}" aria-hidden="true"></i> {{ s.nombre }}
+      </button>
+    </div>
+
+    <form class="describir" (submit)="$event.preventDefault(); analizar()">
+      <input
+        type="text"
+        name="sintoma"
+        maxlength="200"
+        [(ngModel)]="texto"
+        placeholder="Ej.: hace ruido al frenar"
+        aria-label="Describe lo que le pasa a tu coche"
+      />
+      <button type="submit" [disabled]="!texto.trim()">Analizar</button>
+    </form>
+
+    <p class="sin" *ngIf="sinCoincidencia" role="status">
+      No lo tengo claro con esa descripción. Pide una cita general: la anotaremos como motivo para el taller.
+    </p>
+
+    <div class="resultado" *ngIf="seleccionado as s" role="status">
+      <p class="titulo">
+        {{ s.nombre }}
+        <span class="urgente" *ngIf="s.urgente">Conviene no retrasarlo</span>
+      </p>
+      <p>{{ s.consejo }}</p>
+      <p class="servicio" *ngIf="hayTaller && servicioSugerido as sug">Te sugerimos: <strong>{{ sug.Name }}</strong></p>
+      <p class="servicio" *ngIf="hayTaller && !servicioSugerido">Este taller no tiene un servicio específico: te sugerimos una <strong>cita general</strong>.</p>
+      <p class="servicio" *ngIf="!hayTaller">Elige un taller para ver qué servicio te encaja.</p>
+    </div>
+
+    <button type="button" class="aplicar" *ngIf="(seleccionado || sinCoincidencia) && hayTaller" (click)="aplicar()">
+      Usar esta sugerencia
+    </button>
+    <p class="nota">Es solo una orientación: el diagnóstico lo hace el taller.</p>
+  </div>
+</section>

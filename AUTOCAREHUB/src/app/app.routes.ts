@@ -67,6 +67,10 @@ export const routes: Routes = [
         loadComponent: () => import('./components/agenda-config/agenda-config.component').then(m => m.AgendaConfigComponent),
     },
     {
+        path: 'pantallaTaller', canActivate: [roleGuard(['Taller'])],
+        loadComponent: () => import('./components/pantalla-taller/pantalla-taller.component').then(m => m.PantallaTallerComponent),
+    },
+    {
         path: 'taller3d', canActivate: [roleGuard(['Taller'])],
         loadComponent: () => import('./components/workshop-3d/workshop-3d.component').then(m => m.Workshop3dComponent),
     },

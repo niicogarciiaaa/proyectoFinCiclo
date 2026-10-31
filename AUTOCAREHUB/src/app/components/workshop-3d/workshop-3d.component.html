@@ -45,6 +45,7 @@
     </div>
 
     <div class="camara">
+      <a class="enlace-tv" routerLink="/pantallaTaller" title="Pantalla para TV: coches de hoy"><i class="bi bi-tv" aria-hidden="true"></i><span class="visually-hidden-text">Pantalla para TV</span></a>
       <button type="button" (click)="descargarCaptura()" title="Descargar imagen (C)"><i class="bi bi-camera" aria-hidden="true"></i><span class="visually-hidden-text">Descargar imagen del taller</span></button>
       <button type="button" (click)="alternarGiro()" [class.activo]="girando" [attr.aria-pressed]="girando" title="Girar automáticamente"><i class="bi bi-arrow-repeat" aria-hidden="true"></i><span class="visually-hidden-text">Girar automáticamente</span></button>
       <button type="button" (click)="alternarPantallaCompleta()" [title]="pantallaCompleta ? 'Salir de pantalla completa' : 'Pantalla completa'"><i class="bi" [class.bi-fullscreen]="!pantallaCompleta" [class.bi-fullscreen-exit]="pantallaCompleta" aria-hidden="true"></i><span class="visually-hidden-text">Pantalla completa</span></button>

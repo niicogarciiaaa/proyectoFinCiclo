@@ -41,6 +41,8 @@
     </div>
   </section>
 
+  <app-coste-coches [vehiculos]="vehiculos" [vehiculoId]="vehiculoId"></app-coste-coches>
+
   <div *ngIf="!loading && resumen && historial.length === 0" class="empty">
     Este vehículo todavía no tiene citas.
   </div>

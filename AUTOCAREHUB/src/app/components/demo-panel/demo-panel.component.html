@@ -1,0 +1,15 @@
+<section class="demo" aria-labelledby="demo-titulo">
+  <div>
+    <h3 id="demo-titulo"><i class="bi bi-magic" aria-hidden="true"></i> Modo demostración</h3>
+    <p *ngIf="!activo">Rellena tu taller con clientes, citas, facturas y coches de ejemplo para enseñar la aplicación.</p>
+    <p *ngIf="activo && demo">Activo: {{ demo.Clientes }} clientes, {{ demo.Citas }} citas y {{ demo.Facturas }} facturas de ejemplo.</p>
+    <p class="ok" *ngIf="mensaje" role="status">{{ mensaje }}. Recarga las pantallas abiertas para verlo.</p>
+    <p class="error" *ngIf="error" role="alert">{{ error }}</p>
+  </div>
+  <button type="button" *ngIf="demo && !activo" class="principal" [disabled]="trabajando" (click)="crear()">
+    {{ trabajando ? 'Creando...' : 'Crear datos de ejemplo' }}
+  </button>
+  <button type="button" *ngIf="activo" class="secundario" [disabled]="trabajando" (click)="borrar()">
+    {{ trabajando ? 'Borrando...' : 'Borrar datos de ejemplo' }}
+  </button>
+</section>

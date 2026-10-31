@@ -152,3 +152,15 @@
   border-radius: 0;
   border: 0;
 }
+
+.enlace-tv {
+  width: 34px;
+  height: 34px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: #fff;
+  border: 1px solid var(--t-borde);
+  border-radius: 8px;
+  color: var(--t-suave);
+}

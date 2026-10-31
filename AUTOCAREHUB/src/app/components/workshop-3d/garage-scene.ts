@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 import { RoundedBoxGeometry } from 'three/examples/jsm/geometries/RoundedBoxGeometry.js';
+import { cocheConRetraso } from './retraso';
 
 /**
  * Escena 3D del taller (Three.js), independiente de Angular.
@@ -68,11 +69,7 @@ export interface EstadoCamara {
   target: [number, number, number];
 }
 
-/** La cita debería haber terminado ya y no está finalizada. */
-export function cocheConRetraso(c: { EndDateTime?: string; Status: string }, ahora = new Date()): boolean {
-  if (!c.EndDateTime || c.Status === 'Finalizada' || c.Status === 'Cancelada') return false;
-  return new Date(c.EndDateTime.replace(' ', 'T')) < ahora;
-}
+export { cocheConRetraso };
 
 /** Medidas de un puesto (metros): ancho en X local y largo en Z local. */
 const PUESTO_ANCHO = 3.4;

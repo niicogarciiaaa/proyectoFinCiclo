@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { MenuComponent } from '../menu/menu.component';
+import { DemoPanelComponent } from '../demo-panel/demo-panel.component';
 import { I18nService } from '../../services/i18n.service';
 import { DataAccessService } from '../../services/dataAccess.service';
 
@@ -23,7 +24,7 @@ interface CitaResumen {
 @Component({
   selector: 'app-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, MenuComponent],
+  imports: [CommonModule, RouterLink, MenuComponent, DemoPanelComponent],
   templateUrl: './home.component.html',
   styleUrl: './home.component.css',
 })

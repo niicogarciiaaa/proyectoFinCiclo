@@ -40,6 +40,12 @@
     </div>
   </div>
 
+  <app-asistente-averias
+    [servicios]="services"
+    [hayTaller]="!!selectedWorkshop"
+    (elegir)="aplicarSugerencia($event)"
+  ></app-asistente-averias>
+
   <!-- Opiniones recientes del taller elegido -->
   <div class="opiniones" *ngIf="opiniones.length > 0" aria-label="Opiniones recientes del taller">
     <div class="opinion" *ngFor="let o of opiniones">

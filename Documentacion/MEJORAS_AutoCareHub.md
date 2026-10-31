@@ -6,7 +6,7 @@
 
 **Proyecto:** AutoCareHub (Angular + PHP/MySQL)
 **Autor:** Nicolás García Moreira
-**Última actualización:** 17/10/2026
+**Última actualización:** 31/10/2026
 
 > **Restricción del proyecto:** la API existente no se modifica. Las funcionalidades
 > nuevas se construyen creando **llamadas nuevas**, nunca editando las llamadas ya
@@ -31,7 +31,8 @@
 13. [Taller 3D con estilo minimalista](#13-taller-3d-con-estilo-minimalista)
 14. [Seguimiento de la reparación paso a paso](#14-seguimiento-de-la-reparación-paso-a-paso)
 15. [Exportación para el gestor](#15-exportación-para-el-gestor)
-16. [Próximas mejoras propuestas](#16-próximas-mejoras-propuestas)
+16. [Asistente, costes, demanda, plantillas, TV y demostración](#16-asistente-costes-demanda-plantillas-tv-y-demostración)
+17. [Próximas mejoras propuestas](#17-próximas-mejoras-propuestas)
 
 ---
 
@@ -428,6 +429,7 @@ borra datos). Resumen:
 | Tabla `WorkshopReviews` | Reseñas y valoraciones (ver 8.10, `2026_10_mejoras.sql`). |
 | Tablas `WorkshopLayouts`, `WorkshopBayAssignments`, `VehicleNotes` | Taller en 3D (ver 8.9 y 8.10). |
 | Tabla `AppointmentProgress` | Seguimiento de la reparación por etapas (ver 14, `2026_10_seguimiento.sql`). |
+| Tabla `WorkTemplates` | Plantillas de trabajo del taller (ver 16, `2026_10_plantillas.sql`). |
 
 También se actualizó `PHP/paginaCreacionBase.php` para que una base de datos nueva
 incluya ya estas tablas y columnas.
@@ -656,7 +658,50 @@ lectura; solo el rol Taller).
 
 ---
 
-## 16. Próximas mejoras propuestas
+## 16. Asistente, costes, demanda, plantillas, TV y demostración
+
+**Asistente de averías** (`components/asistente-averias/`, en *Pedir cita*): el cliente
+elige un síntoma o lo describe con sus palabras y recibe una orientación, un aviso si
+conviene no retrasarlo y el servicio del taller que encaja. Al aceptar, se rellenan el
+servicio y el motivo. Funciona solo en el navegador y es orientativo.
+
+**Coste total por coche** (`components/coste-coches/`, en *Historial de vehículos*):
+compara lo facturado en todos los coches del cliente (total, año actual, nº de facturas y
+última) y desglosa el coche elegido por año y por servicio. Importes con IVA, sin
+facturas canceladas.
+
+**Horas de más trabajo** (`components/mapa-demanda/`, en *Estadísticas*): mapa de calor de
+citas por día y hora de los últimos 3, 6 o 12 meses, con el momento de más demanda y el
+día más tranquilo. Se calcula con las citas que ya devuelve la agenda.
+
+**Plantillas de trabajo** (`components/plantillas-factura/`, en *Generar Factura*):
+paquetes de conceptos y precios («Revisión completa») que se añaden a la factura de una
+vez. Se guardan a partir de las líneas actuales y se pueden sustituir o borrar. Backend
+nuevo: `routes/templates.php`, `WorkTemplateController`, `models/WorkTemplate.php` y tabla
+`WorkTemplates` (`migrations/2026_10_plantillas.sql`; el endpoint también la crea).
+
+**Pantalla para TV** (`components/pantalla-taller/`, ruta `/pantallaTaller`, botón en el
+Taller 3D): reloj y coches de hoy en tres columnas (*Por llegar*, *En el taller* y *Listos
+para recoger*) con etapa, puesto, horario y retraso. Se actualiza cada minuto y no muestra
+datos del cliente, porque puede estar a la vista de todos.
+
+**Modo demostración** (`components/demo-panel/`, en el inicio del taller; backend
+`routes/demo.php`, `DemoController`, `models/Demo.php`): crea en una transacción 6 clientes
+ficticios, 54 citas, 48 facturas, reseñas, etapas y coches colocados, incluido uno con
+retraso. Los clientes usan el dominio reservado `autocarehub.invalid` y una contraseña
+aleatoria que no se guarda, así que nadie puede entrar con ellos. Al borrarlos, las claves
+foráneas eliminan el resto en cascada y lo real no se toca. Si ya hay facturas reales con
+VeriFactu registradas después de una factura de ejemplo, **se niega a borrar** para no
+romper la cadena de huellas. Mientras esté activo, los datos de ejemplo salen en las
+estadísticas y en la exportación.
+
+**Comprobado** con una base de datos temporal (MariaDB de XAMPP): los endpoints nuevos y
+sus permisos, las pantallas y el ciclo crear / borrar de la demo con recuento de cada
+tabla, además de `tracking.php`, `accounting.php` y la ficha del coche (`garage.php`).
+
+---
+
+## 17. Próximas mejoras propuestas
 
 Ideas que encajan con lo construido, ordenadas por relación valor / esfuerzo:
 

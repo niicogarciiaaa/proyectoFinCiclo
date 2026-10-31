@@ -74,6 +74,7 @@
             </div>
 
             <h5 class="mt-4">Ítems de la Factura</h5>
+            <app-plantillas-factura [lineas]="items" (aplicar)="aplicarPlantilla($event)"></app-plantillas-factura>
             <div class="table-responsive" *ngIf="items.length > 0">
               <table class="table table-striped">
                 <thead>

@@ -1,0 +1,46 @@
+<div class="pantalla no-invert">
+  <header>
+    <div>
+      <h1>{{ nombre || 'Taller' }}</h1>
+      <p>{{ fechaLarga }}</p>
+    </div>
+    <div class="reloj" aria-live="off">{{ ahora | date : 'HH:mm' }}</div>
+    <div class="acciones">
+      <button type="button" (click)="pantallaCompleta()" title="Pantalla completa" aria-label="Pantalla completa"><i class="bi bi-fullscreen" aria-hidden="true"></i></button>
+      <a routerLink="/taller3d" title="Salir" aria-label="Volver al Taller 3D"><i class="bi bi-x-lg" aria-hidden="true"></i></a>
+    </div>
+  </header>
+
+  <p class="error" *ngIf="error" role="alert">{{ error }}. Se reintentará en un minuto.</p>
+
+  <main class="columnas" *ngIf="actualizado">
+    <section>
+      <h2>Por llegar <span>{{ porLlegar.length }}</span></h2>
+      <ng-container *ngTemplateOutlet="lista; context: { items: porLlegar, vacio: 'No hay más coches previstos hoy' }"></ng-container>
+    </section>
+    <section>
+      <h2>En el taller <span>{{ enTaller.length }}</span></h2>
+      <ng-container *ngTemplateOutlet="lista; context: { items: enTaller, vacio: 'El taller está libre' }"></ng-container>
+    </section>
+    <section class="listos">
+      <h2>Listos para recoger <span>{{ listos.length }}</span></h2>
+      <ng-container *ngTemplateOutlet="lista; context: { items: listos, vacio: 'Ningún coche listo todavía' }"></ng-container>
+    </section>
+  </main>
+</div>
+
+<ng-template #lista let-items="items" let-vacio="vacio">
+  <p class="vacio" *ngIf="items.length === 0">{{ vacio }}</p>
+  <article *ngFor="let c of items" [class.retraso]="c.retraso">
+    <div class="fila1">
+      <strong class="matricula">{{ c.matricula }}</strong>
+      <span class="hora">{{ c.inicio }}–{{ c.fin }}</span>
+    </div>
+    <div class="fila2">{{ c.modelo }} · {{ c.servicio }}</div>
+    <div class="fila3">
+      <span *ngIf="c.etapa" class="etapa">{{ c.etapa }}</span>
+      <span *ngIf="c.puesto">{{ c.puesto }}</span>
+      <span *ngIf="c.retraso" class="aviso">Con retraso</span>
+    </div>
+  </article>
+</ng-template>

@@ -755,6 +755,34 @@ export class DataAccessService {
     return this.postAccion('tracking.php', 'deshacer', { AppointmentID: appointmentId });
   }
 
+  // ---------- Plantillas de trabajo (templates.php) ----------
+
+  listarPlantillas(): Observable<any> {
+    return this.postAccion('templates.php', 'listar');
+  }
+
+  guardarPlantilla(nombre: string, items: object[]): Observable<any> {
+    return this.postAccion('templates.php', 'guardar', { Nombre: nombre, Items: items });
+  }
+
+  eliminarPlantilla(templateId: number): Observable<any> {
+    return this.postAccion('templates.php', 'eliminar', { TemplateID: templateId });
+  }
+
+  // ---------- Modo demostración (demo.php) ----------
+
+  estadoDemo(): Observable<any> {
+    return this.postAccion('demo.php', 'estado');
+  }
+
+  crearDemo(): Observable<any> {
+    return this.postAccion('demo.php', 'crear');
+  }
+
+  borrarDemo(): Observable<any> {
+    return this.postAccion('demo.php', 'borrar');
+  }
+
   // ---------- Exportación para el gestor (accounting.php) ----------
 
   /** (Taller) Facturas de un trimestre con el desglose de IVA por tipo. */

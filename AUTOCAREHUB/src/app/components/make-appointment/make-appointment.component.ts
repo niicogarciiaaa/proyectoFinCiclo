@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { DataAccessService } from '../../services/dataAccess.service';
+import { AsistenteAveriasComponent } from '../asistente-averias/asistente-averias.component';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { MenuComponent } from '../menu/menu.component';
@@ -24,7 +25,7 @@ interface Service {
 @Component({
   selector: 'app-make-appointment',
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MenuComponent],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MenuComponent, AsistenteAveriasComponent],
   templateUrl: './make-appointment.component.html',
   styleUrl: './make-appointment.component.css',
 })
@@ -337,6 +338,15 @@ export class MakeAppointmentComponent implements OnInit {
       this.cargarServicios();
       this.consultarDisponibilidad();
       this.cargarOpiniones();
+    }
+  }
+
+  /** El asistente de averías propone un servicio y un motivo para la cita. */
+  aplicarSugerencia(s: { serviceId: number; motivo: string }) {
+    if (s.motivo && !this.motivo.trim()) this.motivo = s.motivo;
+    if (s.serviceId !== this.selectedService) {
+      this.selectedService = s.serviceId;
+      this.onServiceChange();
     }
   }
 
